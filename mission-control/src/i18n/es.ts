@@ -287,6 +287,11 @@ const es = {
   members: {
     title: 'Miembros del proyecto',
     subtitle: 'Personas que pueden ver y operar este proyecto.',
+    role: 'Rol en el proyecto',
+    owner: 'Owner',
+    developer: 'Developer',
+    viewer: 'Viewer',
+    updateFailed: 'No se pudo actualizar el rol.',
     add: 'Agregar miembro',
     addPlaceholder: 'usuario',
     added: '{{username}} agregado al proyecto.',

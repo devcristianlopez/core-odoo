@@ -43,6 +43,7 @@ class ProjectMember(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="projects.id", index=True)
     user_id: int = Field(foreign_key="users.id", index=True)
+    role: str = Field(default="developer", max_length=16)
     created_at: datetime = Field(default_factory=utcnow)
 
 

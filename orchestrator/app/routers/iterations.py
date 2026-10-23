@@ -36,7 +36,7 @@ from ..services import (
 
 router = APIRouter(
     tags=["iterations"],
-    dependencies=[Depends(require_write), Depends(require_project_access)],
+    dependencies=[Depends(require_project_access), Depends(require_write)],
 )
 
 

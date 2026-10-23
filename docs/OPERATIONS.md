@@ -27,9 +27,15 @@ Después, un admin puede crear más usuarios en **Mission Control → Users**:
 El token de API se considera siempre admin; usalo para automatización, no para
 usuarios humanos.
 
-Los roles son globales, pero el acceso a proyectos es por membresía. Un
-`operator` o `viewer` solamente ve los proyectos donde fue agregado. El admin
-agrega miembros desde **Project Detail → Miembros del proyecto**.
+Los roles globales definen el alcance general y el rol de proyecto define la
+operación dentro de ese proyecto:
+
+- `owner`: opera y puede administrar el proyecto (los miembros los gestiona un admin).
+- `developer`: opera el proyecto.
+- `viewer`: solo lectura dentro del proyecto.
+
+Un `operator` o `viewer` solamente ve los proyectos donde fue agregado. El admin
+agrega miembros y asigna el rol desde **Project Detail → Miembros del proyecto**.
 
 ### Proyectos y entornos
 

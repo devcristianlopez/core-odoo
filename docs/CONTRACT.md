@@ -102,8 +102,10 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | POST | `/deploy-requests/{id}/reject` | – | `DeploymentRequest` (admin) |
 | GET | `/projects/{name}/iterations` | – | `[Iteration]` |
 | GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
+| GET | `/projects/{name}/access` | – | `{role}` (member/admin) |
 | GET | `/projects/{name}/members` | – | `[ProjectMember]` (admin) |
-| POST | `/projects/{name}/members` | `{username}` | `ProjectMember` (admin) |
+| POST | `/projects/{name}/members` | `{username, role}` | `ProjectMember` (admin) |
+| PATCH | `/projects/{name}/members/{username}` | `{role}` | `ProjectMember` (admin) |
 | DELETE | `/projects/{name}/members/{username}` | – | `{deleted: true}` (admin) |
 | POST | `/projects/{name}/iterations` | `{version, title, notes?, branch?, commit_sha?, modules?}` | `Iteration` |
 | POST | `/projects/{name}/iterations/{version}/restore` | – | `Iteration` |
@@ -129,8 +131,9 @@ iterations, backups, logs) and `viewer` (read-only). Project create/delete,
 environment delete, production deploy and user management require `admin`.
 The API token is always treated as `admin`. Non-admin users only see projects
 where they are a member; `GET /projects` is filtered and project endpoints
-return `403` for non-members. Admins can manage membership from the project
-detail page.
+return `403` for non-members. Project roles are `owner`, `developer` and
+`viewer`: viewer is read-only, developer/owner can operate. Admins can manage
+membership from the project detail page.
 
 Production deploys require `confirm` equal to the project name, a versioned
 iteration and at least one database backup for that iteration. The source is

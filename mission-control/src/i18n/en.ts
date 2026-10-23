@@ -284,6 +284,11 @@ const en = {
   members: {
     title: 'Project members',
     subtitle: 'People who can view and operate this project.',
+    role: 'Project role',
+    owner: 'Owner',
+    developer: 'Developer',
+    viewer: 'Viewer',
+    updateFailed: 'Could not update the role.',
     add: 'Add member',
     addPlaceholder: 'username',
     added: '{{username}} added to the project.',

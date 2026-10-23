@@ -40,9 +40,11 @@ from ..schemas import (
     DeployRequest,
     EnvironmentRead,
     LogsResponse,
+    ProjectAccessRead,
     ProjectCreate,
     ProjectMemberCreate,
     ProjectMemberRead,
+    ProjectMemberUpdate,
     ProjectRead,
 )
 from ..services import (
@@ -59,7 +61,7 @@ from ..services import (
 
 router = APIRouter(
     tags=["projects"],
-    dependencies=[Depends(require_write), Depends(require_project_access)],
+    dependencies=[Depends(require_project_access), Depends(require_write)],
 )
 
 ProviderOperation = Callable[[EnvironmentSpec], ProviderStatus]
@@ -156,6 +158,29 @@ def create_project(
     session.commit()
     session.refresh(project)
     return project_read(session, project)
+
+
+@router.get("/projects/{name}/access", response_model=ProjectAccessRead)
+def project_access(
+    name: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+) -> ProjectAccessRead:
+    project = _get_project(session, name)
+    if principal.role == "admin" or principal.method == "api_token":
+        return ProjectAccessRead(role="admin")
+    user = session.exec(select(User).where(User.username == principal.username)).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="project access denied")
+    member = session.exec(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project.id,
+            ProjectMember.user_id == user.id,
+        )
+    ).first()
+    if member is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="project access denied")
+    return ProjectAccessRead(role=member.role)  # type: ignore[arg-type]
 
 
 @router.get("/projects/{name}", response_model=ProjectRead)
@@ -326,7 +351,8 @@ def list_project_members(
             result.append(
                 ProjectMemberRead(
                     username=user.username,
-                    role=user.role,  # type: ignore[arg-type]
+                    role=member.role,  # type: ignore[arg-type]
+                    user_role=user.role,  # type: ignore[arg-type]
                     created_at=member.created_at,
                 )
             )
@@ -358,7 +384,7 @@ def add_project_member(
     ).first()
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="user is already a member")
-    member = ProjectMember(project_id=project.id, user_id=user.id)
+    member = ProjectMember(project_id=project.id, user_id=user.id, role=payload.role)
     session.add(member)
     record_audit(
         session,
@@ -371,7 +397,50 @@ def add_project_member(
     session.refresh(member)
     return ProjectMemberRead(
         username=user.username,
-        role=user.role,  # type: ignore[arg-type]
+        role=member.role,  # type: ignore[arg-type]
+        user_role=user.role,  # type: ignore[arg-type]
+        created_at=member.created_at,
+    )
+
+
+@router.patch(
+    "/projects/{name}/members/{username}",
+    response_model=ProjectMemberRead,
+)
+def update_project_member(
+    name: str,
+    username: str,
+    payload: ProjectMemberUpdate,
+    session: SessionDep,
+    principal: AdminDep,
+) -> ProjectMemberRead:
+    project = _get_project(session, name)
+    user = session.exec(select(User).where(User.username == username)).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+    member = session.exec(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project.id,
+            ProjectMember.user_id == user.id,
+        )
+    ).first()
+    if member is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="member not found")
+    member.role = payload.role
+    session.add(member)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="project.member.update",
+        target=f"{name}/{username}",
+        details={"role": payload.role},
+    )
+    session.commit()
+    session.refresh(member)
+    return ProjectMemberRead(
+        username=user.username,
+        role=member.role,  # type: ignore[arg-type]
+        user_role=user.role,  # type: ignore[arg-type]
         created_at=member.created_at,
     )
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
+from sqlalchemy import inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
@@ -21,6 +22,15 @@ def make_engine(database_url: str) -> Engine:
 
 def init_db(engine: Engine) -> None:
     SQLModel.metadata.create_all(engine)
+    # Lightweight additive migration for the membership role. New installs get
+    # the column from SQLModel; existing SQLite databases need the ALTER.
+    with engine.begin() as connection:
+        columns = {column["name"] for column in inspect(connection).get_columns("project_members")}
+        if "role" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE project_members ADD COLUMN role "
+                "VARCHAR(16) NOT NULL DEFAULT 'developer'"
+            )
 
 
 def session_from_factory(session_factory) -> Iterator[Session]:  # type: ignore[no-untyped-def]

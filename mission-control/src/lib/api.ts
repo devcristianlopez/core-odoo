@@ -7,6 +7,7 @@ import type {
   LoginResponse,
   MeResponse,
   Project,
+  ProjectAccess,
   ProjectMember,
   Stage,
   StatusPayload,
@@ -296,6 +297,9 @@ export const api = {
     create(input: CreateProjectInput): Promise<Project> {
       return request<Project>('/projects', { method: 'POST', body: input })
     },
+    access(name: string): Promise<ProjectAccess> {
+      return request<ProjectAccess>(`${projectPath(name)}/access`)
+    },
     remove(name: string, confirm: string, purge = false): Promise<{ deleted: boolean }> {
       return request(projectPath(name), {
         method: 'DELETE',
@@ -330,11 +334,17 @@ export const api = {
     list(name: string): Promise<ProjectMember[]> {
       return request<ProjectMember[]>(`${projectPath(name)}/members`)
     },
-    add(name: string, username: string): Promise<ProjectMember> {
+    add(name: string, username: string, role: string): Promise<ProjectMember> {
       return request<ProjectMember>(`${projectPath(name)}/members`, {
         method: 'POST',
-        body: { username },
+        body: { username, role },
       })
+    },
+    update(name: string, username: string, role: string): Promise<ProjectMember> {
+      return request<ProjectMember>(
+        `${projectPath(name)}/members/${encodeURIComponent(username)}`,
+        { method: 'PATCH', body: { role } },
+      )
     },
     remove(name: string, username: string): Promise<{ deleted: boolean }> {
       return request(`${projectPath(name)}/members/${encodeURIComponent(username)}`, {

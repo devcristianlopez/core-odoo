@@ -47,7 +47,6 @@ export default function ProjectDetailPage() {
   const { pushToast } = useToast()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
-  const canWrite = user?.role === 'admin' || user?.role === 'operator'
 
   const [deployOpen, setDeployOpen] = useState(false)
   const [deployStage, setDeployStage] = useState<Stage>('dev')
@@ -72,6 +71,14 @@ export default function ProjectDetailPage() {
   })
 
   const project = projectQuery.data
+  const accessQuery = useQuery({
+    queryKey: queryKeys.access(name),
+    queryFn: () => api.projects.access(name),
+    enabled: name !== '',
+  })
+  const projectRole = accessQuery.data?.role
+  const canWrite =
+    isAdmin || (user?.role === 'operator' && (projectRole === 'owner' || projectRole === 'developer'))
   const iterationsQuery = useQuery({
     queryKey: queryKeys.iterations(name),
     queryFn: () => api.iterations.list(name),

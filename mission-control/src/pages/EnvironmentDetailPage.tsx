@@ -51,7 +51,14 @@ export default function EnvironmentDetailPage() {
   const { pushToast } = useToast()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
-  const canOperate = user?.role === 'admin' || user?.role === 'operator'
+  const accessQuery = useQuery({
+    queryKey: queryKeys.access(name),
+    queryFn: () => api.projects.access(name),
+    enabled: name !== '',
+  })
+  const projectRole = accessQuery.data?.role
+  const canOperate =
+    isAdmin || (user?.role === 'operator' && (projectRole === 'owner' || projectRole === 'developer'))
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [metricsPaused, setMetricsPaused] = useState(false)

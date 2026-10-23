@@ -9,7 +9,7 @@ import { describeError } from '../../lib/errors'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
-import { Input } from '../ui/Input'
+import { Input, Select } from '../ui/Input'
 import { EmptyState } from '../ui/EmptyState'
 import { ErrorState } from '../ui/ErrorState'
 import { LoadingState } from '../ui/Loading'
@@ -19,6 +19,7 @@ export function MembersPanel({ project, canManage }: { project: string; canManag
   const { pushToast } = useToast()
   const queryClient = useQueryClient()
   const [username, setUsername] = useState('')
+  const [role, setRole] = useState<'owner' | 'developer' | 'viewer'>('developer')
 
   const membersQuery = useQuery({
     queryKey: queryKeys.members(project),
@@ -33,14 +34,25 @@ export function MembersPanel({ project, canManage }: { project: string; canManag
   }
 
   const addMutation = useMutation({
-    mutationFn: (name: string) => api.members.add(project, name),
+    mutationFn: ({ name, role }: { name: string; role: 'owner' | 'developer' | 'viewer' }) =>
+      api.members.add(project, name, role),
     onSuccess: (member) => {
       setUsername('')
+      setRole('developer')
       refresh()
       pushToast({ title: t('members.added', { username: member.username }), variant: 'success' })
     },
     onError: (error) => {
       pushToast({ title: t('members.addFailed'), description: describeError(error, t), variant: 'error' })
+    },
+  })
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ name, role }: { name: string; role: string }) =>
+      api.members.update(project, name, role),
+    onSuccess: () => refresh(),
+    onError: (error) => {
+      pushToast({ title: t('members.updateFailed'), description: describeError(error, t), variant: 'error' })
     },
   })
 
@@ -67,7 +79,7 @@ export function MembersPanel({ project, canManage }: { project: string; canManag
             className="flex items-center gap-1.5"
             onSubmit={(event) => {
               event.preventDefault()
-              if (username.trim()) addMutation.mutate(username.trim())
+              if (username.trim()) addMutation.mutate({ name: username.trim(), role })
             }}
           >
             <Input
@@ -77,6 +89,16 @@ export function MembersPanel({ project, canManage }: { project: string; canManag
               className="h-9 w-32"
               aria-label={t('members.addPlaceholder')}
             />
+            <Select
+              value={role}
+              onChange={(event) => setRole(event.target.value as 'owner' | 'developer' | 'viewer')}
+              className="h-9 w-32"
+              aria-label={t('members.role')}
+            >
+              {(['owner', 'developer', 'viewer'] as const).map((value) => (
+                <option key={value} value={value}>{t(`members.${value}`)}</option>
+              ))}
+            </Select>
             <Button type="submit" size="sm" variant="primary" disabled={addMutation.isPending}>
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {t('members.add')}
@@ -98,7 +120,17 @@ export function MembersPanel({ project, canManage }: { project: string; canManag
             <li key={member.username} className="flex items-center justify-between gap-3 px-5 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-slate-100">{member.username}</span>
-                <Badge tone="neutral">{member.role}</Badge>
+                <Select
+                  value={member.role}
+                  onChange={(event) => updateRoleMutation.mutate({ name: member.username, role: event.target.value })}
+                  className="h-8 w-28"
+                  aria-label={t('members.role')}
+                >
+                  {(['owner', 'developer', 'viewer'] as const).map((value) => (
+                    <option key={value} value={value}>{t(`members.${value}`)}</option>
+                  ))}
+                </Select>
+                <Badge tone="neutral">{member.user_role}</Badge>
               </div>
               <Button
                 variant="ghost"

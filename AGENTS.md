@@ -111,8 +111,9 @@ to link the deployment to the version in the timeline.
 
 The panel has `admin`, `operator` and `viewer` users. The API token and MCP
 server act as `admin`. Non-admin users only see projects where they are a
-member. Ask a human before destructive operations on production. Destructive
-deletes require typed confirmation (`--confirm` in the CLI). Use `--purge` to
+member. Project roles are `owner`, `developer` and `viewer`; viewer is read-only.
+Ask a human before destructive operations on production. Destructive deletes
+require typed confirmation (`--confirm` in the CLI). Use `--purge` to
 remove source code, iteration snapshots and backups; without it the project is
 only unregistered.
 

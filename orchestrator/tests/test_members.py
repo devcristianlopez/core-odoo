@@ -57,3 +57,40 @@ def test_admin_sees_all_projects(
     create_project("two-project")
     projects = harness.client.get("/api/v1/projects", headers=auth_headers).json()
     assert {project["name"] for project in projects} == {"one-project", "two-project"}
+
+
+def test_project_role_controls_write_access(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    _create_user(harness, auth_headers, "role_operator", "operator")
+    create_project("smoke-test")
+    token = _login(harness, "role_operator")
+    headers = {"Authorization": f"Bearer {token}"}
+    added = harness.client.post(
+        "/api/v1/projects/smoke-test/members",
+        json={"username": "role_operator", "role": "viewer"},
+        headers=auth_headers,
+    )
+    assert added.status_code == 201, added.text
+    access = harness.client.get("/api/v1/projects/smoke-test/access", headers=headers)
+    assert access.status_code == 200
+    assert access.json()["role"] == "viewer"
+    forbidden = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "dev"},
+        headers=headers,
+    )
+    assert forbidden.status_code == 403
+
+    updated = harness.client.patch(
+        "/api/v1/projects/smoke-test/members/role_operator",
+        json={"role": "developer"},
+        headers=auth_headers,
+    )
+    assert updated.status_code == 200, updated.text
+    deployed = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "dev"},
+        headers=headers,
+    )
+    assert deployed.status_code == 200, deployed.text

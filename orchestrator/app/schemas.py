@@ -74,14 +74,27 @@ class ProjectRead(BaseModel):
     environments: list[EnvironmentRead] = Field(default_factory=list)
 
 
+ProjectRole = Literal["owner", "developer", "viewer"]
+
+
 class ProjectMemberCreate(BaseModel):
     username: str = Field(min_length=2, max_length=64)
+    role: ProjectRole = "developer"
+
+
+class ProjectMemberUpdate(BaseModel):
+    role: ProjectRole
 
 
 class ProjectMemberRead(BaseModel):
     username: str
-    role: Role
+    role: ProjectRole
+    user_role: Role = "viewer"
     created_at: datetime
+
+
+class ProjectAccessRead(BaseModel):
+    role: Literal["admin", "owner", "developer", "viewer"]
 
 
 class ProjectCreate(BaseModel):

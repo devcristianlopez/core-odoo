@@ -67,12 +67,15 @@ def require_principal(
 def require_write(request: Request, principal: PrincipalDep) -> Principal:
     if request.method in {"GET", "HEAD", "OPTIONS"}:
         return principal
-    if principal.role not in {"admin", "operator"}:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="this action requires operator or admin role",
-        )
-    return principal
+    if principal.role == "admin":
+        return principal
+    project_role = getattr(request.state, "project_role", None)
+    if principal.role == "operator" and project_role in {"owner", "developer"}:
+        return principal
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="this action requires admin or a developer/owner project role",
+    )
 
 
 def require_admin(principal: PrincipalDep) -> Principal:
@@ -90,7 +93,10 @@ def require_project_access(
     session: Annotated[Session, Depends(get_session)],
 ) -> None:
     name = request.path_params.get("name")
-    if not name or principal.role == "admin" or principal.method == "api_token":
+    if not name:
+        return
+    if principal.role == "admin" or principal.method == "api_token":
+        request.state.project_role = "admin"
         return
     project = session.exec(select(Project).where(Project.name == name)).first()
     if project is None:
@@ -106,6 +112,7 @@ def require_project_access(
     ).first()
     if membership is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="project access denied")
+    request.state.project_role = membership.role
 
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]

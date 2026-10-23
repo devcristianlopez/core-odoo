@@ -66,10 +66,17 @@ export interface DeploymentRequest {
   deployed_at?: string | null
 }
 
+export type ProjectRole = 'owner' | 'developer' | 'viewer'
+
 export interface ProjectMember {
   username: string
-  role: UserRole
+  role: ProjectRole
+  user_role: UserRole
   created_at: string
+}
+
+export interface ProjectAccess {
+  role: 'admin' | ProjectRole
 }
 
 export interface Project {
