@@ -323,7 +323,7 @@ fi
 
 if [[ "$HAS_DEV" -eq 1 ]]; then
     log "removing previous ${STAGE} environment"
-    api_request DELETE "/projects/${PROJECT}/environments/${STAGE}"
+    api_request DELETE "/projects/${PROJECT}/environments/${STAGE}?confirm=${PROJECT}%2F${STAGE}"
     expect_status "delete previous environment" 200 202 204
     wait_compose_absent "$COMPOSE_PROJECT" 90
 fi
@@ -487,7 +487,7 @@ fi
 # --- 7. Delete and assert clean ---------------------------------------------
 
 log "deleting project ${PROJECT}"
-api_request DELETE "/projects/${PROJECT}"
+api_request DELETE "/projects/${PROJECT}?confirm=${PROJECT}"
 expect_status "delete project" 200 202 204
 
 wait_clean 90

@@ -7,7 +7,6 @@ from typing import Any
 
 import typer
 from rich.console import Console
-from rich.prompt import Confirm
 from rich.table import Table
 
 from ..api import OrchestratorClient
@@ -86,15 +85,23 @@ def project_delete(
     ctx: typer.Context,
     name: str = argument("arg.name", ...),
     yes: bool = option("opt.yes", False, "--yes", "-y"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
+    purge: bool = option("opt.purge", False, "--purge"),
 ) -> None:
-    """Delete a project."""
-    if not yes:
-        if machine_output():
+    """Delete a project (use --purge to remove source and snapshots)."""
+    expected = name
+    if confirm is None:
+        if machine_output() and not yes:
             raise CliError(t("error.confirmation_required"), code="confirmation_required")
-        if not Confirm.ask(t("prompt.confirm_delete", name=name), default=False):
-            info(t("msg.cancelled"))
-            return
-    _client(ctx).delete_project(name)
+        if not yes:
+            typed = typer.prompt(t("prompt.type_project_name", name=name))
+            if typed != expected:
+                info(t("msg.cancelled"))
+                return
+        confirm = expected
+    elif confirm != expected:
+        raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
+    _client(ctx).delete_project(name, confirm, purge)
     if machine_output():
         emit({"deleted": True, "name": name})
         return
@@ -177,17 +184,22 @@ def env_delete(
     name: str = argument("arg.name", ...),
     stage: Stage = option("opt.stage", ..., "--stage"),
     yes: bool = option("opt.yes", False, "--yes", "-y"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
 ) -> None:
     """Delete an environment."""
-    if not yes:
-        if machine_output():
+    expected = f"{name}/{stage.value}"
+    if confirm is None:
+        if machine_output() and not yes:
             raise CliError(t("error.confirmation_required"), code="confirmation_required")
-        if not Confirm.ask(
-            t("prompt.confirm_delete_env", name=name, stage=stage.value), default=False
-        ):
-            info(t("msg.cancelled"))
-            return
-    _client(ctx).delete_environment(name, stage.value)
+        if not yes:
+            typed = typer.prompt(t("prompt.type_environment", value=expected))
+            if typed != expected:
+                info(t("msg.cancelled"))
+                return
+        confirm = expected
+    elif confirm != expected:
+        raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
+    _client(ctx).delete_environment(name, stage.value, confirm)
     if machine_output():
         emit({"deleted": True, "name": name, "stage": stage.value})
         return

@@ -14,6 +14,7 @@ const es = {
     create: 'Crear',
     delete: 'Eliminar',
     confirm: 'Confirmar',
+    confirmValue: 'Escribí {{value}} para confirmar.',
     search: 'Buscar',
     actions: 'Acciones',
     back: 'Volver',

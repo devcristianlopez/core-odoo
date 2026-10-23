@@ -118,7 +118,7 @@ export default function EnvironmentDetailPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => api.environments.remove(name, stage),
+    mutationFn: () => api.environments.remove(name, stage, `${name}/${stage}`),
     onSuccess: () => {
       setDeleteOpen(false)
       invalidate()
@@ -608,6 +608,8 @@ export default function EnvironmentDetailPage() {
         confirmLabel={
           deleteMutation.isPending ? t('common.deleting') : t('environment.deleteEnvironment')
         }
+        requireText={`${name}/${stage}`}
+        requireTextHint={t('common.confirmValue', { value: `${name}/${stage}` })}
         destructive
         loading={deleteMutation.isPending}
       />

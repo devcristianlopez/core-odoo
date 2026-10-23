@@ -93,7 +93,7 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | GET | `/projects` | – | `[Project]` |
 | POST | `/projects` | `{name, template, repo_url?}` | `Project` |
 | GET | `/projects/{name}` | – | `Project` |
-| DELETE | `/projects/{name}` | – | `{deleted: true}` |
+| DELETE | `/projects/{name}` | `?confirm=<name>&purge=<bool>` | `{deleted: true}` |
 | GET | `/projects/{name}/environments` | – | `[Environment]` |
 | POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?, confirm?}` | `Environment` |
 | GET | `/projects/{name}/iterations` | – | `[Iteration]` |
@@ -109,7 +109,7 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
-| DELETE | `/projects/{name}/environments/{stage}` | – | `{deleted: true}` |
+| DELETE | `/projects/{name}/environments/{stage}` | `?confirm=<name>/<stage>` | `{deleted: true}` |
 | GET | `/projects/{name}/environments/{stage}/logs` | `?tail=200` | `{logs: string}` |
 | POST | `/projects/{name}/environments/{stage}/backup` | – | `{backup: true, path, created_at}` |
 | GET | `/metrics/query` | `?query=<promql>` | Prometheus JSON passthrough |
@@ -233,7 +233,7 @@ core-odoo init [--lang es|en] [--domain-suffix <suffix>] [--non-interactive]
 core-odoo up | down | restart | status
 core-odoo project create <name> [--template <template>]
 core-odoo project list
-core-odoo project delete <name>
+core-odoo project delete <name> [--confirm <name>] [--purge]
 core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteration <version>] [--confirm <name>]
 core-odoo iteration list <name>
 core-odoo iteration create <name> --version <version> --title <title>
@@ -241,7 +241,7 @@ core-odoo iteration restore <name> <version>
 core-odoo iteration diff <name> <version> [--against <version>]
 core-odoo iteration backup <name> <version> --stage <stage>
 core-odoo env stop|start|restart <name> --stage <stage>
-core-odoo env delete <name> --stage <stage>
+core-odoo env delete <name> --stage <stage> [--confirm <name>/<stage>]
 core-odoo logs <name> --stage <stage> [--tail 200]
 core-odoo backup <name> --stage <stage>
 core-odoo upgrade

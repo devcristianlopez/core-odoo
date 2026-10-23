@@ -160,7 +160,14 @@ def delete_project(
     principal: AdminDep,
     provider: ProviderDep,
     settings: SettingsDep,
+    confirm: str = Query(..., min_length=1, max_length=64),
+    purge: bool = Query(default=False),
 ) -> DeletedResponse:
+    if confirm != name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="confirm must exactly match the project name",
+        )
     project = _get_project(session, name)
     environments = session.exec(
         select(Environment).where(Environment.project_id == project.id)
@@ -190,15 +197,16 @@ def delete_project(
     for member in members:
         session.delete(member)
     session.delete(project)
-    for path in (
-        settings.core_projects_dir / name,
-        settings.iterations_dir / name,
-    ):
-        if path.exists():
-            shutil.rmtree(path)
-    for backup_dir in settings.backups_dir.glob(f"{name}-*"):
-        if backup_dir.is_dir():
-            shutil.rmtree(backup_dir)
+    if purge:
+        for path in (
+            settings.core_projects_dir / name,
+            settings.iterations_dir / name,
+        ):
+            if path.exists():
+                shutil.rmtree(path)
+        for backup_dir in settings.backups_dir.glob(f"{name}-*"):
+            if backup_dir.is_dir():
+                shutil.rmtree(backup_dir)
     record_audit(
         session,
         actor=principal.username,
@@ -206,7 +214,7 @@ def delete_project(
         target=name,
         details={
             "environments": [env.stage for env in environments],
-            "source_removed": True,
+            "purged": purge,
         },
     )
     session.commit()
@@ -595,7 +603,13 @@ def delete_environment(
     principal: AdminDep,
     provider: ProviderDep,
     settings: SettingsDep,
+    confirm: str = Query(..., min_length=1, max_length=80),
 ) -> DeletedResponse:
+    if confirm != f"{name}/{stage}":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="confirm must match '<project>/<stage>'",
+        )
     project = _get_project(session, name)
     environment = _get_environment(session, project, stage)
     spec = build_spec(settings, project, environment)

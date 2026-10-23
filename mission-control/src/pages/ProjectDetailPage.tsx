@@ -151,7 +151,7 @@ export default function ProjectDetailPage() {
 
   const deleteEnvironmentMutation = useMutation({
     mutationFn: (environment: Environment) =>
-      api.environments.remove(name, environment.stage),
+      api.environments.remove(name, environment.stage, `${name}/${environment.stage}`),
     onSuccess: (_result, environment) => {
       setEnvironmentToDelete(null)
       invalidateAll()
@@ -173,7 +173,7 @@ export default function ProjectDetailPage() {
   })
 
   const deleteProjectMutation = useMutation({
-    mutationFn: () => api.projects.remove(name),
+    mutationFn: () => api.projects.remove(name, name, true),
     onSuccess: () => {
       setDeleteProjectOpen(false)
       invalidateAll()
@@ -692,6 +692,8 @@ export default function ProjectDetailPage() {
         confirmLabel={
           deleteProjectMutation.isPending ? t('common.deleting') : t('project.deleteProject')
         }
+        requireText={name}
+        requireTextHint={t('common.confirmValue', { value: name })}
         destructive
         loading={deleteProjectMutation.isPending}
       />
@@ -715,6 +717,10 @@ export default function ProjectDetailPage() {
             ? t('common.deleting')
             : t('environment.deleteEnvironment')
         }
+        requireText={environmentToDelete ? `${name}/${environmentToDelete.stage}` : undefined}
+        requireTextHint={t('common.confirmValue', {
+          value: environmentToDelete ? `${name}/${environmentToDelete.stage}` : '',
+        })}
         destructive
         loading={deleteEnvironmentMutation.isPending}
       />

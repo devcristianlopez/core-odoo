@@ -145,7 +145,8 @@ def test_delete_environment(
     create_project("smoke-test")
     _deploy(harness, auth_headers)
     response = harness.client.delete(
-        "/api/v1/projects/smoke-test/environments/dev", headers=auth_headers
+        "/api/v1/projects/smoke-test/environments/dev?confirm=smoke-test%2Fdev",
+        headers=auth_headers,
     )
     assert response.status_code == 200
     assert harness.provider.calls[-1][0] == "delete"

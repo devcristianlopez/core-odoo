@@ -101,7 +101,7 @@ export default function ProjectsPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (project: Project) => api.projects.remove(project.name),
+    mutationFn: (project: Project) => api.projects.remove(project.name, project.name, true),
     onSuccess: (_result, project) => {
       setProjectToDelete(null)
       invalidateProjects()
@@ -413,6 +413,8 @@ export default function ProjectsPage() {
         confirmLabel={
           deleteMutation.isPending ? t('common.deleting') : t('projects.deleteAction')
         }
+        requireText={projectToDelete?.name}
+        requireTextHint={t('common.confirmValue', { value: projectToDelete?.name ?? '' })}
         destructive
         loading={deleteMutation.isPending}
       />

@@ -22,7 +22,9 @@ def test_create_list_get_project(
     assert listing.status_code == 200
     assert [item["name"] for item in listing.json()] == ["smoke-test"]
 
-    detail = harness.client.get("/api/v1/projects/smoke-test", headers=auth_headers)
+    detail = harness.client.get(
+        "/api/v1/projects/smoke-test?confirm=smoke-test", headers=auth_headers
+    )
     assert detail.status_code == 200
     assert detail.json()["name"] == "smoke-test"
 
@@ -59,7 +61,9 @@ def test_delete_project_cleans_environments(
     )
     assert deploy.status_code == 200
 
-    response = harness.client.delete("/api/v1/projects/smoke-test", headers=auth_headers)
+    response = harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=smoke-test", headers=auth_headers
+    )
     assert response.status_code == 200
     assert response.json() == {"deleted": True}
     assert harness.provider.calls[-1][0] == "delete"
@@ -78,12 +82,17 @@ def test_delete_project_provider_failure_is_reported(
         "/api/v1/projects/smoke-test/deploy", json={"stage": "dev"}, headers=auth_headers
     )
     harness.provider.fail_with = ProviderError("docker compose down failed")
-    response = harness.client.delete("/api/v1/projects/smoke-test", headers=auth_headers)
+    response = harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=smoke-test", headers=auth_headers
+    )
     assert response.status_code == 502
     assert response.json()["detail"] == "docker compose down failed"
     # project is kept so the operation can be retried
     assert (
-        harness.client.get("/api/v1/projects/smoke-test", headers=auth_headers).status_code == 200
+        harness.client.get(
+            "/api/v1/projects/smoke-test?confirm=smoke-test", headers=auth_headers
+        ).status_code
+        == 200
     )
 
 
@@ -101,6 +110,26 @@ def test_project_files_are_removed_on_delete(
     harness: AppHarness, auth_headers: dict[str, str], create_project, settings
 ) -> None:
     create_project("smoke-test")
-    harness.client.delete("/api/v1/projects/smoke-test", headers=auth_headers)
+    harness.client.delete("/api/v1/projects/smoke-test?confirm=smoke-test&purge=true", headers=auth_headers)
     assert not (settings.core_projects_dir / "smoke-test").exists()
     assert not (settings.iterations_dir / "smoke-test").exists()
+
+
+def test_delete_project_requires_typed_confirmation(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert (
+        harness.client.delete("/api/v1/projects/smoke-test", headers=auth_headers).status_code
+        == 422
+    )
+    wrong = harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=nope",
+        headers=auth_headers,
+    )
+    assert wrong.status_code == 400
+    correct = harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=smoke-test&purge=true",
+        headers=auth_headers,
+    )
+    assert correct.status_code == 200

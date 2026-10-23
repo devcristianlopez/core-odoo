@@ -102,7 +102,7 @@ def test_project_crud_shapes(settings: RuntimeSettings) -> None:
 
     assert client.create_project("demo", "odoo-module") == {"name": "demo"}
     assert client.list_projects() == [{"name": "demo"}]
-    assert client.delete_project("demo") == {"deleted": True}
+    assert client.delete_project("demo", "demo") == {"deleted": True}
 
     calls = [call for instance in FakeClient.instances for call in instance.calls]
     assert calls[0] == {
@@ -133,7 +133,7 @@ def test_environment_endpoints(settings: RuntimeSettings) -> None:
 
     client.deploy("demo", "dev", "main")
     client.environment_action("demo", "dev", "stop")
-    client.delete_environment("demo", "dev")
+    client.delete_environment("demo", "dev", "demo/dev")
     assert client.logs("demo", "dev", 50) == "line"
     assert client.backup("demo", "dev") == {"path": "/tmp/backup.zip"}
 
@@ -171,7 +171,7 @@ def test_error_envelope_is_surfaced(settings: RuntimeSettings) -> None:
         )
     ]
     with pytest.raises(CliError) as excinfo:
-        api.OrchestratorClient(settings).delete_project("missing")
+        api.OrchestratorClient(settings).delete_project("missing", "missing")
     assert excinfo.value.code == "http_error"
     assert "Project missing" in excinfo.value.message
 

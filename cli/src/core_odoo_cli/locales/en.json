@@ -152,5 +152,9 @@
   "cmd.iteration.diff": "Compare an iteration with the previous one.",
   "cmd.iteration.backup": "Create a database dump linked to an iteration.",
   "opt.against": "Base version for the diff.",
-  "opt.confirm": "Explicit production confirmation (project name)."
+  "opt.confirm": "Explicit production confirmation (project name).",
+  "prompt.type_project_name": "Type the project name ({name}) to confirm:",
+  "prompt.type_environment": "Type '{value}' to confirm:",
+  "error.confirmation_mismatch": "Confirmation does not match.",
+  "opt.purge": "Also remove source code, snapshots and backups."
 }

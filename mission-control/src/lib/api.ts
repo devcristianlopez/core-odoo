@@ -295,8 +295,11 @@ export const api = {
     create(input: CreateProjectInput): Promise<Project> {
       return request<Project>('/projects', { method: 'POST', body: input })
     },
-    remove(name: string): Promise<{ deleted: boolean }> {
-      return request(projectPath(name), { method: 'DELETE' })
+    remove(name: string, confirm: string, purge = false): Promise<{ deleted: boolean }> {
+      return request(projectPath(name), {
+        method: 'DELETE',
+        query: { confirm, ...(purge ? { purge: true } : {}) },
+      })
     },
   },
   members: {
@@ -363,8 +366,8 @@ export const api = {
     restart(name: string, stage: string): Promise<Environment> {
       return request<Environment>(`${environmentPath(name, stage)}/restart`, { method: 'POST' })
     },
-    remove(name: string, stage: string): Promise<{ deleted: boolean }> {
-      return request(environmentPath(name, stage), { method: 'DELETE' })
+    remove(name: string, stage: string, confirm: string): Promise<{ deleted: boolean }> {
+      return request(environmentPath(name, stage), { method: 'DELETE', query: { confirm } })
     },
     logs(name: string, stage: string, tail = 200): Promise<{ logs: string }> {
       return request<{ logs: string }>(`${environmentPath(name, stage)}/logs`, {

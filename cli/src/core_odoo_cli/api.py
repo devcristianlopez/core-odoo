@@ -122,8 +122,13 @@ class OrchestratorClient:
         payload = self._request("GET", "/projects")
         return payload if isinstance(payload, list) else []
 
-    def delete_project(self, name: str) -> dict[str, Any]:
-        return self._request("DELETE", f"/projects/{name}")
+    def delete_project(
+        self, name: str, confirm: str, purge: bool = False
+    ) -> dict[str, Any]:
+        params = {"confirm": confirm}
+        if purge:
+            params["purge"] = "true"
+        return self._request("DELETE", f"/projects/{name}", params=params)
 
     # ---------------------------------------------------------------- iterations
 
@@ -200,10 +205,11 @@ class OrchestratorClient:
             timeout=DEPLOY_TIMEOUT,
         )
 
-    def delete_environment(self, name: str, stage: str) -> dict[str, Any]:
+    def delete_environment(self, name: str, stage: str, confirm: str) -> dict[str, Any]:
         return self._request(
             "DELETE",
             f"/projects/{name}/environments/{stage}",
+            params={"confirm": confirm},
             timeout=DEPLOY_TIMEOUT,
         )
 

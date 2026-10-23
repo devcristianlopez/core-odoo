@@ -96,6 +96,10 @@ el snapshot antes de desplegar.
 backup` crea un dump de PostgreSQL y lo asocia a la iteración; restaurar la base
 desde ese dump todavía es una operación manual.
 
+Borrar un proyecto sin `--purge` desregistra el proyecto y elimina sus entornos,
+pero conserva el código fuente y las iteraciones. `--purge` elimina también el
+código, los snapshots y los backups.
+
 ### Backups
 
 ```bash
