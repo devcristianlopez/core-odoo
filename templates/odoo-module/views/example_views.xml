@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2026 Core Odoo contributors
+     SPDX-License-Identifier: LGPL-3.0 -->
+<odoo>
+    <record id="view_example_model_list" model="ir.ui.view">
+        <field name="name">__MODULE__.example.list</field>
+        <field name="model">__MODULE__.example</field>
+        <field name="arch" type="xml">
+            <list string="__MODULE_TITLE__">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_example_model_form" model="ir.ui.view">
+        <field name="name">__MODULE__.example.form</field>
+        <field name="model">__MODULE__.example</field>
+        <field name="arch" type="xml">
+            <form string="__MODULE_TITLE__">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <field name="name"/>
+                        <field name="active" widget="boolean_toggle"/>
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_example_model_search" model="ir.ui.view">
+        <field name="name">__MODULE__.example.search</field>
+        <field name="model">__MODULE__.example</field>
+        <field name="arch" type="xml">
+            <search string="__MODULE_TITLE__">
+                <field name="name"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_example_model" model="ir.actions.act_window">
+        <field name="name">__MODULE_TITLE__</field>
+        <field name="res_model">__MODULE__.example</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_example_model_search"/>
+    </record>
+
+    <menuitem id="menu___MODULE___root" name="__MODULE_TITLE__" sequence="10"/>
+    <menuitem
+        id="menu___MODULE___example"
+        name="Examples"
+        parent="menu___MODULE___root"
+        action="action_example_model"
+        sequence="10"/>
+</odoo>

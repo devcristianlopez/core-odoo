@@ -1,0 +1,125 @@
+# Prometheus alerting rules — Core Odoo.
+#
+# Metrics come from:
+#   - up                        (Prometheus target health)
+#   - traefik_*                 (Traefik metrics entrypoint)
+#   - node_*                    (node-exporter)
+#   - container_*               (cAdvisor)
+#   - core_*                    (orchestrator /metrics)
+
+groups:
+  - name: core-odoo-availability
+    rules:
+      - alert: EnvironmentDown
+        expr: up{job=~"orchestrator|traefik"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: control-plane
+        annotations:
+          summary: "Control-plane target {{ $labels.instance }} is down"
+          description: >-
+            Prometheus has been unable to scrape {{ $labels.job }} at
+            {{ $labels.instance }} for more than 2 minutes. Environments behind
+            it are unreachable until the target recovers.
+
+  - name: core-odoo-http
+    rules:
+      - alert: HighHttp5xxRate
+        expr: |
+          (
+            sum by (service) (rate(traefik_service_requests_total{code=~"5.."}[5m]))
+            /
+            sum by (service) (rate(traefik_service_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: edge
+        annotations:
+          summary: "High 5xx rate on {{ $labels.service }}"
+          description: >-
+            More than 5% of the requests routed by Traefik to
+            {{ $labels.service }} have returned a 5xx response over the last
+            5 minutes.
+
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, service) (rate(traefik_service_request_duration_seconds_bucket[5m]))
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: edge
+        annotations:
+          summary: "p95 latency above 2s on {{ $labels.service }}"
+          description: >-
+            The 95th percentile response time for {{ $labels.service }} has
+            been above 2 seconds for at least 5 minutes.
+
+  - name: core-odoo-host
+    rules:
+      - alert: DiskAlmostFull
+        expr: |
+          (
+            1
+            - node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay|squashfs"}
+            /
+            node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay|squashfs"}
+          ) * 100 > 85
+        for: 10m
+        labels:
+          severity: critical
+          component: host
+        annotations:
+          summary: "Disk usage above 85% on {{ $labels.instance }}"
+          description: >-
+            The filesystem mounted at {{ $labels.mountpoint }} on
+            {{ $labels.instance }} is {{ printf "%.1f" $value }}% full.
+            Prune old images, volumes or backups before it fills up.
+
+  - name: core-odoo-operations
+    rules:
+      - alert: BackupMissing
+        expr: |
+          time() - max by (project, stage) (core_backup_last_success_timestamp_seconds) > 86400
+        for: 30m
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "No successful backup for {{ $labels.project }}/{{ $labels.stage }} in 24h"
+          description: >-
+            The last successful backup for {{ $labels.project }} ({{ $labels.stage }})
+            is older than 24 hours. Check the backup job and disk space.
+
+      - alert: DeployFailed
+        expr: |
+          increase(core_deploy_total{status="failed"}[15m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          component: deploy
+        annotations:
+          summary: "Deploy failed for {{ $labels.project }}/{{ $labels.stage }}"
+          description: >-
+            At least one deploy for {{ $labels.project }} ({{ $labels.stage }})
+            failed in the last 15 minutes. Inspect the orchestrator audit log
+            and the environment logs.
+
+      - alert: OdooCronLag
+        expr: |
+          max by (project, stage, cron) (core_odoo_cron_lag_seconds) > 3600
+        for: 15m
+        labels:
+          severity: warning
+          component: odoo
+        annotations:
+          summary: "Odoo cron {{ $labels.cron }} is lagging"
+          description: >-
+            The cron {{ $labels.cron }} for {{ $labels.project }}
+            ({{ $labels.stage }}) has not run successfully for
+            {{ printf "%.0f" $value }} seconds. Check the Odoo workers and the
+            cron configuration.

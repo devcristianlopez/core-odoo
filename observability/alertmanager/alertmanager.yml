@@ -1,0 +1,23 @@
+# Alertmanager — Core Odoo.
+#
+# The default receiver points at the orchestrator webhook placeholder, which
+# currently only logs the payload (no external notifications). Replace `url`
+# with a Slack/Teams/Discord webhook to receive real notifications.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: webhook
+  group_by:
+    - alertname
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: webhook
+    webhook_configs:
+      - url: http://orchestrator:8080/api/v1/alerts
+        send_resolved: true
+        max_alerts: 0

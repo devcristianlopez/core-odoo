@@ -1,0 +1,29 @@
+# Core Odoo — rendered per environment by the orchestrator.
+# Placeholders are substituted from env.template (see README.md).
+[options]
+http_interface = 0.0.0.0
+http_port = 8069
+admin_passwd = ${ODOO_MASTER_PASSWORD}
+db_host = db
+db_port = 5432
+db_user = odoo
+db_password = ${POSTGRES_PASSWORD}
+dbfilter = ^${ODOO_DB}$
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+proxy_mode = True
+list_db = False
+workers = ${CORE_WORKERS}
+max_cron_threads = 1
+log_level = ${CORE_LOG_LEVEL}
+
+# "all" disables demo data (staging/prod). Leave the value empty for dev when
+# demo data is required; entrypoint.sh also passes --without-demo=True when
+# ODOO_DEMO=0.
+without_demo = ${ODOO_WITHOUT_DEMO}
+
+# Mail is captured by Mailpit for dev/staging. Odoo never talks to the internet.
+smtp_host = mailpit
+smtp_port = 1025
+smtp_user =
+smtp_password =
+smtp_ssl = False

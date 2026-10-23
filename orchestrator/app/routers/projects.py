@@ -1,0 +1,493 @@
+"""Project and environment lifecycle endpoints."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlmodel import select
+
+from ..deps import PrincipalDep, ProviderDep, SessionDep, SettingsDep
+from ..metrics import record_backup_success, record_deploy
+from ..models import Environment, Project, utcnow
+from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
+from ..providers.docker import backup_filename
+from ..scaffold import ensure_project_layout
+from ..schemas import (
+    BackupResponse,
+    DeletedResponse,
+    DeployRequest,
+    EnvironmentRead,
+    LogsResponse,
+    ProjectCreate,
+    ProjectRead,
+)
+from ..services import (
+    build_spec,
+    compose_project_name,
+    database_name,
+    environment_read,
+    environment_url,
+    new_secret,
+    project_read,
+    record_audit,
+)
+
+router = APIRouter(tags=["projects"])
+
+ProviderOperation = Callable[[EnvironmentSpec], ProviderStatus]
+
+
+# --------------------------------------------------------------------- helpers
+
+
+def _get_project(session: SessionDep, name: str) -> Project:
+    project = session.exec(select(Project).where(Project.name == name)).first()
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="project not found")
+    return project
+
+
+def _get_environment(session: SessionDep, project: Project, stage: str) -> Environment:
+    environment = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == stage,
+        )
+    ).first()
+    if environment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="environment not found")
+    return environment
+
+
+def _audit_failure(
+    session: SessionDep,
+    *,
+    actor: str,
+    action: str,
+    target: str,
+    exc: ProviderError,
+) -> None:
+    record_audit(
+        session,
+        actor=actor,
+        action=action,
+        target=target,
+        status="failed",
+        details={"error": exc.message, "output": exc.details},
+    )
+    session.commit()
+
+
+# --------------------------------------------------------------------- projects
+
+
+@router.get("/projects", response_model=list[ProjectRead])
+def list_projects(session: SessionDep, principal: PrincipalDep) -> list[ProjectRead]:
+    projects = session.exec(select(Project).order_by(Project.name)).all()
+    return [project_read(session, project) for project in projects]
+
+
+@router.post("/projects", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
+def create_project(
+    payload: ProjectCreate,
+    session: SessionDep,
+    principal: PrincipalDep,
+    settings: SettingsDep,
+) -> ProjectRead:
+    existing = session.exec(select(Project).where(Project.name == payload.name)).first()
+    if existing is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="project already exists")
+
+    ensure_project_layout(settings, payload.name, payload.template)
+    project = Project(
+        name=payload.name,
+        template=payload.template,
+        repo_url=payload.repo_url,
+        created_at=utcnow(),
+    )
+    session.add(project)
+    session.flush()
+    record_audit(
+        session,
+        actor=principal.username,
+        action="project.create",
+        target=payload.name,
+        details={"template": payload.template, "repo_url": payload.repo_url},
+    )
+    session.commit()
+    session.refresh(project)
+    return project_read(session, project)
+
+
+@router.get("/projects/{name}", response_model=ProjectRead)
+def get_project(name: str, session: SessionDep, principal: PrincipalDep) -> ProjectRead:
+    project = _get_project(session, name)
+    return project_read(session, project)
+
+
+@router.delete("/projects/{name}", response_model=DeletedResponse)
+def delete_project(
+    name: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> DeletedResponse:
+    project = _get_project(session, name)
+    environments = session.exec(
+        select(Environment).where(Environment.project_id == project.id)
+    ).all()
+
+    for environment in environments:
+        spec = build_spec(settings, project, environment)
+        try:
+            provider.delete(spec)
+        except ProviderError as exc:
+            _audit_failure(
+                session,
+                actor=principal.username,
+                action="project.delete",
+                target=name,
+                exc=exc,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message
+            ) from exc
+
+    for environment in environments:
+        session.delete(environment)
+    session.delete(project)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="project.delete",
+        target=name,
+        details={"environments": [env.stage for env in environments]},
+    )
+    session.commit()
+    return DeletedResponse(deleted=True)
+
+
+# ----------------------------------------------------------------- environments
+
+
+@router.get("/projects/{name}/environments", response_model=list[EnvironmentRead])
+def list_environments(
+    name: str, session: SessionDep, principal: PrincipalDep
+) -> list[EnvironmentRead]:
+    project = _get_project(session, name)
+    environments = session.exec(
+        select(Environment).where(Environment.project_id == project.id).order_by(Environment.stage)
+    ).all()
+    return [environment_read(project.name, env) for env in environments]
+
+
+@router.post(
+    "/projects/{name}/deploy",
+    response_model=EnvironmentRead,
+)
+def deploy(
+    name: str,
+    payload: DeployRequest,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> EnvironmentRead:
+    project = _get_project(session, name)
+    environment = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == payload.stage,
+        )
+    ).first()
+
+    now = utcnow()
+    if environment is None:
+        environment = Environment(
+            project_id=project.id,
+            stage=payload.stage,
+            status="provisioning",
+            url=environment_url(settings, project.name, payload.stage),
+            compose_project=compose_project_name(project.name, payload.stage),
+            services=[],
+            branch=payload.branch,
+            modules=list(payload.modules or []),
+            db_name=database_name(project.name, payload.stage),
+            db_password=new_secret(24),
+            master_password=new_secret(24),
+            odoo_api_key=new_secret(32),
+            gateway_jwt_secret=new_secret(32),
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(environment)
+    else:
+        environment.branch = payload.branch
+        environment.modules = list(payload.modules or [])
+        environment.status = "provisioning"
+        environment.updated_at = now
+    session.commit()
+    session.refresh(environment)
+
+    spec = build_spec(settings, project, environment)
+    try:
+        result = provider.deploy(spec)
+    except ProviderError as exc:
+        record_deploy(name, payload.stage, "failed")
+        environment.status = "error"
+        environment.updated_at = utcnow()
+        session.add(environment)
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action="environment.deploy",
+            target=f"{name}/{payload.stage}",
+            exc=exc,
+        )
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
+
+    record_deploy(name, payload.stage, "success")
+    environment.status = result.status or "running"
+    environment.services = result.services
+    environment.url = spec.url
+    environment.updated_at = utcnow()
+    session.add(environment)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.deploy",
+        target=f"{name}/{payload.stage}",
+        details={
+            "branch": payload.branch,
+            "modules": list(payload.modules or []),
+            "services": [service.get("name") for service in result.services],
+        },
+    )
+    session.commit()
+    session.refresh(environment)
+    return environment_read(name, environment)
+
+
+def _environment_action(
+    *,
+    action: str,
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+    operation: ProviderOperation,
+) -> EnvironmentRead:
+    project = _get_project(session, name)
+    environment = _get_environment(session, project, stage)
+    spec = build_spec(settings, project, environment)
+    try:
+        result = operation(spec)
+    except ProviderError as exc:
+        environment.status = "error"
+        environment.updated_at = utcnow()
+        session.add(environment)
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action=action,
+            target=f"{name}/{stage}",
+            exc=exc,
+        )
+        code = (
+            status.HTTP_409_CONFLICT
+            if "has not been deployed" in exc.message
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code=code, detail=exc.message) from exc
+
+    environment.status = result.status
+    environment.services = result.services
+    environment.updated_at = utcnow()
+    session.add(environment)
+    record_audit(
+        session,
+        actor=principal.username,
+        action=action,
+        target=f"{name}/{stage}",
+        details={"status": result.status},
+    )
+    session.commit()
+    session.refresh(environment)
+    return environment_read(name, environment)
+
+
+@router.post("/projects/{name}/environments/{stage}/start", response_model=EnvironmentRead)
+def start_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> EnvironmentRead:
+    return _environment_action(
+        action="environment.start",
+        name=name,
+        stage=stage,
+        session=session,
+        principal=principal,
+        provider=provider,
+        settings=settings,
+        operation=provider.start,
+    )
+
+
+@router.post("/projects/{name}/environments/{stage}/stop", response_model=EnvironmentRead)
+def stop_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> EnvironmentRead:
+    return _environment_action(
+        action="environment.stop",
+        name=name,
+        stage=stage,
+        session=session,
+        principal=principal,
+        provider=provider,
+        settings=settings,
+        operation=provider.stop,
+    )
+
+
+@router.post("/projects/{name}/environments/{stage}/restart", response_model=EnvironmentRead)
+def restart_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> EnvironmentRead:
+    return _environment_action(
+        action="environment.restart",
+        name=name,
+        stage=stage,
+        session=session,
+        principal=principal,
+        provider=provider,
+        settings=settings,
+        operation=provider.restart,
+    )
+
+
+@router.delete("/projects/{name}/environments/{stage}", response_model=DeletedResponse)
+def delete_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> DeletedResponse:
+    project = _get_project(session, name)
+    environment = _get_environment(session, project, stage)
+    spec = build_spec(settings, project, environment)
+    try:
+        provider.delete(spec)
+    except ProviderError as exc:
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action="environment.delete",
+            target=f"{name}/{stage}",
+            exc=exc,
+        )
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
+
+    session.delete(environment)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.delete",
+        target=f"{name}/{stage}",
+    )
+    session.commit()
+    return DeletedResponse(deleted=True)
+
+
+@router.get("/projects/{name}/environments/{stage}/logs", response_model=LogsResponse)
+def environment_logs(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+    tail: int = Query(default=200, ge=1, le=10000),
+) -> LogsResponse:
+    project = _get_project(session, name)
+    environment = _get_environment(session, project, stage)
+    spec = build_spec(settings, project, environment)
+    try:
+        logs = provider.logs(spec, tail)
+    except ProviderError as exc:
+        code = (
+            status.HTTP_409_CONFLICT
+            if "has not been deployed" in exc.message
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code=code, detail=exc.message) from exc
+    return LogsResponse(logs=logs)
+
+
+@router.post(
+    "/projects/{name}/environments/{stage}/backup",
+    response_model=BackupResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def backup_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> BackupResponse:
+    project = _get_project(session, name)
+    environment = _get_environment(session, project, stage)
+    spec = build_spec(settings, project, environment)
+    created_at = datetime.now(UTC)
+    destination = (
+        settings.backups_dir / f"{name}-{stage}" / backup_filename(name, stage, created_at)
+    )
+    try:
+        path = provider.backup(spec, destination)
+    except ProviderError as exc:
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action="environment.backup",
+            target=f"{name}/{stage}",
+            exc=exc,
+        )
+        code = (
+            status.HTTP_409_CONFLICT
+            if "has not been deployed" in exc.message
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code=code, detail=exc.message) from exc
+
+    record_backup_success(name, stage, created_at.timestamp())
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.backup",
+        target=f"{name}/{stage}",
+        details={"path": str(path)},
+    )
+    session.commit()
+    return BackupResponse(backup=True, path=str(path), created_at=created_at)

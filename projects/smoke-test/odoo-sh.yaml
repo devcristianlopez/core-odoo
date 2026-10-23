@@ -1,0 +1,20 @@
+# Core Odoo project descriptor — disposable E2E fixture.
+project: smoke-test
+odoo_version: "20.0"
+
+stages:
+  dev:
+    branches:
+      - dev
+  staging:
+    branches:
+      - staging
+  prod:
+    branches:
+      - main
+
+install_modules:
+  - smoke_test
+
+tests:
+  enabled: true

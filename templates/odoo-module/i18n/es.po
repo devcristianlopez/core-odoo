@@ -1,0 +1,41 @@
+# Spanish translation for __MODULE_TITLE__
+# Copyright 2026 Core Odoo contributors
+# SPDX-License-Identifier: LGPL-3.0
+msgid ""
+msgstr ""
+"Project-Id-Version: __MODULE__ 20.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-01-01 00:00+0000\n"
+"Last-Translator: Core Odoo <hello@core-odoo.local>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: __MODULE__
+#: model:ir.model.fields,field_description:__MODULE__.field___MODULE___example__name
+msgid "Name"
+msgstr "Nombre"
+
+#. module: __MODULE__
+#: model:ir.model.fields,field_description:__MODULE__.field___MODULE___example__description
+msgid "Description"
+msgstr "Descripción"
+
+#. module: __MODULE__
+#: model:ir.model.fields,field_description:__MODULE__.field___MODULE___example__active
+msgid "Active"
+msgstr "Activo"
+
+#. module: __MODULE__
+#: model:ir.ui.menu,name:__MODULE__.menu___MODULE___root
+msgid "__MODULE_TITLE__"
+msgstr "__MODULE_TITLE__"
+
+#. module: __MODULE__
+#: model:ir.ui.menu,name:__MODULE__.menu___MODULE___example
+msgid "Examples"
+msgstr "Ejemplos"

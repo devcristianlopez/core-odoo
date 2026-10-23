@@ -1,0 +1,153 @@
+# Core Odoo — control plane (Traefik, orchestrator API, Mission Control).
+#
+# Only 80/443 are published on the host. Every other service is reachable
+# through Traefik subdomains (nip.io) or from inside the `core-edge` network.
+#
+#   docker compose up -d --build
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d --build
+#
+# Environment comes from `.env` (see `.env.example` / `core-odoo init`).
+
+name: core-odoo
+
+services:
+  traefik:
+    image: traefik:v3.6
+    restart: unless-stopped
+    environment:
+      DOCKER_API_VERSION: "1.44"
+    command:
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      - --log.level=INFO
+      - --accesslog=true
+      - --api=true
+      - --api.insecure=true
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=core-edge
+      - --providers.docker.watch=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.traefik.address=:8080
+      - --ping=true
+      - --metrics.prometheus=true
+      - --metrics.prometheus.entrypoint=traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - core-edge
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CORE_DOMAIN_SUFFIX: ${CORE_DOMAIN_SUFFIX:-localhost}
+      CORE_DATA_DIR: /app/data
+      CORE_PROJECTS_DIR: /app/projects
+      CORE_TEMPLATES_DIR: /app/templates
+      CORE_REPO_ROOT: /app
+      CORE_GATEWAY_DIR: /app/gateway
+      CORE_HOST_DATA_DIR: ${CORE_HOST_DATA_DIR:-}
+      CORE_HOST_PROJECTS_DIR: ${CORE_HOST_PROJECTS_DIR:-}
+      CORE_HOST_GATEWAY_DIR: ${CORE_HOST_GATEWAY_DIR:-}
+      PROMETHEUS_URL: http://prometheus:9090
+      LOKI_URL: http://loki:3100
+    expose:
+      - "8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+      - ./projects:/app/projects
+      - ./templates:/app/templates
+      - ./gateway:/app/gateway:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=core-edge
+      - traefik.http.routers.core-api.rule=Host(`api.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-api.entrypoints=web
+      - traefik.http.routers.core-api.service=core-api
+      - traefik.http.routers.core-api-tls.rule=Host(`api.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-api-tls.entrypoints=websecure
+      - traefik.http.routers.core-api-tls.tls=true
+      - traefik.http.routers.core-api-tls.service=core-api
+      - traefik.http.services.core-api.loadbalancer.server.port=8080
+    networks:
+      - core-edge
+      - default
+    depends_on:
+      traefik:
+        condition: service_started
+    mem_limit: 1g
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  mission-control:
+    build:
+      context: ./mission-control
+    restart: unless-stopped
+    expose:
+      - "80"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=core-edge
+      - traefik.http.routers.core-panel.rule=Host(`core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-panel.entrypoints=web
+      - traefik.http.routers.core-panel.service=core-panel
+      - traefik.http.routers.core-panel-tls.rule=Host(`core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-panel-tls.entrypoints=websecure
+      - traefik.http.routers.core-panel-tls.tls=true
+      - traefik.http.routers.core-panel-tls.service=core-panel
+      - traefik.http.services.core-panel.loadbalancer.server.port=80
+    networks:
+      - core-edge
+      - default
+    mem_limit: 256m
+
+  # Optional Cloudflare quick tunnel for remote testing. The URL is ephemeral.
+  #   docker compose --profile tunnel up -d
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://traefik:80
+    depends_on:
+      traefik:
+        condition: service_started
+    networks:
+      - core-edge
+    mem_limit: 128m
+
+networks:
+  core-edge:
+    name: core-edge
+    driver: bridge
+  default:
+    name: core-odoo_default

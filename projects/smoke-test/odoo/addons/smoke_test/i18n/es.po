@@ -1,0 +1,26 @@
+# Spanish translation for Smoke Test
+# Copyright 2026 Core Odoo contributors
+# SPDX-License-Identifier: LGPL-3.0
+msgid ""
+msgstr ""
+"Project-Id-Version: smoke_test 20.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-01-01 00:00+0000\n"
+"Last-Translator: Core Odoo <hello@core-odoo.local>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: smoke_test
+#: model:ir.model.fields,field_description:smoke_test.field_res_partner__nickname
+msgid "Nickname"
+msgstr "Apodo"
+
+#. module: smoke_test
+#: model:ir.model,name:smoke_test.model_res_partner
+msgid "Contact"
+msgstr "Contacto"

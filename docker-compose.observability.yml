@@ -1,0 +1,191 @@
+# Core Odoo — observability plane (override file).
+#
+# Always use together with docker-compose.yml, which owns the `core-edge`
+# network and the Traefik instance that routes Grafana / Uptime Kuma:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+#
+# Total memory budget: ~1.9 GiB (mem_limit on every service).
+# Prometheus, Loki, Alertmanager, Alloy, node-exporter and cAdvisor are
+# internal-only (no Traefik route).
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+    expose:
+      - "9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 512m
+
+  loki:
+    image: grafana/loki:3.3.2
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/config.yml
+    expose:
+      - "3100"
+    volumes:
+      - ./observability/loki/config.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 384m
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - alloy_data:/var/lib/alloy/data
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 192m
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    expose:
+      - "3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=core-edge
+      - traefik.http.routers.core-grafana.rule=Host(`grafana.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-grafana.entrypoints=web
+      - traefik.http.routers.core-grafana.service=core-grafana
+      - traefik.http.routers.core-grafana-tls.rule=Host(`grafana.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-grafana-tls.entrypoints=websecure
+      - traefik.http.routers.core-grafana-tls.tls=true
+      - traefik.http.routers.core-grafana-tls.service=core-grafana
+      - traefik.http.services.core-grafana.loadbalancer.server.port=3000
+    networks:
+      - core-edge
+    mem_limit: 256m
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    expose:
+      - "9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 128m
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    expose:
+      - "3001"
+    volumes:
+      - uptime_data:/app/data
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=core-edge
+      - traefik.http.routers.core-uptime.rule=Host(`uptime.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-uptime.entrypoints=web
+      - traefik.http.routers.core-uptime.service=core-uptime
+      - traefik.http.routers.core-uptime-tls.rule=Host(`uptime.core-odoo.${CORE_DOMAIN_SUFFIX}`)
+      - traefik.http.routers.core-uptime-tls.entrypoints=websecure
+      - traefik.http.routers.core-uptime-tls.tls=true
+      - traefik.http.routers.core-uptime-tls.service=core-uptime
+      - traefik.http.services.core-uptime.loadbalancer.server.port=3001
+    networks:
+      - core-edge
+    mem_limit: 192m
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    restart: unless-stopped
+    pid: host
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/host/root
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+)($|/)
+    expose:
+      - "9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 64m
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    privileged: true
+    command:
+      - --housekeeping_interval=30s
+      - --docker_only=true
+    expose:
+      - "8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    labels:
+      - traefik.enable=false
+    networks:
+      - core-edge
+    mem_limit: 192m
+
+volumes:
+  prometheus_data:
+    name: core-odoo_prometheus_data
+  loki_data:
+    name: core-odoo_loki_data
+  alloy_data:
+    name: core-odoo_alloy_data
+  grafana_data:
+    name: core-odoo_grafana_data
+  alertmanager_data:
+    name: core-odoo_alertmanager_data
+  uptime_data:
+    name: core-odoo_uptime_data

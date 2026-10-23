@@ -1,0 +1,2 @@
+id,name,model_id,group_id/id,operation,domain
+access___MODULE___example_user,__MODULE__.example user,__MODULE__.example,base.group_user,crud,

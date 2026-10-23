@@ -1,0 +1,35 @@
+# Secrets / local state
+.env
+.env.*
+!.env.example
+data/
+core-odoo.yaml
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Odoo runtime
+filestore/
+*.dump
+*.sql
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
