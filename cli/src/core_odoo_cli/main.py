@@ -6,6 +6,8 @@ import sys
 
 import typer
 
+from .commands import catalog as catalog_commands
+from .commands import generate as generate_commands
 from .commands import projects as project_commands
 from .commands import system
 from .errors import CliError
@@ -76,6 +78,15 @@ def build_app(language: str | None = None) -> typer.Typer:
     app.command("deploy", help=t("cmd.deploy"))(project_commands.deploy)
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)
+
+    catalog_app = typer.Typer(help=t("cmd.catalog"), no_args_is_help=True)
+    catalog_app.command("models", help=t("cmd.catalog.models"))(catalog_commands.catalog_models)
+    app.add_typer(catalog_app, name="catalog")
+
+    generate_app = typer.Typer(help=t("cmd.generate"), no_args_is_help=True)
+    generate_app.command("module", help=t("cmd.generate.module"))(generate_commands.module)
+    generate_app.command("resource", help=t("cmd.generate.resource"))(generate_commands.resource)
+    app.add_typer(generate_app, name="generate")
 
     return app
 

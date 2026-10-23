@@ -31,6 +31,19 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
 - **Bilingual** — Spanish and English (UI, CLI, docs).
 
+## Agent development
+
+- [Agent instructions](AGENTS.md)
+- [Agent layer](docs/agent/README.md)
+- [Model catalogue](docs/agent/model-catalog.md)
+- Skills: `skills/odoo-module`, `skills/odoo-frontend`, `skills/odoo-deploy`
+
+```bash
+core-odoo --json catalog models <project> --stage dev --model res.partner
+core-odoo generate module <project> <module> --model <model> --fields "name:char;..."
+core-odoo generate resource <project> <resource> --model <module>.<model> --fields name,...
+```
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
