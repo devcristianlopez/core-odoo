@@ -65,6 +65,8 @@ def environment_read(project_name: str, environment: Environment) -> Environment
         url=environment.url,
         compose_project=environment.compose_project,
         services=list(environment.services or []),
+        branch=environment.branch,
+        modules=list(environment.modules or []),
         created_at=environment.created_at,
         updated_at=environment.updated_at,
     )

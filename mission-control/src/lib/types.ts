@@ -19,6 +19,8 @@ export interface Environment {
   status: string
   url: string | null
   compose_project: string
+  branch?: string | null
+  modules?: string[]
   /** The orchestrator may report services as a list or a map; normalize it. */
   services?: unknown
   created_at?: string | null

@@ -478,6 +478,12 @@ export default function ProjectDetailPage() {
                               </dd>
                             </div>
                             <div className="flex items-center justify-between gap-2">
+                              <dt className="text-slate-500">{t('project.branchLabel')}</dt>
+                              <dd className="truncate font-mono text-[11px] text-slate-400" title={environment.branch ?? 'main'}>
+                                {environment.branch || 'main'}
+                              </dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
                               <dt className="text-slate-500">{t('common.updatedAt')}</dt>
                               <dd className="text-slate-400">
                                 {formatRelativeTime(

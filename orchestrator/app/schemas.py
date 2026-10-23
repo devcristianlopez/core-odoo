@@ -36,6 +36,8 @@ class EnvironmentRead(BaseModel):
     url: str
     compose_project: str
     services: list[dict[str, Any]] = Field(default_factory=list)
+    branch: str | None = None
+    modules: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

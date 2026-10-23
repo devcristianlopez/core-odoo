@@ -6,7 +6,7 @@ import { ExternalLink, FolderKanban, Plus, Search, Trash2 } from 'lucide-react'
 import { api, type CreateProjectInput } from '../lib/api'
 import { queryKeys } from '../lib/query'
 import { formatDate } from '../lib/format'
-import { safeHttpUrl } from '../lib/services'
+import { groupEnvironmentsByStage, safeHttpUrl } from '../lib/services'
 import { describeError } from '../lib/errors'
 import { useToast } from '../lib/toast-context'
 import { PageHeader } from '../components/ui/PageHeader'
@@ -19,7 +19,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Loading'
 import { Badge } from '../components/ui/Badge'
-import type { Project } from '../lib/types'
+import { STAGES, type Project } from '../lib/types'
 
 const TEMPLATE_SUGGESTIONS = ['odoo', 'odoo-module', 'frontend-starter']
 const NAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/
@@ -245,6 +245,17 @@ export default function ProjectsPage() {
                           <Badge tone="neutral">
                             {t('projects.environmentCount', { count: environmentCount })}
                           </Badge>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label={t('project.environmentsTitle')}>
+                          {STAGES.map((stage) => {
+                            const count = groupEnvironmentsByStage(project.environments ?? [])[stage].length
+                            return (
+                              <Badge key={stage} tone={count > 0 ? 'success' : 'neutral'}>
+                                {t(`stages.${stage}`)}
+                                <span className="tabular-nums opacity-70">{count}</span>
+                              </Badge>
+                            )
+                          })}
                         </div>
                         <p className="mt-3 text-xs text-slate-500">
                           {t('projects.createdOn', {
