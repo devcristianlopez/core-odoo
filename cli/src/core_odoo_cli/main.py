@@ -89,6 +89,7 @@ def build_app(language: str | None = None) -> typer.Typer:
     generate_app.command("module", help=t("cmd.generate.module"))(generate_commands.module)
     generate_app.command("resource", help=t("cmd.generate.resource"))(generate_commands.resource)
     generate_app.command("sdk", help=t("cmd.generate.sdk"))(generate_commands.sdk)
+    generate_app.command("frontend", help=t("cmd.generate.frontend"))(generate_commands.frontend)
     app.add_typer(generate_app, name="generate")
 
     return app

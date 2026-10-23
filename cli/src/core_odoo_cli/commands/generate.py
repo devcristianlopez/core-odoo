@@ -7,6 +7,7 @@ from pathlib import Path
 import typer
 
 from ..errors import CliError
+from ..frontend_generator import generate_frontend as build_frontend
 from ..generator import GeneratorError
 from ..generator import generate_module as build_module
 from ..generator import generate_resource as build_resource
@@ -102,3 +103,32 @@ def sdk(
         emit(result)
         return
     success(t("msg.sdk_generated", path=result["path"]))
+
+
+def frontend(
+    ctx: typer.Context,
+    project: str = argument("arg.project"),
+    stage: str = option("opt.stage", "dev", "--stage"),
+    template: str = option("opt.frontend_template", "templates/agent-frontend", "--template"),
+    force: bool = option("opt.force", False, "--force"),
+) -> None:
+    """Generate a generic login + CRUD frontend from backend.yaml."""
+    settings: RuntimeSettings = ctx.obj or RuntimeSettings.load()
+    project_path = find_project_dir(settings, project)
+    template_path = Path(template).expanduser()
+    if not template_path.is_absolute():
+        template_path = settings.repo_root / template_path
+    try:
+        result = build_frontend(
+            project_path,
+            project,
+            template_dir=template_path,
+            stage=stage,
+            force=force,
+        )
+    except SdkError as exc:
+        raise CliError(str(exc), code="generate_failed") from exc
+    if machine_output():
+        emit(result)
+        return
+    success(t("msg.frontend_generated", path=result["path"]))

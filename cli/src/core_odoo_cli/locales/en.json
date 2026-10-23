@@ -130,5 +130,10 @@
   "msg.check_failed": "The project has {count} error(s).",
   "header.level": "Level",
   "header.check": "Check",
-  "header.message": "Message"
+  "header.message": "Message",
+  "cmd.generate.frontend": "Generate a login + CRUD frontend from backend.yaml.",
+  "opt.frontend_template": "Frontend template.",
+  "msg.frontend_generated": "Frontend generated at {path}.",
+  "msg.frontend_hint": "Review src/App.tsx and deploy the environment.",
+  "error.frontend_exists": "A frontend already exists. Use --force to replace it."
 }

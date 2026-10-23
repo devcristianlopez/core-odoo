@@ -43,11 +43,15 @@ core-odoo generate resource crm-demo leads \
   --fields name,contact_name,email,stage,expected_revenue,notes \
   --search-fields name,contact_name,email
 
-# 4. Generate a typed SDK for the frontend
-core-odoo generate sdk crm-demo --stage dev --output frontend/src/api.generated.ts
+# 4. For a new project, generate a complete login + CRUD frontend
+#    (this also writes the typed SDK). Skip it for an existing custom app.
+core-odoo generate frontend <project> --stage dev
+
+# 4b. For an existing frontend, generate only the typed SDK
+core-odoo generate sdk <project> --stage dev --output frontend/src/api.generated.ts
 
 # 5. Validate the project before deploying
-core-odoo check crm-demo --catalog --frontend
+core-odoo check <project> --catalog --frontend
 
 # 6. Deploy and inspect
 core-odoo deploy crm-demo --stage dev

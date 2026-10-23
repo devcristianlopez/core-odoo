@@ -121,28 +121,26 @@ export async function login(login: string, password: string): Promise<string> {
 """
 
 
-def generate_sdk(
+def load_schema(
     project_dir: Path,
     project_name: str,
     *,
     stage: str = "dev",
-    output: Path | None = None,
-    force: bool = False,
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
+    """Resolve backend resources and Odoo field types for generators."""
     data = _load_backend(project_dir)
-    target = output or project_dir / "frontend" / "src" / "api.generated.ts"
-    if target.exists() and not force:
-        raise SdkError(f"SDK already exists: {target} (use --force)")
-    target.parent.mkdir(parents=True, exist_ok=True)
-
     catalog: dict[str, dict[str, tuple[str, bool]]] = {}
-    resources: list[dict[str, Any]] = []
+    schema: list[dict[str, Any]] = []
     for resource in data["resources"]:
         if not isinstance(resource, dict):
             raise SdkError("each resource must be a mapping")
         name = str(resource.get("name", "")).strip()
         model = str(resource.get("model", "")).strip()
-        fields = [str(field) for field in resource.get("fields", []) if str(field).strip()]
+        fields = [
+            str(field)
+            for field in resource.get("fields", [])
+            if str(field).strip() and str(field) != "id"
+        ]
         operations = [str(op) for op in resource.get("operations", []) if str(op).strip()]
         if not name or not model or not fields:
             raise SdkError("resources need name, model and fields")
@@ -159,10 +157,46 @@ def generate_sdk(
                     if isinstance(field, dict)
                 }
             except Exception:
-                # Catalog is optional: fall back to unknown field types so the
-                # SDK can still be generated offline.
+                # Catalogue is optional; offline generation falls back to unknown.
                 catalog[model] = {}
-        resources.append({"name": name, "model": model, "fields": fields, "operations": operations})
+        resolved = []
+        for field in fields:
+            info = catalog[model].get(field)
+            resolved.append(
+                {
+                    "name": field,
+                    "type": _type_for(field, info),
+                    "required": bool(info[1]) if info else False,
+                }
+            )
+        schema.append(
+            {
+                "name": name,
+                "apiKey": _camel(name),
+                "model": model,
+                "operations": operations,
+                "fields": resolved,
+            }
+        )
+    return schema
+
+
+def generate_sdk(
+    project_dir: Path,
+    project_name: str,
+    *,
+    stage: str = "dev",
+    output: Path | None = None,
+    force: bool = False,
+    schema: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    resources = (
+        schema if schema is not None else load_schema(project_dir, project_name, stage=stage)
+    )
+    target = output or project_dir / "frontend" / "src" / "api.generated.ts"
+    if target.exists() and not force:
+        raise SdkError(f"SDK already exists: {target} (use --force)")
+    target.parent.mkdir(parents=True, exist_ok=True)
 
     lines = [
         "/**",
@@ -176,17 +210,16 @@ def generate_sdk(
         lines.append(f"export interface {type_name} {{")
         lines.append("  id: number")
         for field in resource["fields"]:
-            if field == "id":
+            if field["name"] == "id":
                 continue
-            field_type = _type_for(field, catalog[resource["model"]].get(field))
-            lines.append(f"  {field}: {field_type}")
+            lines.append(f"  {field['name']}: {field['type']}")
         lines.append("}")
         lines.append(f"export type {type_name}Input = Omit<{type_name}, 'id'>")
         lines.append("")
 
     for resource in resources:
         type_name = _pascal(_singular(resource["name"]))
-        api_name = _camel(resource["name"])
+        api_name = resource["apiKey"]
         base = f"/api/{resource['name']}"
         lines.append(f"export const {api_name} = {{")
         operations = set(resource["operations"])
@@ -222,7 +255,7 @@ def generate_sdk(
 
     lines.append("export const api = {")
     for resource in resources:
-        lines.append(f"  {_camel(resource['name'])},")
+        lines.append(f"  {resource['apiKey']},")
     lines.append("}")
     lines.append("")
     target.write_text("\n".join(lines), encoding="utf-8")

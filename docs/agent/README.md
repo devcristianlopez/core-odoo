@@ -55,11 +55,12 @@ the rest of the YAML.
 ## Implemented
 
 - `generate sdk` from `backend.yaml` + Odoo catalogue,
+- `generate frontend` for a login + generic CRUD app,
 - `check` for contract, manifest, ACL, XML, Python and optional frontend build,
 - multi-agent compatibility files and skill links.
 
 ## Next increments
 
-- `generate frontend` from a BFF resource,
 - MCP server exposing catalogue/generate/deploy as tools,
-- Odoo unit-test execution inside `check`/deploy.
+- Odoo unit-test execution inside `check`/deploy,
+- generated frontend field widgets for selections, dates and relations.
