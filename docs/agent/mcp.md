@@ -23,6 +23,9 @@ Tools:
 | `generate_frontend` | Login + generic CRUD frontend |
 | `check_project` | Contract/module/ACL/frontend validation |
 | `deploy_project` | Deploy through the orchestrator (`confirm` required for prod) |
+| `list_deploy_requests` | List production requests |
+| `request_deploy` | Request production approval |
+| `approve_deploy` / `reject_deploy` | Admin decision |
 | `environment_logs` | Tail environment logs |
 
 ## OpenCode

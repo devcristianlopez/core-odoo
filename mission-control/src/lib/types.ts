@@ -52,6 +52,20 @@ export interface IterationDiff {
   summary: Record<string, number>
 }
 
+export interface DeploymentRequest {
+  id: number
+  project: string
+  stage: string
+  iteration: string
+  reason: string
+  status: string
+  requested_by: string
+  decided_by?: string | null
+  created_at: string
+  decided_at?: string | null
+  deployed_at?: string | null
+}
+
 export interface ProjectMember {
   username: string
   role: UserRole

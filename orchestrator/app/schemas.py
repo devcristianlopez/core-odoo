@@ -160,6 +160,25 @@ class IterationBackupRead(BaseModel):
     created_at: datetime
 
 
+class DeploymentRequestCreate(BaseModel):
+    iteration: str = Field(min_length=1, max_length=32)
+    reason: str = Field(default="", max_length=2000)
+
+
+class DeploymentRequestRead(BaseModel):
+    id: int
+    project: str
+    stage: str
+    iteration: str
+    reason: str
+    status: str
+    requested_by: str
+    decided_by: str | None = None
+    created_at: datetime
+    decided_at: datetime | None = None
+    deployed_at: datetime | None = None
+
+
 class DeletedResponse(BaseModel):
     deleted: bool = True
 

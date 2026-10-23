@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Database, GitCompare, History, Plus, RotateCcw, Rocket } from 'lucide-react'
+import { Database, GitCompare, History, Plus, RotateCcw, Rocket, ShieldCheck } from 'lucide-react'
 import { api, type CreateIterationInput } from '../../lib/api'
 import { queryKeys } from '../../lib/query'
 import { isStage, type Iteration, type IterationDiff } from '../../lib/types'
@@ -126,6 +126,26 @@ export function IterationsPanel({
     onError: (error) => {
       pushToast({
         title: t('iterations.diffFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
+
+  const requestMutation = useMutation({
+    mutationFn: (iteration: Iteration) => {
+      const reason = window.prompt(t('iterations.requestReason', { version: iteration.version })) ?? ''
+      return api.approvals.create(project, iteration.version, reason)
+    },
+    onSuccess: (_request, iteration) => {
+      pushToast({
+        title: t('iterations.requested', { version: iteration.version }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('iterations.requestFailed'),
         description: describeError(error, t),
         variant: 'error',
       })
@@ -266,6 +286,15 @@ export function IterationsPanel({
                       >
                         <Database className="h-3.5 w-3.5" aria-hidden="true" />
                         {t('iterations.backup')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => requestMutation.mutate(iteration)}
+                        disabled={!iteration.has_snapshot || requestMutation.isPending}
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t('iterations.requestProd')}
                       </Button>
                       <Button
                         variant="secondary"

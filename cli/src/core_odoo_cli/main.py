@@ -6,6 +6,7 @@ import sys
 
 import typer
 
+from .commands import approvals as approval_commands
 from .commands import catalog as catalog_commands
 from .commands import check as check_commands
 from .commands import generate as generate_commands
@@ -88,9 +89,7 @@ def build_app(language: str | None = None) -> typer.Typer:
     iteration_app.command("restore", help=t("cmd.iteration.restore"))(
         iteration_commands.restore_iteration
     )
-    iteration_app.command("diff", help=t("cmd.iteration.diff"))(
-        iteration_commands.diff_iteration
-    )
+    iteration_app.command("diff", help=t("cmd.iteration.diff"))(iteration_commands.diff_iteration)
     iteration_app.command("backup", help=t("cmd.iteration.backup"))(
         iteration_commands.backup_iteration
     )
@@ -98,6 +97,15 @@ def build_app(language: str | None = None) -> typer.Typer:
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)
     app.command("check", help=t("cmd.check"))(check_commands.check)
+
+    approval_app = typer.Typer(help=t("cmd.approval"), no_args_is_help=True)
+    approval_app.command("list", help=t("cmd.approval.list"))(approval_commands.list_requests)
+    approval_app.command("request", help=t("cmd.approval.request"))(
+        approval_commands.request_deploy
+    )
+    approval_app.command("approve", help=t("cmd.approval.approve"))(approval_commands.approve)
+    approval_app.command("reject", help=t("cmd.approval.reject"))(approval_commands.reject)
+    app.add_typer(approval_app, name="approval")
 
     mcp_app = typer.Typer(help=t("cmd.mcp"), no_args_is_help=True)
     mcp_app.command("serve", help=t("cmd.mcp.serve"))(mcp_commands.serve)

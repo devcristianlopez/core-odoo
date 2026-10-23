@@ -31,4 +31,5 @@ export const queryKeys = {
   metrics: (query: string) => ['metrics', query] as const,
   audit: (limit: number) => ['audit', limit] as const,
   users: ['users'] as const,
+  approvals: (status?: string) => ['approvals', status ?? 'all'] as const,
 }

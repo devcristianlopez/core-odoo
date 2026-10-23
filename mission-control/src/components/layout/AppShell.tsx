@@ -10,6 +10,7 @@ import {
   Settings,
   UserRound,
   Users,
+  CheckCheck,
   X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -26,11 +27,13 @@ interface NavItem {
   icon: LucideIcon
   end?: boolean
   adminOnly?: boolean
+  operatorOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
   { to: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
+  { to: '/approvals', labelKey: 'nav.approvals', icon: CheckCheck, operatorOnly: true },
   { to: '/users', labelKey: 'nav.users', icon: Users, adminOnly: true },
   { to: '/audit', labelKey: 'nav.audit', icon: ScrollText },
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
@@ -59,7 +62,11 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'admin')
+  const items = NAV_ITEMS.filter(
+    (item) =>
+      (!item.adminOnly || user?.role === 'admin') &&
+      (!item.operatorOnly || user?.role === 'admin' || user?.role === 'operator'),
+  )
   return (
     <nav aria-label={t('nav.primary')} className="flex flex-1 flex-col gap-1 px-3 py-4">
       {items.map((item) => {

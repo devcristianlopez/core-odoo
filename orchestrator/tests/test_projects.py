@@ -110,7 +110,10 @@ def test_project_files_are_removed_on_delete(
     harness: AppHarness, auth_headers: dict[str, str], create_project, settings
 ) -> None:
     create_project("smoke-test")
-    harness.client.delete("/api/v1/projects/smoke-test?confirm=smoke-test&purge=true", headers=auth_headers)
+    harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=smoke-test&purge=true",
+        headers=auth_headers,
+    )
     assert not (settings.core_projects_dir / "smoke-test").exists()
     assert not (settings.iterations_dir / "smoke-test").exists()
 

@@ -1,5 +1,6 @@
 import type {
   AuditEvent,
+  DeploymentRequest,
   Environment,
   Iteration,
   IterationDiff,
@@ -299,6 +300,29 @@ export const api = {
       return request(projectPath(name), {
         method: 'DELETE',
         query: { confirm, ...(purge ? { purge: true } : {}) },
+      })
+    },
+  },
+  approvals: {
+    list(status?: string): Promise<DeploymentRequest[]> {
+      return request<DeploymentRequest[]>('/deploy-requests', {
+        query: status ? { status } : undefined,
+      })
+    },
+    create(project: string, iteration: string, reason: string): Promise<DeploymentRequest> {
+      return request<DeploymentRequest>(`${projectPath(project)}/deploy-requests`, {
+        method: 'POST',
+        body: { iteration, reason },
+      })
+    },
+    approve(id: number): Promise<DeploymentRequest> {
+      return request<DeploymentRequest>(`/deploy-requests/${id}/approve`, {
+        method: 'POST',
+      })
+    },
+    reject(id: number): Promise<DeploymentRequest> {
+      return request<DeploymentRequest>(`/deploy-requests/${id}/reject`, {
+        method: 'POST',
       })
     },
   },

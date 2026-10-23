@@ -100,6 +100,20 @@ Borrar un proyecto sin `--purge` desregistra el proyecto y elimina sus entornos,
 pero conserva el código fuente y las iteraciones. `--purge` elimina también el
 código, los snapshots y los backups.
 
+### Aprobaciones de producción
+
+Un `operator` no despliega directo a producción: crea una solicitud.
+
+```bash
+core-odoo approval request <proyecto> --iteration 0.1.0 --reason "listo para prod"
+core-odoo approval list --status pending
+core-odoo approval approve <id>
+core-odoo approval reject <id>
+```
+
+La solicitud exige una iteración con backup. Al aprobarla, un admin ejecuta el
+deploy con los guardrails de producción.
+
 ### Backups
 
 ```bash

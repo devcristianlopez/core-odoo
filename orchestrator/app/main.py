@@ -19,7 +19,17 @@ from .metrics import render as render_metrics
 from .models import Environment
 from .providers.base import EnvironmentProvider, ProviderError
 from .providers.docker import DockerProvider
-from .routers import audit, auth, health, iterations, observability, projects, status, users
+from .routers import (
+    audit,
+    auth,
+    deployment_requests,
+    health,
+    iterations,
+    observability,
+    projects,
+    status,
+    users,
+)
 from .routers.auth import login, me
 from .schemas import MeResponse, TokenResponse
 from .security import SecurityService
@@ -76,6 +86,7 @@ def create_app(
     # the base path, so expose them both as /api/v1/auth/* and /auth/*.
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(users.router, prefix=API_PREFIX)
+    app.include_router(deployment_requests.router, prefix=API_PREFIX)
     app.add_api_route(
         "/auth/login",
         login,

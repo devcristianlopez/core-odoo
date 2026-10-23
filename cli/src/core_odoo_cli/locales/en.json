@@ -156,5 +156,13 @@
   "prompt.type_project_name": "Type the project name ({name}) to confirm:",
   "prompt.type_environment": "Type '{value}' to confirm:",
   "error.confirmation_mismatch": "Confirmation does not match.",
-  "opt.purge": "Also remove source code, snapshots and backups."
+  "opt.purge": "Also remove source code, snapshots and backups.",
+  "cmd.approval": "Manage production deployment approvals.",
+  "cmd.approval.list": "List deployment requests.",
+  "cmd.approval.request": "Request approval to deploy an iteration to production.",
+  "cmd.approval.approve": "Approve and execute a request (admin).",
+  "cmd.approval.reject": "Reject a request (admin).",
+  "opt.status": "Filter by status.",
+  "opt.reason": "Request reason.",
+  "arg.request_id": "Request ID."
 }

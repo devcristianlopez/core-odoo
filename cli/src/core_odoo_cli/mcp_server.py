@@ -50,6 +50,52 @@ def build_server() -> FastMCP:
             return _fail(exc)
 
     @server.tool()
+    def list_deploy_requests(status: str | None = None) -> dict[str, Any]:
+        """List production deployment requests."""
+        try:
+            return {
+                "ok": True,
+                "requests": OrchestratorClient(_settings()).list_deploy_requests(status),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def request_deploy(project: str, iteration: str, reason: str = "") -> dict[str, Any]:
+        """Request admin approval for a production deploy."""
+        try:
+            return {
+                "ok": True,
+                "request": OrchestratorClient(_settings()).create_deploy_request(
+                    project, iteration, reason
+                ),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def approve_deploy(request_id: int) -> dict[str, Any]:
+        """Approve and execute a production deployment request (admin)."""
+        try:
+            return {
+                "ok": True,
+                "request": OrchestratorClient(_settings()).approve_deploy_request(request_id),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def reject_deploy(request_id: int) -> dict[str, Any]:
+        """Reject a production deployment request (admin)."""
+        try:
+            return {
+                "ok": True,
+                "request": OrchestratorClient(_settings()).reject_deploy_request(request_id),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
     def list_iterations(project: str) -> dict[str, Any]:
         """List versioned iterations for a project."""
         try:

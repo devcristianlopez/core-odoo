@@ -122,13 +122,31 @@ class OrchestratorClient:
         payload = self._request("GET", "/projects")
         return payload if isinstance(payload, list) else []
 
-    def delete_project(
-        self, name: str, confirm: str, purge: bool = False
-    ) -> dict[str, Any]:
+    def delete_project(self, name: str, confirm: str, purge: bool = False) -> dict[str, Any]:
         params = {"confirm": confirm}
         if purge:
             params["purge"] = "true"
         return self._request("DELETE", f"/projects/{name}", params=params)
+
+    # ---------------------------------------------------------- deploy requests
+
+    def list_deploy_requests(self, status: str | None = None) -> list[dict[str, Any]]:
+        params = {"status": status} if status else None
+        payload = self._request("GET", "/deploy-requests", params=params)
+        return payload if isinstance(payload, list) else []
+
+    def create_deploy_request(self, name: str, iteration: str, reason: str = "") -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"/projects/{name}/deploy-requests",
+            json={"iteration": iteration, "reason": reason},
+        )
+
+    def approve_deploy_request(self, request_id: int) -> dict[str, Any]:
+        return self._request("POST", f"/deploy-requests/{request_id}/approve")
+
+    def reject_deploy_request(self, request_id: int) -> dict[str, Any]:
+        return self._request("POST", f"/deploy-requests/{request_id}/reject")
 
     # ---------------------------------------------------------------- iterations
 

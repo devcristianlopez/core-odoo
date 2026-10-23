@@ -96,6 +96,10 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | DELETE | `/projects/{name}` | `?confirm=<name>&purge=<bool>` | `{deleted: true}` |
 | GET | `/projects/{name}/environments` | – | `[Environment]` |
 | POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?, confirm?}` | `Environment` |
+| POST | `/projects/{name}/deploy-requests` | `{iteration, reason?}` | `DeploymentRequest` |
+| GET | `/deploy-requests` | `?status=pending` | `[DeploymentRequest]` |
+| POST | `/deploy-requests/{id}/approve` | – | `DeploymentRequest` (admin) |
+| POST | `/deploy-requests/{id}/reject` | – | `DeploymentRequest` (admin) |
 | GET | `/projects/{name}/iterations` | – | `[Iteration]` |
 | GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
 | GET | `/projects/{name}/members` | – | `[ProjectMember]` (admin) |
@@ -130,7 +134,8 @@ detail page.
 
 Production deploys require `confirm` equal to the project name, a versioned
 iteration and at least one database backup for that iteration. The source is
-restored from the iteration snapshot before deploying.
+restored from the iteration snapshot before deploying. An operator can create a
+deployment request; an admin must approve it before the production deploy runs.
 
 ## 6. Gateway (BFF) contract
 
@@ -251,6 +256,10 @@ core-odoo generate resource <project> <resource> --model <odoo.model> --fields a
 core-odoo generate sdk <project> --stage dev [--output frontend/src/api.generated.ts]
 core-odoo generate frontend <project> --stage dev [--template <path>] [--force]
 core-odoo check <project> [--catalog] [--frontend]
+core-odoo approval list [--status pending]
+core-odoo approval request <project> --iteration <version> [--reason <text>]
+core-odoo approval approve <request-id>
+core-odoo approval reject <request-id>
 core-odoo mcp serve
 ```
 

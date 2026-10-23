@@ -108,6 +108,22 @@ class IterationBackup(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
+class DeploymentRequest(SQLModel, table=True):
+    __tablename__ = "deployment_requests"
+
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="projects.id", index=True)
+    stage: str = Field(default="prod", max_length=16)
+    iteration: str = Field(max_length=32)
+    reason: str = Field(default="", max_length=2000)
+    status: str = Field(default="pending", max_length=16)
+    requested_by: str = Field(max_length=64)
+    decided_by: str | None = Field(default=None, max_length=64)
+    created_at: datetime = Field(default_factory=utcnow)
+    decided_at: datetime | None = Field(default=None)
+    deployed_at: datetime | None = Field(default=None)
+
+
 class AuditEvent(SQLModel, table=True):
     __tablename__ = "audit_events"
 

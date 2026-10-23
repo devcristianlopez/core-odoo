@@ -156,5 +156,13 @@
   "prompt.type_project_name": "Escribí el nombre del proyecto ({name}) para confirmar:",
   "prompt.type_environment": "Escribí '{value}' para confirmar:",
   "error.confirmation_mismatch": "La confirmación no coincide.",
-  "opt.purge": "Elimina también código fuente, snapshots y backups."
+  "opt.purge": "Elimina también código fuente, snapshots y backups.",
+  "cmd.approval": "Gestiona aprobaciones de despliegue a producción.",
+  "cmd.approval.list": "Lista solicitudes de despliegue.",
+  "cmd.approval.request": "Solicita aprobación para desplegar una iteración a producción.",
+  "cmd.approval.approve": "Aprueba y ejecuta una solicitud (admin).",
+  "cmd.approval.reject": "Rechaza una solicitud (admin).",
+  "opt.status": "Filtra por estado.",
+  "opt.reason": "Motivo de la solicitud.",
+  "arg.request_id": "ID de la solicitud."
 }

@@ -19,13 +19,24 @@ from ..deps import (
     require_write,
 )
 from ..metrics import record_backup_success, record_deploy
-from ..models import Environment, Iteration, IterationBackup, Project, ProjectMember, User, utcnow
+from ..models import (
+    DeploymentRequest,
+    Environment,
+    Iteration,
+    IterationBackup,
+    Project,
+    ProjectMember,
+    User,
+    utcnow,
+)
 from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
 from ..providers.docker import backup_filename
 from ..scaffold import ensure_project_layout
 from ..schemas import (
     BackupResponse,
     DeletedResponse,
+    DeploymentRequestCreate,
+    DeploymentRequestRead,
     DeployRequest,
     EnvironmentRead,
     LogsResponse,
@@ -219,6 +230,80 @@ def delete_project(
     )
     session.commit()
     return DeletedResponse(deleted=True)
+
+
+# ------------------------------------------------------------- deploy requests
+
+
+@router.post(
+    "/projects/{name}/deploy-requests",
+    response_model=DeploymentRequestRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_deploy_request(
+    name: str,
+    payload: DeploymentRequestCreate,
+    session: SessionDep,
+    principal: PrincipalDep,
+) -> DeploymentRequestRead:
+    project = _get_project(session, name)
+    iteration = session.exec(
+        select(Iteration).where(
+            Iteration.project_id == project.id,
+            Iteration.version == payload.iteration,
+        )
+    ).first()
+    if iteration is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="iteration not found")
+    if (
+        session.exec(
+            select(IterationBackup).where(IterationBackup.iteration_id == iteration.id)
+        ).first()
+        is None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="the iteration needs a database backup before requesting production",
+        )
+    pending = session.exec(
+        select(DeploymentRequest).where(
+            DeploymentRequest.project_id == project.id,
+            DeploymentRequest.status == "pending",
+        )
+    ).first()
+    if pending is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="there is already a pending production request for this project",
+        )
+    request = DeploymentRequest(
+        project_id=project.id,
+        stage="prod",
+        iteration=payload.iteration,
+        reason=payload.reason,
+        requested_by=principal.username,
+        status="pending",
+    )
+    session.add(request)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="deploy_request.create",
+        target=f"{name}/{payload.iteration}",
+        details={"reason": payload.reason},
+    )
+    session.commit()
+    session.refresh(request)
+    return DeploymentRequestRead(
+        id=request.id or 0,
+        project=name,
+        stage=request.stage,
+        iteration=request.iteration,
+        reason=request.reason,
+        status=request.status,
+        requested_by=request.requested_by,
+        created_at=request.created_at,
+    )
 
 
 # --------------------------------------------------------------------- members
