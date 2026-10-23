@@ -55,6 +55,7 @@ testing. The URL is ephemeral by design.
 ```dotenv
 CORE_LANG=es
 CORE_DOMAIN_SUFFIX=192.168.1.50.nip.io
+CORE_API_URL=http://api.core-odoo.192.168.1.50.nip.io
 CORE_ADMIN_USER=admin
 CORE_ADMIN_PASSWORD=<generated>
 CORE_API_TOKEN=<generated>

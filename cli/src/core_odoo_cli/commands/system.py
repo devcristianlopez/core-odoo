@@ -29,6 +29,7 @@ console = Console()
 _ENV_ORDER = (
     "CORE_LANG",
     "CORE_DOMAIN_SUFFIX",
+    "CORE_API_URL",
     "CORE_ADMIN_USER",
     "CORE_ADMIN_PASSWORD",
     "CORE_API_TOKEN",
@@ -142,6 +143,8 @@ def _build_values(
     values: dict[str, str] = {
         "CORE_LANG": language,
         "CORE_DOMAIN_SUFFIX": domain_suffix,
+        "CORE_API_URL": existing.get("CORE_API_URL")
+        or f"http://api.core-odoo.{domain_suffix}",
         "CORE_ADMIN_USER": existing.get("CORE_ADMIN_USER") or "admin",
         "CORE_ADMIN_PASSWORD": _password(),
         "CORE_API_TOKEN": _secret(),
@@ -179,7 +182,7 @@ def _write_config(
         "lang": language,
         "domain_suffix": domain_suffix,
         "admin_user": values["CORE_ADMIN_USER"],
-        "api_url": existing.get("api_url", "http://localhost:8080"),
+        "api_url": values["CORE_API_URL"],
         "data_dir": values["CORE_DATA_DIR"],
         "projects_dir": values["CORE_PROJECTS_DIR"],
         "templates_dir": values["CORE_TEMPLATES_DIR"],

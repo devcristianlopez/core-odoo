@@ -46,6 +46,7 @@ El usuario y la contraseña del panel/API están en `.env`
 | Variable | Uso |
 |---|---|
 | `CORE_DOMAIN_SUFFIX` | Sufijo de dominio, por ejemplo `192.168.1.50.nip.io` |
+| `CORE_API_URL` | URL pública del orquestador (`http://api.core-odoo.<suffix>`) |
 | `CORE_DATA_DIR` | Datos dentro del contenedor (`/app/data`) |
 | `CORE_PROJECTS_DIR` | Proyectos dentro del contenedor (`/app/projects`) |
 | `CORE_HOST_DATA_DIR` | Ruta absoluta del host para `data/` |

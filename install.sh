@@ -200,6 +200,7 @@ else
     sed \
         -e "s|^CORE_LANG=.*|CORE_LANG=${LANG_CHOICE}|" \
         -e "s|^CORE_DOMAIN_SUFFIX=.*|CORE_DOMAIN_SUFFIX=${suffix}|" \
+        -e "s|^CORE_API_URL=.*|CORE_API_URL=http://api.core-odoo.${suffix}|" \
         -e "s|^CORE_ADMIN_PASSWORD=.*|CORE_ADMIN_PASSWORD=$(random_secret)|" \
         -e "s|^CORE_API_TOKEN=.*|CORE_API_TOKEN=$(random_secret)|" \
         -e "s|^CORE_JWT_SECRET=.*|CORE_JWT_SECRET=$(random_secret)|" \
