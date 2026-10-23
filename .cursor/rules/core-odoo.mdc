@@ -1,0 +1,8 @@
+---
+description: Core Odoo agent conventions
+alwaysApply: true
+---
+
+Read `AGENTS.md` and `docs/agent/` before coding. Use the `core-odoo` CLI for
+catalogue, generators, deploy and logs. Never expose Odoo to the browser; use the
+gateway and `backend.yaml`.

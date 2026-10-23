@@ -22,8 +22,14 @@ Browser → frontend nginx → gateway → Odoo.
 4. Handle 401 (expired token), 403, 404 and 422 as distinct states.
 5. Never send Odoo credentials or API keys to the browser.
 
-## Current limitation
+## Generated SDK
 
-There is no `generate frontend`/`generate sdk` yet. Scaffold from
-`templates/frontend-starter` or an existing project and keep API types in one
-module.
+```bash
+core-odoo generate sdk <project> --stage dev \
+  --output frontend/src/api.generated.ts --force
+```
+
+The SDK reads `backend.yaml`, resolves field types from the running Odoo
+catalogue when available, and exports `login`, `apiRequest`, resource types and
+resource clients. Regenerate it when the contract changes. A full
+`generate frontend` scaffold is still pending.

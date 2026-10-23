@@ -116,5 +116,19 @@
   "error.container_missing": "No se encontró el contenedor '{container}'. ¿Está desplegado el entorno?",
   "error.catalog_failed": "No se pudo leer el catálogo de Odoo: {detail}",
   "error.invalid_fields": "Especificación de campos inválida: {detail}",
-  "error.model_required": "El recurso necesita --model."
+  "error.model_required": "El recurso necesita --model.",
+  "cmd.generate.sdk": "Genera un cliente TypeScript tipado desde backend.yaml.",
+  "opt.output": "Archivo de salida (por defecto frontend/src/api.generated.ts).",
+  "msg.sdk_generated": "SDK TypeScript generado en {path}.",
+  "msg.sdk_hint": "Importá api y login desde api.generated.ts; regenerá con --force si cambia el contrato.",
+  "error.sdk_exists": "El SDK ya existe. Usa --force para regenerarlo.",
+  "cmd.check": "Valida un proyecto antes de desplegarlo.",
+  "opt.catalog": "Valida los campos del contrato contra Odoo (requiere entorno levantado).",
+  "opt.frontend": "Ejecuta el build del frontend.",
+  "msg.check_title": "Chequeo de {project}",
+  "msg.check_ok": "Proyecto '{project}' validado.",
+  "msg.check_failed": "El proyecto tiene {count} error(es).",
+  "header.level": "Nivel",
+  "header.check": "Chequeo",
+  "header.message": "Mensaje"
 }

@@ -8,6 +8,7 @@ description: Deploy, inspect and debug a Core Odoo environment. Use after changi
 ## Workflow
 
 ```bash
+core-odoo check <project> --catalog --frontend
 core-odoo deploy <project> --stage dev
 core-odoo logs <project> --stage dev --tail 200
 ```

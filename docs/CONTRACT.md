@@ -218,6 +218,8 @@ core-odoo upgrade
 core-odoo --json catalog models <project> --stage dev [--model <model>]
 core-odoo generate module <project> <module> --model <model> --fields "... "
 core-odoo generate resource <project> <resource> --model <odoo.model> --fields a,b,c
+core-odoo generate sdk <project> --stage dev [--output frontend/src/api.generated.ts]
+core-odoo check <project> [--catalog] [--frontend]
 ```
 
 Global flags: `--lang`, `--json`, `--verbose`.

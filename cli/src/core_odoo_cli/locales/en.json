@@ -116,5 +116,19 @@
   "error.container_missing": "Container '{container}' was not found. Is the environment deployed?",
   "error.catalog_failed": "Could not read the Odoo catalogue: {detail}",
   "error.invalid_fields": "Invalid field specification: {detail}",
-  "error.model_required": "The resource requires --model."
+  "error.model_required": "The resource requires --model.",
+  "cmd.generate.sdk": "Generate a typed TypeScript client from backend.yaml.",
+  "opt.output": "Output file (default: frontend/src/api.generated.ts).",
+  "msg.sdk_generated": "TypeScript SDK generated at {path}.",
+  "msg.sdk_hint": "Import api and login from api.generated.ts; regenerate with --force when the contract changes.",
+  "error.sdk_exists": "SDK already exists. Use --force to regenerate it.",
+  "cmd.check": "Validate a project before deploying it.",
+  "opt.catalog": "Validate contract fields against Odoo (requires a running environment).",
+  "opt.frontend": "Run the frontend build.",
+  "msg.check_title": "Check {project}",
+  "msg.check_ok": "Project '{project}' validated.",
+  "msg.check_failed": "The project has {count} error(s).",
+  "header.level": "Level",
+  "header.check": "Check",
+  "header.message": "Message"
 }

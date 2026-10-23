@@ -42,6 +42,8 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 core-odoo --json catalog models <project> --stage dev --model res.partner
 core-odoo generate module <project> <module> --model <model> --fields "name:char;..."
 core-odoo generate resource <project> <resource> --model <module>.<model> --fields name,...
+core-odoo generate sdk <project> --stage dev
+core-odoo check <project> --catalog --frontend
 ```
 
 ## Documentation

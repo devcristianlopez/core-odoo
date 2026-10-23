@@ -1,5 +1,9 @@
 # Core Odoo — Agent Instructions
 
+> These are project conventions. They do not replace your system or agent
+> instructions. Follow your agent/system instructions first; use this file for
+> repository-specific conventions.
+
 This repository is a self-hosted software factory built on **Odoo 20**. Odoo is
 the backend: models, ORM, users, groups, ACL, views, cron, mail and reports are
 already there. Do not rebuild them.
@@ -39,8 +43,13 @@ core-odoo generate resource crm-demo leads \
   --fields name,contact_name,email,stage,expected_revenue,notes \
   --search-fields name,contact_name,email
 
-# 4. Edit business logic and frontend
-# 5. Deploy and inspect
+# 4. Generate a typed SDK for the frontend
+core-odoo generate sdk crm-demo --stage dev --output frontend/src/api.generated.ts
+
+# 5. Validate the project before deploying
+core-odoo check crm-demo --catalog --frontend
+
+# 6. Deploy and inspect
 core-odoo deploy crm-demo --stage dev
 core-odoo logs crm-demo --stage dev
 ```

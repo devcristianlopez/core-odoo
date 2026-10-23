@@ -52,9 +52,14 @@ the rest of the YAML.
 - third-party integrations,
 - migrations and data imports.
 
+## Implemented
+
+- `generate sdk` from `backend.yaml` + Odoo catalogue,
+- `check` for contract, manifest, ACL, XML, Python and optional frontend build,
+- multi-agent compatibility files and skill links.
+
 ## Next increments
 
 - `generate frontend` from a BFF resource,
-- `generate sdk` from OpenAPI,
-- `core-odoo check` (tests + lint + contract + build),
-- MCP server exposing catalogue/generate/deploy as tools.
+- MCP server exposing catalogue/generate/deploy as tools,
+- Odoo unit-test execution inside `check`/deploy.
