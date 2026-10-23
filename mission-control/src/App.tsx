@@ -11,6 +11,7 @@ const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
 const EnvironmentDetailPage = lazy(() => import('./pages/EnvironmentDetailPage'))
 const AuditPage = lazy(() => import('./pages/AuditPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const UsersPage = lazy(() => import('./pages/UsersPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
               path="projects/:name/environments/:stage"
               element={<EnvironmentDetailPage />}
             />
+            <Route path="users" element={<UsersPage />} />
             <Route path="audit" element={<AuditPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

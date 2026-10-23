@@ -105,6 +105,11 @@ to link the deployment to the version in the timeline.
   gateway can reach `/web/login` and `/json/2`.
 - JSON-2 `create` takes `vals_list`.
 
+## Permissions
+
+The panel has `admin`, `operator` and `viewer` users. The API token and MCP
+server act as `admin`. Ask a human before destructive operations on production.
+
 ## MCP tools
 
 When the `core-odoo` MCP server is available (OpenCode, Claude Code, Cursor),

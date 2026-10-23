@@ -79,8 +79,9 @@ def ensure_project_layout(settings: Settings, name: str, template: str) -> Path:
     """Create the minimum project tree required by the Docker provider."""
     project_dir = settings.core_projects_dir / name
     if not project_dir.exists():
-        source = settings.core_templates_dir / template
-        if source.is_dir():
+        templates_root = settings.core_templates_dir.resolve()
+        source = (settings.core_templates_dir / template).resolve()
+        if source.is_dir() and source.is_relative_to(templates_root):
             shutil.copytree(source, project_dir)
         else:
             project_dir.mkdir(parents=True)

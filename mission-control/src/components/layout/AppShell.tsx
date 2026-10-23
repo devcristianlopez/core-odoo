@@ -9,6 +9,7 @@ import {
   ScrollText,
   Settings,
   UserRound,
+  Users,
   X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -24,11 +25,13 @@ interface NavItem {
   labelKey: string
   icon: LucideIcon
   end?: boolean
+  adminOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
   { to: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
+  { to: '/users', labelKey: 'nav.users', icon: Users, adminOnly: true },
   { to: '/audit', labelKey: 'nav.audit', icon: ScrollText },
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
 ]
@@ -55,9 +58,11 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const items = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'admin')
   return (
     <nav aria-label={t('nav.primary')} className="flex flex-1 flex-col gap-1 px-3 py-4">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon
         return (
           <NavLink

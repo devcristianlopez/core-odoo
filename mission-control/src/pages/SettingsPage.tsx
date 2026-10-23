@@ -102,6 +102,9 @@ export default function SettingsPage() {
                 <p className="truncate text-sm font-medium text-slate-100">
                   {user?.username ?? t('auth.userFallback')}
                 </p>
+                <p className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">
+                  {t('settings.role')}: {user?.role ?? 'viewer'}
+                </p>
               </div>
             </div>
             <div className="flex items-center justify-between gap-3">

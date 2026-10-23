@@ -65,8 +65,18 @@ export interface LoginResponse {
   token_type?: string
 }
 
+export type UserRole = 'admin' | 'operator' | 'viewer'
+
 export interface MeResponse {
   username: string
+  role: UserRole
+}
+
+export interface User {
+  username: string
+  role: UserRole
+  active: boolean
+  created_at: string
 }
 
 export interface StatusPayload {

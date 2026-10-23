@@ -9,6 +9,7 @@ import { formatDate } from '../lib/format'
 import { groupEnvironmentsByStage, safeHttpUrl } from '../lib/services'
 import { describeError } from '../lib/errors'
 import { useToast } from '../lib/toast-context'
+import { useAuth } from '../lib/auth-context'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card, CardContent, CardFooter } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -56,6 +57,8 @@ export default function ProjectsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { pushToast } = useToast()
+  const { user } = useAuth()
+  const canManage = user?.role === 'admin'
 
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -147,10 +150,12 @@ export default function ProjectsPage() {
         title={t('projects.title')}
         description={t('projects.subtitle')}
         actions={
-          <Button variant="primary" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {t('projects.newProject')}
-          </Button>
+          canManage ? (
+            <Button variant="primary" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t('projects.newProject')}
+            </Button>
+          ) : undefined
         }
       />
 
@@ -173,10 +178,12 @@ export default function ProjectsPage() {
           title={t('projects.emptyTitle')}
           description={t('projects.emptyDescription')}
           action={
-            <Button variant="primary" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              {t('projects.emptyAction')}
-            </Button>
+            canManage ? (
+              <Button variant="primary" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t('projects.emptyAction')}
+              </Button>
+            ) : undefined
           }
         />
       ) : (
@@ -227,16 +234,18 @@ export default function ProjectsPage() {
                               {project.name}
                             </h2>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setProjectToDelete(project)}
-                            aria-label={`${t('projects.deleteTitle')}: ${project.name}`}
-                            title={t('projects.deleteTitle')}
-                            className="text-slate-500 hover:text-danger-400"
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          </Button>
+                          {canManage ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setProjectToDelete(project)}
+                              aria-label={`${t('projects.deleteTitle')}: ${project.name}`}
+                              title={t('projects.deleteTitle')}
+                              className="text-slate-500 hover:text-danger-400"
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          ) : null}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <Badge tone="info">

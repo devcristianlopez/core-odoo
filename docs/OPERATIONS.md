@@ -15,6 +15,18 @@ Servicios esperados: `traefik`, `orchestrator`, `mission-control`, `prometheus`,
 `loki`, `alloy`, `grafana`, `alertmanager`, `uptime-kuma`, `node-exporter`,
 `cadvisor`.
 
+### Usuarios y roles
+
+El primer admin sale de `.env` (`CORE_ADMIN_USER` / `CORE_ADMIN_PASSWORD`).
+Después, un admin puede crear más usuarios en **Mission Control → Users**:
+
+- `admin`: todo, incluido crear/borrar proyectos, usuarios y desplegar a prod.
+- `operator`: despliega dev/staging, lifecycle, iteraciones, backups y logs.
+- `viewer`: solo lectura.
+
+El token de API se considera siempre admin; usalo para automatización, no para
+usuarios humanos.
+
 ### Proyectos y entornos
 
 ```bash

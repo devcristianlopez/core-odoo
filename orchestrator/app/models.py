@@ -15,6 +15,17 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+
+    id: int | None = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True, max_length=64)
+    password_hash: str = Field(max_length=255)
+    role: str = Field(default="viewer", max_length=16)
+    active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Project(SQLModel, table=True):
     __tablename__ = "projects"
 

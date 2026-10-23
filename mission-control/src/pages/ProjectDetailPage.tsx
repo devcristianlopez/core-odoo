@@ -19,6 +19,7 @@ import { isRunningStatus } from '../lib/status'
 import { formatDate, formatRelativeTime } from '../lib/format'
 import { describeError } from '../lib/errors'
 import { useToast } from '../lib/toast-context'
+import { useAuth } from '../lib/auth-context'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card, CardContent, CardFooter } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -43,6 +44,9 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { pushToast } = useToast()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const canWrite = user?.role === 'admin' || user?.role === 'operator'
 
   const [deployOpen, setDeployOpen] = useState(false)
   const [deployStage, setDeployStage] = useState<Stage>('dev')
@@ -276,20 +280,24 @@ export default function ProjectDetailPage() {
                 aria-hidden="true"
               />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setDeleteProjectOpen(true)}
-              aria-label={t('project.deleteProject')}
-              title={t('project.deleteProject')}
-              className="text-slate-500 hover:text-danger-400"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button variant="primary" onClick={() => openDeploy('dev')}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              {t('project.deployAction')}
-            </Button>
+            {isAdmin ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDeleteProjectOpen(true)}
+                aria-label={t('project.deleteProject')}
+                title={t('project.deleteProject')}
+                className="text-slate-500 hover:text-danger-400"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            ) : null}
+            {canWrite ? (
+              <Button variant="primary" onClick={() => openDeploy('dev')}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t('project.deployAction')}
+              </Button>
+            ) : null}
           </>
         }
       />
@@ -374,10 +382,12 @@ export default function ProjectDetailPage() {
                     {t('project.emptyStage', { stage: stageLabel(stage) })}
                   </p>
                   <p className="text-xs text-slate-500">{t('project.emptyStageHint')}</p>
-                  <Button size="sm" className="mt-2" onClick={() => openDeploy(stage)}>
-                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t('project.deployStage', { stage: stageLabel(stage) })}
-                  </Button>
+                  {canWrite ? (
+                    <Button size="sm" className="mt-2" onClick={() => openDeploy(stage)}>
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('project.deployStage', { stage: stageLabel(stage) })}
+                    </Button>
+                  ) : null}
                 </Card>
               ) : (
                 <div className="flex flex-1 flex-col gap-4">
@@ -391,6 +401,8 @@ export default function ProjectDetailPage() {
                           <div className="flex items-start justify-between gap-2">
                             <StatusBadge status={environment.status} />
                             <div className="flex flex-wrap items-center justify-end gap-0.5">
+                              {canWrite ? (
+                                <>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -439,6 +451,9 @@ export default function ProjectDetailPage() {
                               >
                                 <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
                               </Button>
+                              </>
+                              ) : null}
+                              {isAdmin ? (
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -449,6 +464,7 @@ export default function ProjectDetailPage() {
                               >
                                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                               </Button>
+                              ) : null}
                             </div>
                           </div>
 
@@ -525,7 +541,7 @@ export default function ProjectDetailPage() {
       </div>
 
       <div className="mt-6">
-        <IterationsPanel project={name} onChanged={invalidateAll} />
+        <IterationsPanel project={name} onChanged={invalidateAll} canWrite={canWrite} />
       </div>
 
       <Modal

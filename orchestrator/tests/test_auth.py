@@ -22,7 +22,7 @@ def test_login_and_me(harness: AppHarness) -> None:
 
     me = harness.client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me.status_code == 200
-    assert me.json() == {"username": "admin"}
+    assert me.json() == {"username": "admin", "role": "admin"}
 
     alias = harness.client.post(
         "/auth/login", json={"username": "admin", "password": "admin-password"}
@@ -40,7 +40,7 @@ def test_login_rejects_bad_credentials(harness: AppHarness) -> None:
 def test_api_token_identity(harness: AppHarness, auth_headers: dict[str, str]) -> None:
     response = harness.client.get("/api/v1/auth/me", headers=auth_headers)
     assert response.status_code == 200
-    assert response.json() == {"username": "api"}
+    assert response.json() == {"username": "api", "role": "admin"}
 
 
 def test_requires_auth(harness: AppHarness) -> None:

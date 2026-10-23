@@ -8,6 +8,8 @@ import type {
   Project,
   Stage,
   StatusPayload,
+  User,
+  UserRole,
 } from './types'
 
 /**
@@ -233,6 +235,18 @@ export interface DeployInput {
   iteration?: string
 }
 
+export interface CreateUserInput {
+  username: string
+  password: string
+  role: UserRole
+}
+
+export interface UpdateUserInput {
+  password?: string
+  role?: UserRole
+  active?: boolean
+}
+
 export interface CreateIterationInput {
   version: string
   title: string
@@ -337,6 +351,20 @@ export const api = {
     logs(name: string, stage: string, tail = 200): Promise<{ logs: string }> {
       return request<{ logs: string }>(`${environmentPath(name, stage)}/logs`, {
         query: { tail },
+      })
+    },
+  },
+  users: {
+    list(): Promise<User[]> {
+      return request<User[]>('/users')
+    },
+    create(input: CreateUserInput): Promise<User> {
+      return request<User>('/users', { method: 'POST', body: input })
+    },
+    update(username: string, input: UpdateUserInput): Promise<User> {
+      return request<User>(`/users/${encodeURIComponent(username)}`, {
+        method: 'PATCH',
+        body: input,
       })
     },
   },

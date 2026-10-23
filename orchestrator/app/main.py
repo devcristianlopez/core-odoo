@@ -19,7 +19,7 @@ from .metrics import render as render_metrics
 from .models import Environment
 from .providers.base import EnvironmentProvider, ProviderError
 from .providers.docker import DockerProvider
-from .routers import audit, auth, health, iterations, observability, projects, status
+from .routers import audit, auth, health, iterations, observability, projects, status, users
 from .routers.auth import login, me
 from .schemas import MeResponse, TokenResponse
 from .security import SecurityService
@@ -51,6 +51,8 @@ def create_app(
     app.state.engine = engine
     app.state.session_factory = session_factory
     app.state.security = SecurityService(settings)
+    with session_factory() as session:
+        app.state.security.ensure_admin(session)
     app.state.provider = provider or DockerProvider(settings)
     app.state.proxy_transport = None
 
@@ -73,6 +75,7 @@ def create_app(
     # Router-level auth aliases: the contract lists auth endpoints relative to
     # the base path, so expose them both as /api/v1/auth/* and /auth/*.
     app.include_router(auth.router, prefix=API_PREFIX)
+    app.include_router(users.router, prefix=API_PREFIX)
     app.add_api_route(
         "/auth/login",
         login,
@@ -88,9 +91,7 @@ def create_app(
     def metrics() -> PlainTextResponse:
         with session_factory() as session:
             count = session.exec(select(func.count()).select_from(Environment)).one()
-        return PlainTextResponse(
-            render_metrics(int(count)), media_type="text/plain; version=0.0.4"
-        )
+        return PlainTextResponse(render_metrics(int(count)), media_type="text/plain; version=0.0.4")
 
     @app.exception_handler(ProviderError)
     async def provider_error_handler(request: Request, exc: ProviderError) -> JSONResponse:

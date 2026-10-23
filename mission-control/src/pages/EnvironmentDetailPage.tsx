@@ -22,6 +22,7 @@ import { splitLogLines, filterLogLines, logsToText } from '../lib/logs'
 import { copyText } from '../lib/clipboard'
 import { describeError } from '../lib/errors'
 import { useToast } from '../lib/toast-context'
+import { useAuth } from '../lib/auth-context'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -48,6 +49,9 @@ export default function EnvironmentDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { pushToast } = useToast()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const canOperate = user?.role === 'admin' || user?.role === 'operator'
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [metricsPaused, setMetricsPaused] = useState(false)
@@ -228,6 +232,8 @@ export default function EnvironmentDetailPage() {
         actions={
           <>
             <StatusBadge status={environment.status} />
+            {canOperate ? (
+              <>
             <Button
               variant="ghost"
               size="icon"
@@ -264,6 +270,8 @@ export default function EnvironmentDetailPage() {
             >
               <RotateCw className="h-4 w-4" aria-hidden="true" />
             </Button>
+              </>
+            ) : null}
             {url ? (
               <a
                 href={url}
@@ -293,16 +301,18 @@ export default function EnvironmentDetailPage() {
                 aria-hidden="true"
               />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setDeleteOpen(true)}
-              aria-label={t('environment.deleteEnvironment')}
-              title={t('environment.deleteEnvironment')}
-              className="text-slate-500 hover:text-danger-400"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
+            {isAdmin ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDeleteOpen(true)}
+                aria-label={t('environment.deleteEnvironment')}
+                title={t('environment.deleteEnvironment')}
+                className="text-slate-500 hover:text-danger-400"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            ) : null}
           </>
         }
       />

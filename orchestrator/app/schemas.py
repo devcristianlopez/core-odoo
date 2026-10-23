@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any, Literal
 
@@ -25,8 +26,31 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+Role = Literal["admin", "operator", "viewer"]
+
+
 class MeResponse(BaseModel):
     username: str
+    role: Role = "viewer"
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=2, max_length=64)
+    password: str = Field(min_length=8, max_length=256)
+    role: Role = "viewer"
+
+
+class UserUpdate(BaseModel):
+    password: str | None = Field(default=None, min_length=8, max_length=256)
+    role: Role | None = None
+    active: bool | None = None
+
+
+class UserRead(BaseModel):
+    username: str
+    role: Role
+    active: bool
+    created_at: datetime
 
 
 class EnvironmentRead(BaseModel):
@@ -65,6 +89,14 @@ class ProjectCreate(BaseModel):
             raise ValueError("project name cannot start or end with a dash")
         if len(candidate) < 2:
             raise ValueError("project name must be at least 2 characters long")
+        return candidate
+
+    @field_validator("template")
+    @classmethod
+    def _template_slug(cls, value: str) -> str:
+        candidate = value.strip()
+        if not re.match(r"^[a-z][a-z0-9-]{0,63}$", candidate):
+            raise ValueError("template must be a lowercase slug")
         return candidate
 
 

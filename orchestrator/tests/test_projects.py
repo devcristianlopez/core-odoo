@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from app.providers.base import ProviderError
 
 from .conftest import AppHarness
@@ -99,9 +97,10 @@ def test_created_project_is_recorded_in_audit(
     assert audit[0]["status"] == "success"
 
 
-def test_project_files_are_not_removed_on_delete(
+def test_project_files_are_removed_on_delete(
     harness: AppHarness, auth_headers: dict[str, str], create_project, settings
 ) -> None:
     create_project("smoke-test")
     harness.client.delete("/api/v1/projects/smoke-test", headers=auth_headers)
-    assert Path(settings.core_projects_dir / "smoke-test").is_dir()
+    assert not (settings.core_projects_dir / "smoke-test").exists()
+    assert not (settings.iterations_dir / "smoke-test").exists()

@@ -85,7 +85,10 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 |---|---|---|---|
 | GET | `/health` | – | `{status, version}` |
 | POST | `/auth/login` | `{username, password}` | `{access_token, token_type}` |
-| GET | `/auth/me` | – | `{username}` |
+| GET | `/auth/me` | – | `{username, role}` |
+| GET | `/users` | – | `[User]` (admin) |
+| POST | `/users` | `{username, password, role}` | `User` (admin) |
+| PATCH | `/users/{username}` | `{password?, role?, active?}` | `User` (admin) |
 | GET | `/status` | – | `{docker, disk, environments, version}` |
 | GET | `/projects` | – | `[Project]` |
 | POST | `/projects` | `{name, template, repo_url?}` | `Project` |
@@ -113,6 +116,11 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 `Environment`: `{project, stage, status, url, compose_project, services, created_at, updated_at}`
 
 Stages allowed: `dev`, `staging`, `prod`.
+
+Roles: `admin` (everything), `operator` (deploy dev/staging, lifecycle,
+iterations, backups, logs) and `viewer` (read-only). Project create/delete,
+environment delete, production deploy and user management require `admin`.
+The API token is always treated as `admin`.
 
 ## 6. Gateway (BFF) contract
 

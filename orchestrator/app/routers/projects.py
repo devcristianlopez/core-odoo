@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import Callable
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
 
-from ..deps import PrincipalDep, ProviderDep, SessionDep, SettingsDep
+from ..deps import AdminDep, PrincipalDep, ProviderDep, SessionDep, SettingsDep, require_write
 from ..metrics import record_backup_success, record_deploy
 from ..models import Environment, Iteration, Project, utcnow
 from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
@@ -34,7 +35,7 @@ from ..services import (
     record_audit,
 )
 
-router = APIRouter(tags=["projects"])
+router = APIRouter(tags=["projects"], dependencies=[Depends(require_write)])
 
 ProviderOperation = Callable[[EnvironmentSpec], ProviderStatus]
 
@@ -93,7 +94,7 @@ def list_projects(session: SessionDep, principal: PrincipalDep) -> list[ProjectR
 def create_project(
     payload: ProjectCreate,
     session: SessionDep,
-    principal: PrincipalDep,
+    principal: AdminDep,
     settings: SettingsDep,
 ) -> ProjectRead:
     existing = session.exec(select(Project).where(Project.name == payload.name)).first()
@@ -131,7 +132,7 @@ def get_project(name: str, session: SessionDep, principal: PrincipalDep) -> Proj
 def delete_project(
     name: str,
     session: SessionDep,
-    principal: PrincipalDep,
+    principal: AdminDep,
     provider: ProviderDep,
     settings: SettingsDep,
 ) -> DeletedResponse:
@@ -159,12 +160,24 @@ def delete_project(
     for environment in environments:
         session.delete(environment)
     session.delete(project)
+    for path in (
+        settings.core_projects_dir / name,
+        settings.iterations_dir / name,
+    ):
+        if path.exists():
+            shutil.rmtree(path)
+    for backup_dir in settings.backups_dir.glob(f"{name}-*"):
+        if backup_dir.is_dir():
+            shutil.rmtree(backup_dir)
     record_audit(
         session,
         actor=principal.username,
         action="project.delete",
         target=name,
-        details={"environments": [env.stage for env in environments]},
+        details={
+            "environments": [env.stage for env in environments],
+            "source_removed": True,
+        },
     )
     session.commit()
     return DeletedResponse(deleted=True)
@@ -196,6 +209,11 @@ def deploy(
     provider: ProviderDep,
     settings: SettingsDep,
 ) -> EnvironmentRead:
+    if payload.stage == "prod" and principal.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="production deploys require the admin role",
+        )
     project = _get_project(session, name)
     environment = session.exec(
         select(Environment).where(
@@ -413,7 +431,7 @@ def delete_environment(
     name: str,
     stage: str,
     session: SessionDep,
-    principal: PrincipalDep,
+    principal: AdminDep,
     provider: ProviderDep,
     settings: SettingsDep,
 ) -> DeletedResponse:

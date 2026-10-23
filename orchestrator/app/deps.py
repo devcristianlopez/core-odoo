@@ -7,9 +7,10 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from .config import Settings
+from .models import User
 from .providers.base import EnvironmentProvider
 from .security import Principal, SecurityService
 
@@ -36,6 +37,7 @@ def get_session(request: Request) -> Iterator[Session]:
 def require_principal(
     request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> Principal:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
@@ -50,6 +52,35 @@ def require_principal(
             detail="invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if principal.method == "jwt":
+        user = session.exec(select(User).where(User.username == principal.username)).first()
+        if user is None or not user.active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="user is inactive or missing",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return Principal(username=user.username, method="jwt", role=user.role)
+    return principal
+
+
+def require_write(request: Request, principal: PrincipalDep) -> Principal:
+    if request.method in {"GET", "HEAD", "OPTIONS"}:
+        return principal
+    if principal.role not in {"admin", "operator"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="this action requires operator or admin role",
+        )
+    return principal
+
+
+def require_admin(principal: PrincipalDep) -> Principal:
+    if principal.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="this action requires admin role",
+        )
     return principal
 
 
@@ -58,3 +89,5 @@ SecurityDep = Annotated[SecurityService, Depends(get_security)]
 ProviderDep = Annotated[EnvironmentProvider, Depends(get_provider)]
 SessionDep = Annotated[Session, Depends(get_session)]
 PrincipalDep = Annotated[Principal, Depends(require_principal)]
+WritePrincipalDep = Annotated[Principal, Depends(require_write)]
+AdminDep = Annotated[Principal, Depends(require_admin)]

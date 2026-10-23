@@ -20,9 +20,11 @@ import { LoadingState } from '../ui/Loading'
 export function IterationsPanel({
   project,
   onChanged,
+  canWrite = true,
 }: {
   project: string
   onChanged: () => void
+  canWrite?: boolean
 }): JSX.Element {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
@@ -174,10 +176,12 @@ export function IterationsPanel({
           title={t('iterations.title')}
           description={t('iterations.subtitle')}
           actions={
-            <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('iterations.new')}
-            </Button>
+            canWrite ? (
+              <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                {t('iterations.new')}
+              </Button>
+            ) : undefined
           }
         />
         {iterationsQuery.isLoading ? (
@@ -198,10 +202,12 @@ export function IterationsPanel({
               title={t('iterations.empty')}
               description={t('iterations.emptyHint')}
               action={
-                <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t('iterations.new')}
-                </Button>
+                canWrite ? (
+                  <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('iterations.new')}
+                  </Button>
+                ) : undefined
               }
             />
           </CardContent>
@@ -228,39 +234,43 @@ export function IterationsPanel({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => restore(iteration)}
-                    disabled={!iteration.has_snapshot || restoreMutation.isPending || deployMutation.isPending}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                    {restoreMutation.isPending ? t('iterations.restoring') : t('iterations.restore')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
                     onClick={() => diffMutation.mutate(iteration)}
                     disabled={diffMutation.isPending}
                   >
                     <GitCompare className="h-3.5 w-3.5" aria-hidden="true" />
                     {t('iterations.diff')}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => backupMutation.mutate(iteration)}
-                    disabled={!iteration.has_snapshot || backupMutation.isPending}
-                  >
-                    <Database className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t('iterations.backup')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => deploy(iteration)}
-                    disabled={!iteration.has_snapshot || deployMutation.isPending}
-                  >
-                    <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
-                    {deployMutation.isPending ? t('iterations.deploying') : t('iterations.deploy')}
-                  </Button>
+                  {canWrite ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => restore(iteration)}
+                        disabled={!iteration.has_snapshot || restoreMutation.isPending || deployMutation.isPending}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                        {restoreMutation.isPending ? t('iterations.restoring') : t('iterations.restore')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => backupMutation.mutate(iteration)}
+                        disabled={!iteration.has_snapshot || backupMutation.isPending}
+                      >
+                        <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t('iterations.backup')}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => deploy(iteration)}
+                        disabled={!iteration.has_snapshot || deployMutation.isPending}
+                      >
+                        <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
+                        {deployMutation.isPending ? t('iterations.deploying') : t('iterations.deploy')}
+                      </Button>
+                    </>
+                  ) : null}
                 </div>
               </li>
             ))}
