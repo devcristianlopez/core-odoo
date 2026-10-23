@@ -74,6 +74,16 @@ class ProjectRead(BaseModel):
     environments: list[EnvironmentRead] = Field(default_factory=list)
 
 
+class ProjectMemberCreate(BaseModel):
+    username: str = Field(min_length=2, max_length=64)
+
+
+class ProjectMemberRead(BaseModel):
+    username: str
+    role: Role
+    created_at: datetime
+
+
 class ProjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=63)
     template: str = Field(default="odoo-module", min_length=1, max_length=64)

@@ -20,9 +20,7 @@ def _login(harness: AppHarness, username: str) -> str:
     return response.json()["access_token"]
 
 
-def test_admin_can_create_and_list_users(
-    harness: AppHarness, auth_headers: dict[str, str]
-) -> None:
+def test_admin_can_create_and_list_users(harness: AppHarness, auth_headers: dict[str, str]) -> None:
     created = _create_user(harness, auth_headers, "operator", "operator")
     assert created.status_code == 201, created.text
     assert created.json()["role"] == "operator"
@@ -47,6 +45,12 @@ def test_operator_cannot_create_projects_but_can_deploy_dev(
     assert forbidden.status_code == 403
 
     create_project("smoke-test")
+    member = harness.client.post(
+        "/api/v1/projects/smoke-test/members",
+        json={"username": "operator"},
+        headers=auth_headers,
+    )
+    assert member.status_code == 201, member.text
     deployed = harness.client.post(
         "/api/v1/projects/smoke-test/deploy",
         json={"stage": "dev"},
@@ -70,6 +74,12 @@ def test_viewer_is_read_only(
 
     assert harness.client.get("/api/v1/projects", headers=headers).status_code == 200
     create_project("smoke-test")
+    member = harness.client.post(
+        "/api/v1/projects/smoke-test/members",
+        json={"username": "viewer"},
+        headers=auth_headers,
+    )
+    assert member.status_code == 201, member.text
     response = harness.client.post(
         "/api/v1/projects/smoke-test/deploy",
         json={"stage": "dev"},
@@ -78,9 +88,7 @@ def test_viewer_is_read_only(
     assert response.status_code == 403
 
 
-def test_last_admin_cannot_be_demoted(
-    harness: AppHarness, auth_headers: dict[str, str]
-) -> None:
+def test_last_admin_cannot_be_demoted(harness: AppHarness, auth_headers: dict[str, str]) -> None:
     response = harness.client.patch(
         "/api/v1/users/admin",
         json={"role": "viewer"},

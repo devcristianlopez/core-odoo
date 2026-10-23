@@ -10,7 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session, select
 
 from .config import Settings
-from .models import User
+from .models import Project, ProjectMember, User
 from .providers.base import EnvironmentProvider
 from .security import Principal, SecurityService
 
@@ -82,6 +82,30 @@ def require_admin(principal: PrincipalDep) -> Principal:
             detail="this action requires admin role",
         )
     return principal
+
+
+def require_project_access(
+    request: Request,
+    principal: PrincipalDep,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    name = request.path_params.get("name")
+    if not name or principal.role == "admin" or principal.method == "api_token":
+        return
+    project = session.exec(select(Project).where(Project.name == name)).first()
+    if project is None:
+        return
+    user = session.exec(select(User).where(User.username == principal.username)).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="project access denied")
+    membership = session.exec(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project.id,
+            ProjectMember.user_id == user.id,
+        )
+    ).first()
+    if membership is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="project access denied")
 
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]

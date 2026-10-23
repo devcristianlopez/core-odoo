@@ -31,7 +31,7 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Observability** — Prometheus, Loki, Grafana, Alertmanager, Uptime Kuma.
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
 - **Bilingual** — Spanish and English (UI, CLI, docs).
-- **Multi-user panel** — admin, operator and viewer roles; admin-managed users.
+- **Multi-user panel** — admin, operator and viewer roles, with per-project membership.
 
 ## Agent development
 

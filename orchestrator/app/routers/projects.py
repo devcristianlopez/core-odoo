@@ -9,9 +9,17 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
 
-from ..deps import AdminDep, PrincipalDep, ProviderDep, SessionDep, SettingsDep, require_write
+from ..deps import (
+    AdminDep,
+    PrincipalDep,
+    ProviderDep,
+    SessionDep,
+    SettingsDep,
+    require_project_access,
+    require_write,
+)
 from ..metrics import record_backup_success, record_deploy
-from ..models import Environment, Iteration, Project, utcnow
+from ..models import Environment, Iteration, Project, ProjectMember, User, utcnow
 from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
 from ..providers.docker import backup_filename
 from ..scaffold import ensure_project_layout
@@ -22,6 +30,8 @@ from ..schemas import (
     EnvironmentRead,
     LogsResponse,
     ProjectCreate,
+    ProjectMemberCreate,
+    ProjectMemberRead,
     ProjectRead,
 )
 from ..services import (
@@ -35,7 +45,10 @@ from ..services import (
     record_audit,
 )
 
-router = APIRouter(tags=["projects"], dependencies=[Depends(require_write)])
+router = APIRouter(
+    tags=["projects"],
+    dependencies=[Depends(require_write), Depends(require_project_access)],
+)
 
 ProviderOperation = Callable[[EnvironmentSpec], ProviderStatus]
 
@@ -86,7 +99,18 @@ def _audit_failure(
 
 @router.get("/projects", response_model=list[ProjectRead])
 def list_projects(session: SessionDep, principal: PrincipalDep) -> list[ProjectRead]:
-    projects = session.exec(select(Project).order_by(Project.name)).all()
+    if principal.role == "admin":
+        projects = session.exec(select(Project).order_by(Project.name)).all()
+    else:
+        user = session.exec(select(User).where(User.username == principal.username)).first()
+        if user is None:
+            return []
+        project_ids = session.exec(
+            select(ProjectMember.project_id).where(ProjectMember.user_id == user.id)
+        ).all()
+        projects = session.exec(
+            select(Project).where(Project.id.in_(project_ids)).order_by(Project.name)
+        ).all()
     return [project_read(session, project) for project in projects]
 
 
@@ -159,6 +183,11 @@ def delete_project(
 
     for environment in environments:
         session.delete(environment)
+    members = session.exec(
+        select(ProjectMember).where(ProjectMember.project_id == project.id)
+    ).all()
+    for member in members:
+        session.delete(member)
     session.delete(project)
     for path in (
         settings.core_projects_dir / name,
@@ -178,6 +207,106 @@ def delete_project(
             "environments": [env.stage for env in environments],
             "source_removed": True,
         },
+    )
+    session.commit()
+    return DeletedResponse(deleted=True)
+
+
+# --------------------------------------------------------------------- members
+
+
+@router.get("/projects/{name}/members", response_model=list[ProjectMemberRead])
+def list_project_members(
+    name: str,
+    session: SessionDep,
+    principal: AdminDep,
+) -> list[ProjectMemberRead]:
+    project = _get_project(session, name)
+    members = session.exec(
+        select(ProjectMember).where(ProjectMember.project_id == project.id)
+    ).all()
+    result: list[ProjectMemberRead] = []
+    for member in members:
+        user = session.get(User, member.user_id)
+        if user is not None:
+            result.append(
+                ProjectMemberRead(
+                    username=user.username,
+                    role=user.role,  # type: ignore[arg-type]
+                    created_at=member.created_at,
+                )
+            )
+    return sorted(result, key=lambda item: item.username)
+
+
+@router.post(
+    "/projects/{name}/members",
+    response_model=ProjectMemberRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_project_member(
+    name: str,
+    payload: ProjectMemberCreate,
+    session: SessionDep,
+    principal: AdminDep,
+) -> ProjectMemberRead:
+    project = _get_project(session, name)
+    user = session.exec(select(User).where(User.username == payload.username)).first()
+    if user is None or not user.active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user not found or inactive"
+        )
+    existing = session.exec(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project.id,
+            ProjectMember.user_id == user.id,
+        )
+    ).first()
+    if existing is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="user is already a member")
+    member = ProjectMember(project_id=project.id, user_id=user.id)
+    session.add(member)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="project.member.add",
+        target=f"{name}/{user.username}",
+        details={"role": user.role},
+    )
+    session.commit()
+    session.refresh(member)
+    return ProjectMemberRead(
+        username=user.username,
+        role=user.role,  # type: ignore[arg-type]
+        created_at=member.created_at,
+    )
+
+
+@router.delete("/projects/{name}/members/{username}", response_model=DeletedResponse)
+def remove_project_member(
+    name: str,
+    username: str,
+    session: SessionDep,
+    principal: AdminDep,
+) -> DeletedResponse:
+    project = _get_project(session, name)
+    user = session.exec(select(User).where(User.username == username)).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+    member = session.exec(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project.id,
+            ProjectMember.user_id == user.id,
+        )
+    ).first()
+    if member is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="member not found")
+    session.delete(member)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="project.member.remove",
+        target=f"{name}/{username}",
     )
     session.commit()
     return DeletedResponse(deleted=True)

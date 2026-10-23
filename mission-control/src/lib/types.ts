@@ -52,6 +52,12 @@ export interface IterationDiff {
   summary: Record<string, number>
 }
 
+export interface ProjectMember {
+  username: string
+  role: UserRole
+  created_at: string
+}
+
 export interface Project {
   name: string
   template: string

@@ -98,6 +98,9 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?}` | `Environment` |
 | GET | `/projects/{name}/iterations` | – | `[Iteration]` |
 | GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
+| GET | `/projects/{name}/members` | – | `[ProjectMember]` (admin) |
+| POST | `/projects/{name}/members` | `{username}` | `ProjectMember` (admin) |
+| DELETE | `/projects/{name}/members/{username}` | – | `{deleted: true}` (admin) |
 | POST | `/projects/{name}/iterations` | `{version, title, notes?, branch?, commit_sha?, modules?}` | `Iteration` |
 | POST | `/projects/{name}/iterations/{version}/restore` | – | `Iteration` |
 | GET | `/projects/{name}/iterations/{version}/diff` | `?against=<version>` | `IterationDiff` |
@@ -120,7 +123,10 @@ Stages allowed: `dev`, `staging`, `prod`.
 Roles: `admin` (everything), `operator` (deploy dev/staging, lifecycle,
 iterations, backups, logs) and `viewer` (read-only). Project create/delete,
 environment delete, production deploy and user management require `admin`.
-The API token is always treated as `admin`.
+The API token is always treated as `admin`. Non-admin users only see projects
+where they are a member; `GET /projects` is filtered and project endpoints
+return `403` for non-members. Admins can manage membership from the project
+detail page.
 
 ## 6. Gateway (BFF) contract
 

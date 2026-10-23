@@ -33,6 +33,7 @@ import { LoadingState } from '../components/ui/Loading'
 import { StatusBadge } from '../components/StatusBadge'
 import { ServiceBadges } from '../components/environments/ServiceBadges'
 import { IterationsPanel } from '../components/iterations/IterationsPanel'
+import { MembersPanel } from '../components/members/MembersPanel'
 
 type EnvironmentAction = 'start' | 'stop' | 'restart'
 
@@ -540,8 +541,9 @@ export default function ProjectDetailPage() {
         })}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid gap-5">
         <IterationsPanel project={name} onChanged={invalidateAll} canWrite={canWrite} />
+        <MembersPanel project={name} canManage={isAdmin} />
       </div>
 
       <Modal

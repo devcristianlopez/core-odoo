@@ -7,7 +7,14 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
 
-from ..deps import PrincipalDep, ProviderDep, SessionDep, SettingsDep, require_write
+from ..deps import (
+    PrincipalDep,
+    ProviderDep,
+    SessionDep,
+    SettingsDep,
+    require_project_access,
+    require_write,
+)
 from ..models import Environment, Iteration, IterationBackup, Project, utcnow
 from ..providers.base import ProviderError
 from ..providers.docker import backup_filename
@@ -27,7 +34,10 @@ from ..services import (
     snapshot_manifest,
 )
 
-router = APIRouter(tags=["iterations"], dependencies=[Depends(require_write)])
+router = APIRouter(
+    tags=["iterations"],
+    dependencies=[Depends(require_write), Depends(require_project_access)],
+)
 
 
 def _get_project(session: SessionDep, name: str) -> Project:

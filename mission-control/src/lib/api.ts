@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   MeResponse,
   Project,
+  ProjectMember,
   Stage,
   StatusPayload,
   User,
@@ -295,6 +296,22 @@ export const api = {
     },
     remove(name: string): Promise<{ deleted: boolean }> {
       return request(projectPath(name), { method: 'DELETE' })
+    },
+  },
+  members: {
+    list(name: string): Promise<ProjectMember[]> {
+      return request<ProjectMember[]>(`${projectPath(name)}/members`)
+    },
+    add(name: string, username: string): Promise<ProjectMember> {
+      return request<ProjectMember>(`${projectPath(name)}/members`, {
+        method: 'POST',
+        body: { username },
+      })
+    },
+    remove(name: string, username: string): Promise<{ deleted: boolean }> {
+      return request(`${projectPath(name)}/members/${encodeURIComponent(username)}`, {
+        method: 'DELETE',
+      })
     },
   },
   iterations: {

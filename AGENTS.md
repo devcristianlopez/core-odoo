@@ -108,7 +108,8 @@ to link the deployment to the version in the timeline.
 ## Permissions
 
 The panel has `admin`, `operator` and `viewer` users. The API token and MCP
-server act as `admin`. Ask a human before destructive operations on production.
+server act as `admin`. Non-admin users only see projects where they are a
+member. Ask a human before destructive operations on production.
 
 ## MCP tools
 

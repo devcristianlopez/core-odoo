@@ -27,6 +27,10 @@ Después, un admin puede crear más usuarios en **Mission Control → Users**:
 El token de API se considera siempre admin; usalo para automatización, no para
 usuarios humanos.
 
+Los roles son globales, pero el acceso a proyectos es por membresía. Un
+`operator` o `viewer` solamente ve los proyectos donde fue agregado. El admin
+agrega miembros desde **Project Detail → Miembros del proyecto**.
+
 ### Proyectos y entornos
 
 ```bash

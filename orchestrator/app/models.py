@@ -36,6 +36,16 @@ class Project(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
+class ProjectMember(SQLModel, table=True):
+    __tablename__ = "project_members"
+    __table_args__ = (UniqueConstraint("project_id", "user_id", name="uq_project_member"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="projects.id", index=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Environment(SQLModel, table=True):
     __tablename__ = "environments"
     __table_args__ = (UniqueConstraint("project_id", "stage", name="uq_environment_project_stage"),)
