@@ -12,6 +12,9 @@ same project works across agents without duplicating rules.
 | Cursor | `.cursor/rules/core-odoo.mdc` | per config |
 | Aider | `CONVENTIONS.md` | not applicable |
 
+MCP is configured for OpenCode (`opencode.json`), Claude Code (`.mcp.json`) and
+Cursor (`.cursor/mcp.json`).
+
 The canonical skills live in `skills/`. The repository contains symlinks:
 
 ```text

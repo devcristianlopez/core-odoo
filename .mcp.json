@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "core-odoo": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--quiet",
+        "--project",
+        "cli",
+        "core-odoo",
+        "mcp",
+        "serve"
+      ]
+    }
+  }
+}

@@ -135,5 +135,7 @@
   "opt.frontend_template": "Frontend template.",
   "msg.frontend_generated": "Frontend generated at {path}.",
   "msg.frontend_hint": "Review src/App.tsx and deploy the environment.",
-  "error.frontend_exists": "A frontend already exists. Use --force to replace it."
+  "error.frontend_exists": "A frontend already exists. Use --force to replace it.",
+  "cmd.mcp": "MCP server for agents.",
+  "cmd.mcp.serve": "Serve tools over stdio."
 }

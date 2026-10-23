@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "core-odoo": {
+      "type": "local",
+      "command": [
+        "uv",
+        "run",
+        "--quiet",
+        "--project",
+        "cli",
+        "core-odoo",
+        "mcp",
+        "serve"
+      ],
+      "cwd": ".",
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}

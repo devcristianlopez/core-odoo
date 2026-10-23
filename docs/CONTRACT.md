@@ -221,6 +221,7 @@ core-odoo generate resource <project> <resource> --model <odoo.model> --fields a
 core-odoo generate sdk <project> --stage dev [--output frontend/src/api.generated.ts]
 core-odoo generate frontend <project> --stage dev [--template <path>] [--force]
 core-odoo check <project> [--catalog] [--frontend]
+core-odoo mcp serve
 ```
 
 Global flags: `--lang`, `--json`, `--verbose`.
@@ -239,6 +240,8 @@ core-odoo/
 ├── docs/                    # docs ES/EN + agent recipes
 ├── skills/                  # optional agent workflows
 ├── AGENTS.md                # agent rules and golden path
+├── opencode.json            # OpenCode MCP config
+├── .mcp.json                # Claude Code MCP config
 ├── docker-compose.yml       # control plane
 ├── docker-compose.observability.yml
 ├── .env.example

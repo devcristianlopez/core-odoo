@@ -9,6 +9,7 @@ import typer
 from .commands import catalog as catalog_commands
 from .commands import check as check_commands
 from .commands import generate as generate_commands
+from .commands import mcp as mcp_commands
 from .commands import projects as project_commands
 from .commands import system
 from .errors import CliError
@@ -80,6 +81,10 @@ def build_app(language: str | None = None) -> typer.Typer:
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)
     app.command("check", help=t("cmd.check"))(check_commands.check)
+
+    mcp_app = typer.Typer(help=t("cmd.mcp"), no_args_is_help=True)
+    mcp_app.command("serve", help=t("cmd.mcp.serve"))(mcp_commands.serve)
+    app.add_typer(mcp_app, name="mcp")
 
     catalog_app = typer.Typer(help=t("cmd.catalog"), no_args_is_help=True)
     catalog_app.command("models", help=t("cmd.catalog.models"))(catalog_commands.catalog_models)

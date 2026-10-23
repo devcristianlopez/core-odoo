@@ -45,6 +45,7 @@ core-odoo generate resource <project> <resource> --model <module>.<model> --fiel
 core-odoo generate sdk <project> --stage dev
 core-odoo generate frontend <project> --stage dev
 core-odoo check <project> --catalog --frontend
+core-odoo mcp serve   # MCP tools for OpenCode/Claude/Cursor
 ```
 
 ## Documentation

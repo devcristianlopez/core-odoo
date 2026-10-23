@@ -135,5 +135,7 @@
   "opt.frontend_template": "Plantilla de frontend.",
   "msg.frontend_generated": "Frontend generado en {path}.",
   "msg.frontend_hint": "Revisá src/App.tsx y desplegá el entorno.",
-  "error.frontend_exists": "Ya existe un frontend. Usa --force para reemplazarlo."
+  "error.frontend_exists": "Ya existe un frontend. Usa --force para reemplazarlo.",
+  "cmd.mcp": "Servidor MCP para agentes.",
+  "cmd.mcp.serve": "Sirve las herramientas por stdio."
 }

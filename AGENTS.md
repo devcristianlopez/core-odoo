@@ -88,6 +88,13 @@ name:char!        # explicitly required
   gateway can reach `/web/login` and `/json/2`.
 - JSON-2 `create` takes `vals_list`.
 
+## MCP tools
+
+When the `core-odoo` MCP server is available (OpenCode, Claude Code, Cursor),
+prefer its typed tools: `catalog_models`, `generate_module`,
+`generate_resource`, `generate_sdk`, `generate_frontend`, `check_project`,
+`deploy_project`, `environment_logs`. The CLI remains the source of truth.
+
 ## Skills
 
 Optional workflows live in `skills/`:
