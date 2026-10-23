@@ -137,5 +137,16 @@
   "msg.frontend_hint": "Review src/App.tsx and deploy the environment.",
   "error.frontend_exists": "A frontend already exists. Use --force to replace it.",
   "cmd.mcp": "MCP server for agents.",
-  "cmd.mcp.serve": "Serve tools over stdio."
+  "cmd.mcp.serve": "Serve tools over stdio.",
+  "cmd.iteration": "Manage versioned project iterations.",
+  "cmd.iteration.list": "List iterations.",
+  "cmd.iteration.create": "Snapshot the project source as an iteration.",
+  "cmd.iteration.restore": "Restore source code from an iteration.",
+  "opt.version": "Iteration version (for example 0.1.0).",
+  "opt.title": "Iteration title.",
+  "opt.notes": "Iteration notes.",
+  "opt.commit": "Associated commit SHA.",
+  "opt.modules": "Comma-separated modules.",
+  "opt.iteration": "Iteration associated with the deploy.",
+  "arg.version": "Iteration version."
 }

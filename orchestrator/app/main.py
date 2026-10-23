@@ -19,7 +19,7 @@ from .metrics import render as render_metrics
 from .models import Environment
 from .providers.base import EnvironmentProvider, ProviderError
 from .providers.docker import DockerProvider
-from .routers import audit, auth, health, observability, projects, status
+from .routers import audit, auth, health, iterations, observability, projects, status
 from .routers.auth import login, me
 from .schemas import MeResponse, TokenResponse
 from .security import SecurityService
@@ -66,6 +66,7 @@ def create_app(
     app.include_router(health.router)
     app.include_router(health.router, prefix=API_PREFIX, include_in_schema=False)
     app.include_router(projects.router, prefix=API_PREFIX)
+    app.include_router(iterations.router, prefix=API_PREFIX)
     app.include_router(status.router, prefix=API_PREFIX)
     app.include_router(observability.router, prefix=API_PREFIX)
     app.include_router(audit.router, prefix=API_PREFIX)

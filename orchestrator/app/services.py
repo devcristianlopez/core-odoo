@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import re
 import secrets
+import shutil
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from sqlmodel import Session, select
 
 from .config import Settings
-from .models import AuditEvent, Environment, Project, utcnow
+from .models import AuditEvent, Environment, Iteration, Project, utcnow
 from .providers.base import EnvironmentSpec
-from .schemas import EnvironmentRead, ProjectRead
+from .schemas import EnvironmentRead, IterationRead, ProjectRead
 
 _DB_NAME_SAFE = re.compile(r"[^a-z0-9_]+")
 
@@ -82,6 +84,66 @@ def project_read(session: Session, project: Project) -> ProjectRead:
         repo_url=project.repo_url,
         created_at=project.created_at,
         environments=[environment_read(project.name, env) for env in environments],
+    )
+
+
+ITERATION_IGNORE = shutil.ignore_patterns(
+    "node_modules",
+    "dist",
+    ".vite",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    ".git",
+    ".env",
+    "*.log",
+)
+
+
+def create_iteration_snapshot(settings: Settings, project_name: str, version: str) -> str:
+    """Copy the project source into an immutable iteration directory."""
+    source = settings.core_projects_dir / project_name
+    if not source.is_dir():
+        raise FileNotFoundError(f"project source not found: {source}")
+    target = settings.iterations_dir / project_name / version
+    if target.exists():
+        raise FileExistsError(f"iteration snapshot already exists: {target}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, target, ignore=ITERATION_IGNORE)
+    return str(target)
+
+
+def restore_iteration_snapshot(settings: Settings, project_name: str, snapshot_path: str) -> None:
+    """Restore a project source tree from an iteration snapshot."""
+    snapshot = Path(snapshot_path)
+    if not snapshot.is_dir():
+        raise FileNotFoundError(f"iteration snapshot not found: {snapshot}")
+    target = settings.core_projects_dir / project_name
+    target.mkdir(parents=True, exist_ok=True)
+    for name in ("backend.yaml", "odoo", "frontend", "odoo-sh.yaml", "README.md"):
+        path = target / name
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+    shutil.copytree(snapshot, target, dirs_exist_ok=True)
+
+
+def iteration_read(project_name: str, iteration: Iteration) -> IterationRead:
+    return IterationRead(
+        project=project_name,
+        version=iteration.version,
+        title=iteration.title,
+        notes=iteration.notes,
+        status=iteration.status,
+        stage=iteration.stage,
+        branch=iteration.branch,
+        commit_sha=iteration.commit_sha,
+        modules=list(iteration.modules or []),
+        has_snapshot=Path(iteration.snapshot_path).is_dir(),
+        created_at=iteration.created_at,
+        deployed_at=iteration.deployed_at,
     )
 
 

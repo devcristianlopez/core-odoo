@@ -54,6 +54,20 @@ El servicio `bootstrap` se ejecuta una sola vez, después de que Odoo está sano
 El gateway espera a que `bootstrap` termine y lee `file:/run/core/odoo_api_key`.
 Para rotar la key, eliminá el proyecto/entorno y volvé a desplegar.
 
+### Iteraciones
+
+```bash
+core-odoo iteration create <proyecto> --version 0.1.0 --title "Primera versión"
+core-odoo iteration list <proyecto>
+core-odoo iteration restore <proyecto> 0.1.0
+core-odoo deploy <proyecto> --stage dev --iteration 0.1.0
+```
+
+Cada iteración guarda un snapshot del código fuente del proyecto (sin
+`node_modules`, `dist`, cachés ni secretos). Restaurar reemplaza el código actual
+por el snapshot. Desplegar con `--iteration` deja la versión y etapa en el
+historial.
+
 ### Backups
 
 ```bash

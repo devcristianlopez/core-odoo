@@ -125,12 +125,49 @@ class OrchestratorClient:
     def delete_project(self, name: str) -> dict[str, Any]:
         return self._request("DELETE", f"/projects/{name}")
 
+    # ---------------------------------------------------------------- iterations
+
+    def list_iterations(self, name: str) -> list[dict[str, Any]]:
+        payload = self._request("GET", f"/projects/{name}/iterations")
+        return payload if isinstance(payload, list) else []
+
+    def create_iteration(
+        self,
+        name: str,
+        *,
+        version: str,
+        title: str,
+        notes: str = "",
+        branch: str | None = None,
+        commit_sha: str | None = None,
+        modules: list[str] | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"version": version, "title": title, "notes": notes}
+        if branch:
+            body["branch"] = branch
+        if commit_sha:
+            body["commit_sha"] = commit_sha
+        if modules:
+            body["modules"] = modules
+        return self._request("POST", f"/projects/{name}/iterations", json=body)
+
+    def restore_iteration(self, name: str, version: str) -> dict[str, Any]:
+        return self._request("POST", f"/projects/{name}/iterations/{version}/restore")
+
     # -------------------------------------------------------------- environments
 
-    def deploy(self, name: str, stage: str, branch: str | None = None) -> dict[str, Any]:
+    def deploy(
+        self,
+        name: str,
+        stage: str,
+        branch: str | None = None,
+        iteration: str | None = None,
+    ) -> dict[str, Any]:
         body: dict[str, Any] = {"stage": stage}
         if branch:
             body["branch"] = branch
+        if iteration:
+            body["iteration"] = iteration
         return self._request(
             "POST",
             f"/projects/{name}/deploy",

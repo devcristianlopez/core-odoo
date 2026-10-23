@@ -137,5 +137,16 @@
   "msg.frontend_hint": "Revisá src/App.tsx y desplegá el entorno.",
   "error.frontend_exists": "Ya existe un frontend. Usa --force para reemplazarlo.",
   "cmd.mcp": "Servidor MCP para agentes.",
-  "cmd.mcp.serve": "Sirve las herramientas por stdio."
+  "cmd.mcp.serve": "Sirve las herramientas por stdio.",
+  "cmd.iteration": "Gestiona iteraciones versionadas de un proyecto.",
+  "cmd.iteration.list": "Lista las iteraciones.",
+  "cmd.iteration.create": "Crea un snapshot versionado del proyecto.",
+  "cmd.iteration.restore": "Restaura el código desde una iteración.",
+  "opt.version": "Versión de la iteración (por ejemplo 0.1.0).",
+  "opt.title": "Título de la iteración.",
+  "opt.notes": "Notas de la iteración.",
+  "opt.commit": "SHA del commit asociado.",
+  "opt.modules": "Módulos separados por coma.",
+  "opt.iteration": "Iteración asociada al deploy.",
+  "arg.version": "Versión de la iteración."
 }

@@ -50,6 +50,56 @@ def build_server() -> FastMCP:
             return _fail(exc)
 
     @server.tool()
+    def list_iterations(project: str) -> dict[str, Any]:
+        """List versioned iterations for a project."""
+        try:
+            return {
+                "ok": True,
+                "iterations": OrchestratorClient(_settings()).list_iterations(project),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def create_iteration(
+        project: str,
+        version: str,
+        title: str,
+        notes: str = "",
+        branch: str | None = None,
+        commit_sha: str | None = None,
+        modules: str = "",
+    ) -> dict[str, Any]:
+        """Snapshot the current project source as a versioned iteration."""
+        try:
+            module_list = [item.strip() for item in modules.split(",") if item.strip()]
+            return {
+                "ok": True,
+                "iteration": OrchestratorClient(_settings()).create_iteration(
+                    project,
+                    version=version,
+                    title=title,
+                    notes=notes,
+                    branch=branch,
+                    commit_sha=commit_sha,
+                    modules=module_list or None,
+                ),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def restore_iteration(project: str, version: str) -> dict[str, Any]:
+        """Restore project source code from an iteration snapshot."""
+        try:
+            return {
+                "ok": True,
+                "iteration": OrchestratorClient(_settings()).restore_iteration(project, version),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
     def catalog_models(
         project: str,
         stage: str = "dev",
@@ -182,12 +232,15 @@ def build_server() -> FastMCP:
         project: str,
         stage: str = "dev",
         branch: str | None = None,
+        iteration: str | None = None,
     ) -> dict[str, Any]:
         """Deploy a project environment through the orchestrator."""
         try:
             return {
                 "ok": True,
-                "environment": OrchestratorClient(_settings()).deploy(project, stage, branch),
+                "environment": OrchestratorClient(_settings()).deploy(
+                    project, stage, branch, iteration
+                ),
             }
         except Exception as exc:  # noqa: BLE001
             return _fail(exc)

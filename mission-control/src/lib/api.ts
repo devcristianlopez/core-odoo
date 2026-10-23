@@ -1,6 +1,7 @@
 import type {
   AuditEvent,
   Environment,
+  Iteration,
   LoginResponse,
   MeResponse,
   Project,
@@ -228,6 +229,16 @@ export interface DeployInput {
   stage: Stage
   branch?: string
   modules?: string[]
+  iteration?: string
+}
+
+export interface CreateIterationInput {
+  version: string
+  title: string
+  notes?: string
+  branch?: string
+  commit_sha?: string
+  modules?: string[]
 }
 
 function projectPath(name: string): string {
@@ -269,6 +280,23 @@ export const api = {
     },
     remove(name: string): Promise<{ deleted: boolean }> {
       return request(projectPath(name), { method: 'DELETE' })
+    },
+  },
+  iterations: {
+    list(name: string): Promise<Iteration[]> {
+      return request<Iteration[]>(`${projectPath(name)}/iterations`)
+    },
+    create(name: string, input: CreateIterationInput): Promise<Iteration> {
+      return request<Iteration>(`${projectPath(name)}/iterations`, {
+        method: 'POST',
+        body: input,
+      })
+    },
+    restore(name: string, version: string): Promise<Iteration> {
+      return request<Iteration>(
+        `${projectPath(name)}/iterations/${encodeURIComponent(version)}/restore`,
+        { method: 'POST' },
+      )
     },
   },
   environments: {

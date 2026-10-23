@@ -70,6 +70,21 @@ partner_id:many2one=res.partner
 name:char!        # explicitly required
 ```
 
+## Iterations
+
+Projects evolve through immutable, versioned snapshots:
+
+```bash
+core-odoo iteration create <project> --version 0.1.0 --title "First release"
+core-odoo iteration list <project>
+core-odoo iteration restore <project> 0.1.0
+core-odoo deploy <project> --stage dev --iteration 0.1.0
+```
+
+A snapshot copies the project source (without `node_modules`, `dist`, caches or
+secrets). Restoring replaces the current source tree. Deploy with `--iteration`
+to link the deployment to the version in the timeline.
+
 ## What is generated vs. what you write
 
 | Generated | You write |

@@ -109,6 +109,10 @@ class Settings(BaseSettings):
         return self.core_data_dir / "envs"
 
     @property
+    def iterations_dir(self) -> Path:
+        return self.core_data_dir / "iterations"
+
+    @property
     def backups_dir(self) -> Path:
         return self.core_data_dir / "backups"
 
@@ -125,6 +129,7 @@ class Settings(BaseSettings):
             self.core_projects_dir,
             self.envs_dir,
             self.backups_dir,
+            self.iterations_dir,
         ):
             directory.mkdir(parents=True, exist_ok=True)
 

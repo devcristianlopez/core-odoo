@@ -9,6 +9,7 @@ import typer
 from .commands import catalog as catalog_commands
 from .commands import check as check_commands
 from .commands import generate as generate_commands
+from .commands import iterations as iteration_commands
 from .commands import mcp as mcp_commands
 from .commands import projects as project_commands
 from .commands import system
@@ -78,6 +79,16 @@ def build_app(language: str | None = None) -> typer.Typer:
     app.add_typer(env_app, name="env")
 
     app.command("deploy", help=t("cmd.deploy"))(project_commands.deploy)
+
+    iteration_app = typer.Typer(help=t("cmd.iteration"), no_args_is_help=True)
+    iteration_app.command("list", help=t("cmd.iteration.list"))(iteration_commands.list_iterations)
+    iteration_app.command("create", help=t("cmd.iteration.create"))(
+        iteration_commands.create_iteration
+    )
+    iteration_app.command("restore", help=t("cmd.iteration.restore"))(
+        iteration_commands.restore_iteration
+    )
+    app.add_typer(iteration_app, name="iteration")
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)
     app.command("check", help=t("cmd.check"))(check_commands.check)

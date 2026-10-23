@@ -8,10 +8,14 @@ description: Deploy, inspect and debug a Core Odoo environment. Use after changi
 ## Workflow
 
 ```bash
+core-odoo iteration create <project> --version 0.1.0 --title "First release"
 core-odoo check <project> --catalog --frontend
-core-odoo deploy <project> --stage dev
+core-odoo deploy <project> --stage dev --iteration 0.1.0
 core-odoo logs <project> --stage dev --tail 200
 ```
+
+If the deploy fails after restoring an iteration, inspect the iteration and the
+environment logs before retrying.
 
 Then check:
 

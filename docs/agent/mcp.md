@@ -11,6 +11,9 @@ Tools:
 | Tool | Purpose |
 |---|---|
 | `project_list` | List registered projects/environments |
+| `list_iterations` | Versioned project iterations |
+| `create_iteration` | Snapshot the project source |
+| `restore_iteration` | Restore source from a snapshot |
 | `catalog_models` | Models, fields and ACL from a running environment |
 | `generate_module` | Odoo 20 module scaffold |
 | `generate_resource` | Add/replace a `backend.yaml` resource |

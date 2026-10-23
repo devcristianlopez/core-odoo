@@ -52,6 +52,29 @@ class Environment(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow)
 
 
+class Iteration(SQLModel, table=True):
+    """Immutable snapshot of a project iteration over time."""
+
+    __tablename__ = "iterations"
+    __table_args__ = (
+        UniqueConstraint("project_id", "version", name="uq_iteration_project_version"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="projects.id", index=True)
+    version: str = Field(index=True, max_length=32)
+    title: str = Field(max_length=255)
+    notes: str = Field(default="", max_length=8000)
+    status: str = Field(default="created", max_length=32)
+    stage: str | None = Field(default=None, max_length=16)
+    branch: str | None = Field(default=None, max_length=255)
+    commit_sha: str | None = Field(default=None, max_length=64)
+    modules: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    snapshot_path: str = Field(max_length=512)
+    created_at: datetime = Field(default_factory=utcnow)
+    deployed_at: datetime | None = Field(default=None)
+
+
 class AuditEvent(SQLModel, table=True):
     __tablename__ = "audit_events"
 

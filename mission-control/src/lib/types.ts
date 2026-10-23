@@ -27,6 +27,21 @@ export interface Environment {
   updated_at?: string | null
 }
 
+export interface Iteration {
+  project: string
+  version: string
+  title: string
+  notes: string
+  status: string
+  stage?: string | null
+  branch?: string | null
+  commit_sha?: string | null
+  modules?: string[]
+  has_snapshot: boolean
+  created_at: string
+  deployed_at?: string | null
+}
+
 export interface Project {
   name: string
   template: string

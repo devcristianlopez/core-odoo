@@ -31,6 +31,7 @@ import { ErrorState } from '../components/ui/ErrorState'
 import { LoadingState } from '../components/ui/Loading'
 import { StatusBadge } from '../components/StatusBadge'
 import { ServiceBadges } from '../components/environments/ServiceBadges'
+import { IterationsPanel } from '../components/iterations/IterationsPanel'
 
 type EnvironmentAction = 'start' | 'stop' | 'restart'
 
@@ -521,6 +522,10 @@ export default function ProjectDetailPage() {
             </section>
           )
         })}
+      </div>
+
+      <div className="mt-6">
+        <IterationsPanel project={name} onChanged={invalidateAll} />
       </div>
 
       <Modal

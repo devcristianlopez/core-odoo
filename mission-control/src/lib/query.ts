@@ -24,6 +24,7 @@ export const queryKeys = {
   projects: ['projects'] as const,
   project: (name: string) => ['projects', name] as const,
   environments: (name: string) => ['projects', name, 'environments'] as const,
+  iterations: (name: string) => ['projects', name, 'iterations'] as const,
   logs: (name: string, stage: string, tail: number) =>
     ['projects', name, 'environments', stage, 'logs', tail] as const,
   metrics: (query: string) => ['metrics', query] as const,

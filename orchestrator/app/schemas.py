@@ -72,6 +72,31 @@ class DeployRequest(BaseModel):
     stage: Stage
     branch: str | None = Field(default=None, max_length=255)
     modules: list[str] | None = None
+    iteration: str | None = Field(default=None, max_length=32)
+
+
+class IterationCreate(BaseModel):
+    version: str = Field(min_length=1, max_length=32, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+    title: str = Field(min_length=1, max_length=255)
+    notes: str = Field(default="", max_length=8000)
+    branch: str | None = Field(default=None, max_length=255)
+    commit_sha: str | None = Field(default=None, max_length=64)
+    modules: list[str] | None = None
+
+
+class IterationRead(BaseModel):
+    project: str
+    version: str
+    title: str
+    notes: str
+    status: str
+    stage: str | None = None
+    branch: str | None = None
+    commit_sha: str | None = None
+    modules: list[str] = Field(default_factory=list)
+    has_snapshot: bool = True
+    created_at: datetime
+    deployed_at: datetime | None = None
 
 
 class DeletedResponse(BaseModel):

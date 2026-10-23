@@ -92,7 +92,11 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | GET | `/projects/{name}` | – | `Project` |
 | DELETE | `/projects/{name}` | – | `{deleted: true}` |
 | GET | `/projects/{name}/environments` | – | `[Environment]` |
-| POST | `/projects/{name}/deploy` | `{stage, branch?, modules?}` | `Environment` |
+| POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?}` | `Environment` |
+| GET | `/projects/{name}/iterations` | – | `[Iteration]` |
+| GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
+| POST | `/projects/{name}/iterations` | `{version, title, notes?, branch?, commit_sha?, modules?}` | `Iteration` |
+| POST | `/projects/{name}/iterations/{version}/restore` | – | `Iteration` |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -209,7 +213,10 @@ core-odoo up | down | restart | status
 core-odoo project create <name> [--template <template>]
 core-odoo project list
 core-odoo project delete <name>
-core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>]
+core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteration <version>]
+core-odoo iteration list <name>
+core-odoo iteration create <name> --version <version> --title <title>
+core-odoo iteration restore <name> <version>
 core-odoo env stop|start|restart <name> --stage <stage>
 core-odoo env delete <name> --stage <stage>
 core-odoo logs <name> --stage <stage> [--tail 200]

@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from ..deps import PrincipalDep, ProviderDep, SessionDep, SettingsDep
 from ..metrics import record_backup_success, record_deploy
-from ..models import Environment, Project, utcnow
+from ..models import Environment, Iteration, Project, utcnow
 from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
 from ..providers.docker import backup_filename
 from ..scaffold import ensure_project_layout
@@ -237,6 +237,17 @@ def deploy(
         result = provider.deploy(spec)
     except ProviderError as exc:
         record_deploy(name, payload.stage, "failed")
+        if payload.iteration:
+            iteration = session.exec(
+                select(Iteration).where(
+                    Iteration.project_id == project.id,
+                    Iteration.version == payload.iteration,
+                )
+            ).first()
+            if iteration is not None:
+                iteration.status = "failed"
+                iteration.stage = payload.stage
+                session.add(iteration)
         environment.status = "error"
         environment.updated_at = utcnow()
         session.add(environment)
@@ -250,6 +261,18 @@ def deploy(
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
 
     record_deploy(name, payload.stage, "success")
+    if payload.iteration:
+        iteration = session.exec(
+            select(Iteration).where(
+                Iteration.project_id == project.id,
+                Iteration.version == payload.iteration,
+            )
+        ).first()
+        if iteration is not None:
+            iteration.status = "deployed"
+            iteration.stage = payload.stage
+            iteration.deployed_at = utcnow()
+            session.add(iteration)
     environment.status = result.status or "running"
     environment.services = result.services
     environment.url = spec.url
@@ -263,6 +286,7 @@ def deploy(
         details={
             "branch": payload.branch,
             "modules": list(payload.modules or []),
+            "iteration": payload.iteration,
             "services": [service.get("name") for service in result.services],
         },
     )

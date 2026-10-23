@@ -26,6 +26,7 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Odoo 20 backbone** — reuse `res.partner`, `sale.order`, `project.task`, etc.
 - **Declarative BFF** — expose only the models/fields you declare in `backend.yaml`.
 - **Environment pipeline** — one isolated Compose project per stage.
+- **Versioned iterations** — immutable source snapshots, restore and deploy history.
 - **Module lifecycle** — scaffold, test, lint, migrate, promote.
 - **Observability** — Prometheus, Loki, Grafana, Alertmanager, Uptime Kuma.
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
@@ -46,6 +47,7 @@ core-odoo generate sdk <project> --stage dev
 core-odoo generate frontend <project> --stage dev
 core-odoo check <project> --catalog --frontend
 core-odoo mcp serve   # MCP tools for OpenCode/Claude/Cursor
+core-odoo iteration create <project> --version 0.1.0 --title "First release"
 ```
 
 ## Documentation
