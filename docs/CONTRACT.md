@@ -215,6 +215,9 @@ core-odoo env delete <name> --stage <stage>
 core-odoo logs <name> --stage <stage> [--tail 200]
 core-odoo backup <name> --stage <stage>
 core-odoo upgrade
+core-odoo --json catalog models <project> --stage dev [--model <model>]
+core-odoo generate module <project> <module> --model <model> --fields "... "
+core-odoo generate resource <project> <resource> --model <odoo.model> --fields a,b,c
 ```
 
 Global flags: `--lang`, `--json`, `--verbose`.
@@ -230,7 +233,9 @@ core-odoo/
 ├── observability/           # provisioning files
 ├── templates/               # compose, odoo-module, frontend-starter
 ├── projects/                # project sources (MVP: local dirs)
-├── docs/                    # VitePress ES/EN
+├── docs/                    # docs ES/EN + agent recipes
+├── skills/                  # optional agent workflows
+├── AGENTS.md                # agent rules and golden path
 ├── docker-compose.yml       # control plane
 ├── docker-compose.observability.yml
 ├── .env.example
