@@ -263,13 +263,14 @@ def build_server() -> FastMCP:
         stage: str = "dev",
         branch: str | None = None,
         iteration: str | None = None,
+        confirm: str | None = None,
     ) -> dict[str, Any]:
         """Deploy a project environment through the orchestrator."""
         try:
             return {
                 "ok": True,
                 "environment": OrchestratorClient(_settings()).deploy(
-                    project, stage, branch, iteration
+                    project, stage, branch, iteration, confirm
                 ),
             }
         except Exception as exc:  # noqa: BLE001

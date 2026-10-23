@@ -110,9 +110,10 @@ def deploy(
     stage: Stage = option("opt.stage", ..., "--stage"),
     branch: str | None = option("opt.branch", None, "--branch"),
     iteration: str | None = option("opt.iteration", None, "--iteration"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
 ) -> None:
     """Deploy a project to an environment."""
-    environment = _client(ctx).deploy(name, stage.value, branch, iteration)
+    environment = _client(ctx).deploy(name, stage.value, branch, iteration, confirm)
     if machine_output():
         emit(environment)
         return

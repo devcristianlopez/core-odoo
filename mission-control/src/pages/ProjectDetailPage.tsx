@@ -53,6 +53,8 @@ export default function ProjectDetailPage() {
   const [deployStage, setDeployStage] = useState<Stage>('dev')
   const [branch, setBranch] = useState('')
   const [modules, setModules] = useState('')
+  const [deployIteration, setDeployIteration] = useState('')
+  const [confirmName, setConfirmName] = useState('')
   const [deleteProjectOpen, setDeleteProjectOpen] = useState(false)
   const [environmentToDelete, setEnvironmentToDelete] = useState<Environment | null>(null)
 
@@ -70,6 +72,11 @@ export default function ProjectDetailPage() {
   })
 
   const project = projectQuery.data
+  const iterationsQuery = useQuery({
+    queryKey: queryKeys.iterations(name),
+    queryFn: () => api.iterations.list(name),
+    enabled: name !== '' && deployOpen,
+  })
   const environments = useMemo(
     () => environmentsQuery.data ?? project?.environments ?? [],
     [environmentsQuery.data, project?.environments],
@@ -91,6 +98,8 @@ export default function ProjectDetailPage() {
       setDeployOpen(false)
       setBranch('')
       setModules('')
+      setDeployIteration('')
+      setConfirmName('')
       invalidateAll()
       pushToast({
         title: t('project.deployed', {
@@ -182,6 +191,8 @@ export default function ProjectDetailPage() {
 
   function openDeploy(stage: Stage) {
     setDeployStage(stage)
+    setDeployIteration('')
+    setConfirmName('')
     setDeployOpen(true)
   }
 
@@ -189,6 +200,10 @@ export default function ProjectDetailPage() {
     event.preventDefault()
     const input: DeployInput = { stage: deployStage }
     if (branch.trim() !== '') input.branch = branch.trim()
+    if (deployStage === 'prod') {
+      input.iteration = deployIteration
+      input.confirm = confirmName.trim()
+    }
     const moduleList = modules
       .split(',')
       .map((module) => module.trim())
@@ -567,6 +582,10 @@ export default function ProjectDetailPage() {
               form="deploy-environment-form"
               variant="primary"
               loading={deployMutation.isPending}
+              disabled={
+                deployStage === 'prod' &&
+                (deployIteration === '' || confirmName.trim() !== name)
+              }
             >
               {deployMutation.isPending ? t('project.deploying') : t('project.deploySubmit')}
             </Button>
@@ -595,6 +614,40 @@ export default function ProjectDetailPage() {
             </Select>
             <FieldHint id="deploy-stage-hint">{t('project.stageHint')}</FieldHint>
           </div>
+          {deployStage === 'prod' ? (
+            <>
+              <div>
+                <Label htmlFor="deploy-iteration">{t('project.iterationLabel')}</Label>
+                <Select
+                  id="deploy-iteration"
+                  value={deployIteration}
+                  onChange={(event) => setDeployIteration(event.target.value)}
+                  required
+                >
+                  <option value="">{t('project.iterationPlaceholder')}</option>
+                  {(iterationsQuery.data ?? []).map((iteration) => (
+                    <option key={iteration.version} value={iteration.version}>
+                      {iteration.version} · {iteration.title}
+                    </option>
+                  ))}
+                </Select>
+                <FieldHint>{t('project.iterationHint')}</FieldHint>
+              </div>
+              <div>
+                <Label htmlFor="deploy-confirm">{t('project.prodConfirmLabel')}</Label>
+                <Input
+                  id="deploy-confirm"
+                  value={confirmName}
+                  onChange={(event) => setConfirmName(event.target.value)}
+                  placeholder={name}
+                  required
+                />
+                <FieldHint>{t('project.prodConfirmHint', { project: name })}</FieldHint>
+              </div>
+              <p className="text-xs text-warning-400">{t('project.prodBackupHint')}</p>
+            </>
+          ) : null}
+
           <div>
             <Label htmlFor="deploy-branch" optional optionalLabel={t('common.optional')}>
               {t('project.branchLabel')}

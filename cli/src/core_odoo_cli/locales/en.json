@@ -151,5 +151,6 @@
   "arg.version": "Iteration version.",
   "cmd.iteration.diff": "Compare an iteration with the previous one.",
   "cmd.iteration.backup": "Create a database dump linked to an iteration.",
-  "opt.against": "Base version for the diff."
+  "opt.against": "Base version for the diff.",
+  "opt.confirm": "Explicit production confirmation (project name)."
 }

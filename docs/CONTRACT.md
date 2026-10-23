@@ -95,7 +95,7 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | GET | `/projects/{name}` | – | `Project` |
 | DELETE | `/projects/{name}` | – | `{deleted: true}` |
 | GET | `/projects/{name}/environments` | – | `[Environment]` |
-| POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?}` | `Environment` |
+| POST | `/projects/{name}/deploy` | `{stage, branch?, modules?, iteration?, confirm?}` | `Environment` |
 | GET | `/projects/{name}/iterations` | – | `[Iteration]` |
 | GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
 | GET | `/projects/{name}/members` | – | `[ProjectMember]` (admin) |
@@ -127,6 +127,10 @@ The API token is always treated as `admin`. Non-admin users only see projects
 where they are a member; `GET /projects` is filtered and project endpoints
 return `403` for non-members. Admins can manage membership from the project
 detail page.
+
+Production deploys require `confirm` equal to the project name, a versioned
+iteration and at least one database backup for that iteration. The source is
+restored from the iteration snapshot before deploying.
 
 ## 6. Gateway (BFF) contract
 
@@ -230,7 +234,7 @@ core-odoo up | down | restart | status
 core-odoo project create <name> [--template <template>]
 core-odoo project list
 core-odoo project delete <name>
-core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteration <version>]
+core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteration <version>] [--confirm <name>]
 core-odoo iteration list <name>
 core-odoo iteration create <name> --version <version> --title <title>
 core-odoo iteration restore <name> <version>

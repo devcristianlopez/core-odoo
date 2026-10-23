@@ -91,7 +91,14 @@ export function IterationsPanel({
     mutationFn: async (iteration: Iteration) => {
       await api.iterations.restore(project, iteration.version)
       const stage = isStage(iteration.stage) ? iteration.stage : 'dev'
-      return api.environments.deploy(project, { stage, iteration: iteration.version })
+      const confirm =
+        stage === 'prod'
+          ? window.prompt(t('iterations.prodConfirmPrompt', { project })) ?? ''
+          : undefined
+      if (stage === 'prod' && confirm !== project) {
+        throw new Error(t('iterations.prodConfirmMismatch'))
+      }
+      return api.environments.deploy(project, { stage, iteration: iteration.version, confirm })
     },
     onSuccess: (_environment, iteration) => {
       refresh()

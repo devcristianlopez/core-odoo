@@ -234,6 +234,7 @@ export interface DeployInput {
   branch?: string
   modules?: string[]
   iteration?: string
+  confirm?: string
 }
 
 export interface CreateUserInput {

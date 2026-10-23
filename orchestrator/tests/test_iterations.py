@@ -29,9 +29,7 @@ def test_iteration_snapshot_restore_and_deploy(
     assert body["has_snapshot"] is True
     assert app_path(harness, "smoke-test", "0.1.0").is_dir()
 
-    listing = harness.client.get(
-        "/api/v1/projects/smoke-test/iterations", headers=auth_headers
-    )
+    listing = harness.client.get("/api/v1/projects/smoke-test/iterations", headers=auth_headers)
     assert listing.status_code == 200
     assert len(listing.json()) == 1
 
@@ -132,3 +130,50 @@ def test_iteration_database_backup(
     )
     assert backups.status_code == 200
     assert len(backups.json()) == 1
+
+
+def test_production_deploy_requires_confirmation_iteration_and_backup(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert _create_iteration(harness, auth_headers).status_code == 201
+    assert (
+        harness.client.post(
+            "/api/v1/projects/smoke-test/deploy",
+            json={"stage": "dev"},
+            headers=auth_headers,
+        ).status_code
+        == 200
+    )
+    missing_confirm = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "prod", "iteration": "0.1.0"},
+        headers=auth_headers,
+    )
+    assert missing_confirm.status_code == 400
+
+    missing_iteration = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "prod", "confirm": "smoke-test"},
+        headers=auth_headers,
+    )
+    assert missing_iteration.status_code == 409
+
+    missing_backup = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "prod", "confirm": "smoke-test", "iteration": "0.1.0"},
+        headers=auth_headers,
+    )
+    assert missing_backup.status_code == 409
+
+    backup = harness.client.post(
+        "/api/v1/projects/smoke-test/iterations/0.1.0/backup?stage=dev",
+        headers=auth_headers,
+    )
+    assert backup.status_code == 201, backup.text
+    deployed = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "prod", "confirm": "smoke-test", "iteration": "0.1.0"},
+        headers=auth_headers,
+    )
+    assert deployed.status_code == 200, deployed.text

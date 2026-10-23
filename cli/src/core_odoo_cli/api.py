@@ -177,12 +177,15 @@ class OrchestratorClient:
         stage: str,
         branch: str | None = None,
         iteration: str | None = None,
+        confirm: str | None = None,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {"stage": stage}
         if branch:
             body["branch"] = branch
         if iteration:
             body["iteration"] = iteration
+        if confirm:
+            body["confirm"] = confirm
         return self._request(
             "POST",
             f"/projects/{name}/deploy",

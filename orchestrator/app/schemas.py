@@ -115,6 +115,7 @@ class DeployRequest(BaseModel):
     branch: str | None = Field(default=None, max_length=255)
     modules: list[str] | None = None
     iteration: str | None = Field(default=None, max_length=32)
+    confirm: str | None = Field(default=None, max_length=64)
 
 
 class IterationCreate(BaseModel):

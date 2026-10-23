@@ -19,7 +19,7 @@ from ..deps import (
     require_write,
 )
 from ..metrics import record_backup_success, record_deploy
-from ..models import Environment, Iteration, Project, ProjectMember, User, utcnow
+from ..models import Environment, Iteration, IterationBackup, Project, ProjectMember, User, utcnow
 from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
 from ..providers.docker import backup_filename
 from ..scaffold import ensure_project_layout
@@ -43,6 +43,7 @@ from ..services import (
     new_secret,
     project_read,
     record_audit,
+    restore_iteration_snapshot,
 )
 
 router = APIRouter(
@@ -344,6 +345,37 @@ def deploy(
             detail="production deploys require the admin role",
         )
     project = _get_project(session, name)
+    if payload.stage == "prod":
+        if payload.confirm != name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="confirm must exactly match the project name for production",
+            )
+        if not payload.iteration:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="production deploys require a versioned iteration",
+            )
+        iteration = session.exec(
+            select(Iteration).where(
+                Iteration.project_id == project.id,
+                Iteration.version == payload.iteration,
+            )
+        ).first()
+        if iteration is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="iteration not found")
+        backups = session.exec(
+            select(IterationBackup).where(IterationBackup.iteration_id == iteration.id)
+        ).all()
+        if not backups:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="production deploys require a database backup for the iteration",
+            )
+        try:
+            restore_iteration_snapshot(settings, name, iteration.snapshot_path)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     environment = session.exec(
         select(Environment).where(
             Environment.project_id == project.id,

@@ -79,12 +79,18 @@ core-odoo iteration restore <proyecto> 0.1.0
 core-odoo iteration diff <proyecto> 0.1.0
 core-odoo iteration backup <proyecto> 0.1.0 --stage dev
 core-odoo deploy <proyecto> --stage dev --iteration 0.1.0
+# Producción: requiere un backup de la iteración y confirmar el nombre
+core-odoo deploy <proyecto> --stage prod --iteration 0.1.0 --confirm <proyecto>
 ```
 
 Cada iteración guarda un snapshot del código fuente del proyecto (sin
 `node_modules`, `dist`, cachés ni secretos). Restaurar reemplaza el código actual
 por el snapshot. Desplegar con `--iteration` deja la versión y etapa en el
 historial.
+
+Producción tiene guardrails: solo admin, requiere una iteración, un backup de
+esa iteración y confirmar el nombre del proyecto. El código se restaura desde
+el snapshot antes de desplegar.
 
 `iteration diff` compara archivos contra la iteración anterior. `iteration
 backup` crea un dump de PostgreSQL y lo asocia a la iteración; restaurar la base

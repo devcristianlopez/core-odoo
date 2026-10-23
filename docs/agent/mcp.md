@@ -22,7 +22,7 @@ Tools:
 | `generate_sdk` | Typed TypeScript client |
 | `generate_frontend` | Login + generic CRUD frontend |
 | `check_project` | Contract/module/ACL/frontend validation |
-| `deploy_project` | Deploy through the orchestrator |
+| `deploy_project` | Deploy through the orchestrator (`confirm` required for prod) |
 | `environment_logs` | Tail environment logs |
 
 ## OpenCode

@@ -81,6 +81,8 @@ core-odoo iteration restore <project> 0.1.0
 core-odoo iteration diff <project> 0.1.0
 core-odoo iteration backup <project> 0.1.0 --stage dev
 core-odoo deploy <project> --stage dev --iteration 0.1.0
+# Production requires --confirm <project>, an iteration and an iteration backup
+core-odoo deploy <project> --stage prod --iteration 0.1.0 --confirm <project>
 ```
 
 A snapshot copies the project source (without `node_modules`, `dist`, caches or
