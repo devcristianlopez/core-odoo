@@ -148,5 +148,8 @@
   "opt.commit": "SHA del commit asociado.",
   "opt.modules": "Módulos separados por coma.",
   "opt.iteration": "Iteración asociada al deploy.",
-  "arg.version": "Versión de la iteración."
+  "arg.version": "Versión de la iteración.",
+  "cmd.iteration.diff": "Compara una iteración con la anterior.",
+  "cmd.iteration.backup": "Crea un dump de base de datos ligado a una iteración.",
+  "opt.against": "Versión base para el diff."
 }

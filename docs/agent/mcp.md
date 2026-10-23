@@ -14,6 +14,8 @@ Tools:
 | `list_iterations` | Versioned project iterations |
 | `create_iteration` | Snapshot the project source |
 | `restore_iteration` | Restore source from a snapshot |
+| `iteration_diff` | Compare two iterations |
+| `backup_iteration` | Create a DB dump linked to an iteration |
 | `catalog_models` | Models, fields and ACL from a running environment |
 | `generate_module` | Odoo 20 module scaffold |
 | `generate_resource` | Add/replace a `backend.yaml` resource |

@@ -100,6 +100,36 @@ def build_server() -> FastMCP:
             return _fail(exc)
 
     @server.tool()
+    def iteration_diff(
+        project: str,
+        version: str,
+        against: str | None = None,
+    ) -> dict[str, Any]:
+        """Compare an iteration against the previous one or an explicit base."""
+        try:
+            return {
+                "ok": True,
+                "diff": OrchestratorClient(_settings()).iteration_diff(project, version, against),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def backup_iteration(
+        project: str,
+        version: str,
+        stage: str = "dev",
+    ) -> dict[str, Any]:
+        """Create a database dump linked to an iteration."""
+        try:
+            return {
+                "ok": True,
+                "backup": OrchestratorClient(_settings()).backup_iteration(project, version, stage),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
     def catalog_models(
         project: str,
         stage: str = "dev",

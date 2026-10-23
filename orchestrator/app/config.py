@@ -123,6 +123,24 @@ class Settings(BaseSettings):
             return ["*"]
         return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
+    def host_path(self, path: Path) -> Path:
+        """Map an in-container data path to the equivalent host path."""
+        resolved = path.resolve()
+        mappings = (
+            (self.core_data_dir, self.core_host_data_dir),
+            (self.core_projects_dir, self.core_host_projects_dir),
+            (self.core_gateway_dir, self.core_host_gateway_dir),
+        )
+        for container_root, host_root in mappings:
+            if host_root is None:
+                continue
+            try:
+                relative = resolved.relative_to(container_root.resolve())
+            except ValueError:
+                continue
+            return host_root / relative
+        return resolved
+
     def ensure_dirs(self) -> None:
         for directory in (
             self.core_data_dir,

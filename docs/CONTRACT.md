@@ -97,6 +97,9 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | GET | `/projects/{name}/iterations/{version}` | – | `Iteration` |
 | POST | `/projects/{name}/iterations` | `{version, title, notes?, branch?, commit_sha?, modules?}` | `Iteration` |
 | POST | `/projects/{name}/iterations/{version}/restore` | – | `Iteration` |
+| GET | `/projects/{name}/iterations/{version}/diff` | `?against=<version>` | `IterationDiff` |
+| GET | `/projects/{name}/iterations/{version}/backups` | – | `[IterationBackup]` |
+| POST | `/projects/{name}/iterations/{version}/backup` | `?stage=dev` | `IterationBackup` |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -217,6 +220,8 @@ core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteratio
 core-odoo iteration list <name>
 core-odoo iteration create <name> --version <version> --title <title>
 core-odoo iteration restore <name> <version>
+core-odoo iteration diff <name> <version> [--against <version>]
+core-odoo iteration backup <name> <version> --stage <stage>
 core-odoo env stop|start|restart <name> --stage <stage>
 core-odoo env delete <name> --stage <stage>
 core-odoo logs <name> --stage <stage> [--tail 200]

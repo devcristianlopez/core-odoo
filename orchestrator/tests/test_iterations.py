@@ -78,3 +78,57 @@ def test_iteration_missing_is_404(
 
 def app_path(harness: AppHarness, project: str, version: str) -> Path:
     return harness.settings.iterations_dir / project / version
+
+
+def test_iteration_diff_between_versions(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    project_dir = harness.settings.core_projects_dir / "smoke-test"
+    source = project_dir / "backend.yaml"
+    source.write_text("app: one\n", encoding="utf-8")
+    assert _create_iteration(harness, auth_headers, "0.1.0").status_code == 201
+
+    source.write_text("app: two\n", encoding="utf-8")
+    (project_dir / "new.txt").write_text("new\n", encoding="utf-8")
+    assert _create_iteration(harness, auth_headers, "0.2.0").status_code == 201
+
+    response = harness.client.get(
+        "/api/v1/projects/smoke-test/iterations/0.2.0/diff",
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["from_version"] == "0.1.0"
+    assert "backend.yaml" in body["modified"]
+    assert "new.txt" in body["added"]
+
+
+def test_iteration_database_backup(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert _create_iteration(harness, auth_headers).status_code == 201
+    deploy = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "dev"},
+        headers=auth_headers,
+    )
+    assert deploy.status_code == 200, deploy.text
+
+    response = harness.client.post(
+        "/api/v1/projects/smoke-test/iterations/0.1.0/backup?stage=dev",
+        headers=auth_headers,
+    )
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["version"] == "0.1.0"
+    assert body["stage"] == "dev"
+    assert body["path"].endswith(".sql")
+
+    backups = harness.client.get(
+        "/api/v1/projects/smoke-test/iterations/0.1.0/backups",
+        headers=auth_headers,
+    )
+    assert backups.status_code == 200
+    assert len(backups.json()) == 1

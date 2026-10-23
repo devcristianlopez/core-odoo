@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import secrets
 import shutil
@@ -128,6 +129,32 @@ def restore_iteration_snapshot(settings: Settings, project_name: str, snapshot_p
         elif path.exists():
             path.unlink()
     shutil.copytree(snapshot, target, dirs_exist_ok=True)
+
+
+def snapshot_manifest(path: Path) -> dict[str, str]:
+    """Hash every file in a snapshot so iterations can be compared."""
+    manifest: dict[str, str] = {}
+    root = Path(path)
+    for file_path in root.rglob("*"):
+        if not file_path.is_file():
+            continue
+        relative = str(file_path.relative_to(root))
+        manifest[relative] = hashlib.sha256(file_path.read_bytes()).hexdigest()
+    return manifest
+
+
+def diff_snapshots(from_path: Path, to_path: Path) -> dict[str, list[str]]:
+    from_manifest = snapshot_manifest(from_path)
+    to_manifest = snapshot_manifest(to_path)
+    from_files = set(from_manifest)
+    to_files = set(to_manifest)
+    return {
+        "added": sorted(to_files - from_files),
+        "modified": sorted(
+            name for name in from_files & to_files if from_manifest[name] != to_manifest[name]
+        ),
+        "deleted": sorted(from_files - to_files),
+    }
 
 
 def iteration_read(project_name: str, iteration: Iteration) -> IterationRead:

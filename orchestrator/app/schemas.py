@@ -99,6 +99,24 @@ class IterationRead(BaseModel):
     deployed_at: datetime | None = None
 
 
+class IterationDiff(BaseModel):
+    project: str
+    from_version: str | None = None
+    to_version: str
+    added: list[str] = Field(default_factory=list)
+    modified: list[str] = Field(default_factory=list)
+    deleted: list[str] = Field(default_factory=list)
+    summary: dict[str, int] = Field(default_factory=dict)
+
+
+class IterationBackupRead(BaseModel):
+    project: str
+    version: str
+    stage: str
+    path: str
+    created_at: datetime
+
+
 class DeletedResponse(BaseModel):
     deleted: bool = True
 

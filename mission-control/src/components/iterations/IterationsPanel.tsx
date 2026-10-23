@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { History, Plus, RotateCcw, Rocket } from 'lucide-react'
+import { Database, GitCompare, History, Plus, RotateCcw, Rocket } from 'lucide-react'
 import { api, type CreateIterationInput } from '../../lib/api'
 import { queryKeys } from '../../lib/query'
-import { isStage, type Iteration } from '../../lib/types'
+import { isStage, type Iteration, type IterationDiff } from '../../lib/types'
 import { formatDate } from '../../lib/format'
 import { describeError } from '../../lib/errors'
 import { useToast } from '../../lib/toast-context'
@@ -32,6 +32,8 @@ export function IterationsPanel({
   const [version, setVersion] = useState('')
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
+  const [diff, setDiff] = useState<IterationDiff | null>(null)
+  const [diffOpen, setDiffOpen] = useState(false)
 
   const iterationsQuery = useQuery({
     queryKey: queryKeys.iterations(project),
@@ -100,6 +102,43 @@ export function IterationsPanel({
     onError: (error) => {
       pushToast({
         title: t('iterations.deployFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
+
+  const diffMutation = useMutation({
+    mutationFn: (iteration: Iteration) => api.iterations.diff(project, iteration.version),
+    onSuccess: (payload) => {
+      setDiff(payload)
+      setDiffOpen(true)
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('iterations.diffFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
+
+  const backupMutation = useMutation({
+    mutationFn: (iteration: Iteration) =>
+      api.iterations.backup(
+        project,
+        iteration.version,
+        isStage(iteration.stage) ? iteration.stage : 'dev',
+      ),
+    onSuccess: (_result, iteration) => {
+      pushToast({
+        title: t('iterations.backupCreated', { version: iteration.version }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('iterations.backupFailed'),
         description: describeError(error, t),
         variant: 'error',
       })
@@ -196,6 +235,24 @@ export function IterationsPanel({
                     {restoreMutation.isPending ? t('iterations.restoring') : t('iterations.restore')}
                   </Button>
                   <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => diffMutation.mutate(iteration)}
+                    disabled={diffMutation.isPending}
+                  >
+                    <GitCompare className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('iterations.diff')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => backupMutation.mutate(iteration)}
+                    disabled={!iteration.has_snapshot || backupMutation.isPending}
+                  >
+                    <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('iterations.backup')}
+                  </Button>
+                  <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => deploy(iteration)}
@@ -251,6 +308,43 @@ export function IterationsPanel({
           </div>
           {createMutation.isError ? <FieldError>{describeError(createMutation.error, t)}</FieldError> : null}
         </form>
+      </Modal>
+
+      <Modal
+        open={diffOpen}
+        onClose={() => setDiffOpen(false)}
+        title={t('iterations.diffTitle')}
+        description={diff ? `${diff.from_version ?? '∅'} → ${diff.to_version}` : undefined}
+        size="lg"
+        footer={
+          <Button variant="ghost" onClick={() => setDiffOpen(false)}>
+            {t('common.close')}
+          </Button>
+        }
+      >
+        {diff ? (
+          <div className="space-y-4">
+            {diff.added.length === 0 && diff.modified.length === 0 && diff.deleted.length === 0 ? (
+              <p className="text-sm text-slate-400">{t('iterations.noChanges')}</p>
+            ) : null}
+            {(['added', 'modified', 'deleted'] as const).map((key) =>
+              diff[key].length > 0 ? (
+                <div key={key}>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {t(`iterations.${key}`)} · {diff[key].length}
+                  </p>
+                  <ul className="max-h-48 overflow-auto rounded-lg border border-edge-muted bg-surface-muted p-3 font-mono text-xs text-slate-300">
+                    {diff[key].map((file) => (
+                      <li key={file}>{file}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null,
+            )}
+          </div>
+        ) : (
+          <LoadingState rows={3} />
+        )}
       </Modal>
     </>
   )

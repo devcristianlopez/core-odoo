@@ -2,17 +2,29 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, Query, status
 from sqlmodel import select
 
-from ..deps import PrincipalDep, SessionDep, SettingsDep
-from ..models import Iteration, Project, utcnow
-from ..schemas import IterationCreate, IterationRead
+from ..deps import PrincipalDep, ProviderDep, SessionDep, SettingsDep
+from ..models import Environment, Iteration, IterationBackup, Project, utcnow
+from ..providers.base import ProviderError
+from ..providers.docker import backup_filename
+from ..schemas import (
+    IterationBackupRead,
+    IterationCreate,
+    IterationDiff,
+    IterationRead,
+)
 from ..services import (
+    build_spec,
     create_iteration_snapshot,
+    diff_snapshots,
     iteration_read,
     record_audit,
     restore_iteration_snapshot,
+    snapshot_manifest,
 )
 
 router = APIRouter(tags=["iterations"])
@@ -35,6 +47,18 @@ def _get_iteration(session: SessionDep, project: Project, version: str) -> Itera
     if iteration is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="iteration not found")
     return iteration
+
+
+def _get_environment(session: SessionDep, project: Project, stage: str) -> Environment:
+    environment = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == stage,
+        )
+    ).first()
+    if environment is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="environment not deployed")
+    return environment
 
 
 @router.get("/projects/{name}/iterations", response_model=list[IterationRead])
@@ -149,3 +173,135 @@ def restore_iteration(
     session.commit()
     session.refresh(iteration)
     return iteration_read(name, iteration)
+
+
+@router.get(
+    "/projects/{name}/iterations/{version}/diff",
+    response_model=IterationDiff,
+)
+def iteration_diff(
+    name: str,
+    version: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    against: str | None = Query(default=None),
+) -> IterationDiff:
+    project = _get_project(session, name)
+    target = _get_iteration(session, project, version)
+    base: Iteration | None = None
+    if against:
+        base = _get_iteration(session, project, against)
+    else:
+        base = session.exec(
+            select(Iteration)
+            .where(
+                Iteration.project_id == project.id,
+                Iteration.created_at < target.created_at,
+            )
+            .order_by(Iteration.created_at.desc())
+        ).first()
+    if base is None:
+        added = sorted(snapshot_manifest(target.snapshot_path))
+        return IterationDiff(
+            project=name,
+            to_version=target.version,
+            added=added,
+            summary={"added": len(added), "modified": 0, "deleted": 0},
+        )
+    diff = diff_snapshots(Path(base.snapshot_path), Path(target.snapshot_path))
+    return IterationDiff(
+        project=name,
+        from_version=base.version,
+        to_version=target.version,
+        added=diff["added"],
+        modified=diff["modified"],
+        deleted=diff["deleted"],
+        summary={
+            "added": len(diff["added"]),
+            "modified": len(diff["modified"]),
+            "deleted": len(diff["deleted"]),
+        },
+    )
+
+
+@router.get(
+    "/projects/{name}/iterations/{version}/backups",
+    response_model=list[IterationBackupRead],
+)
+def list_iteration_backups(
+    name: str,
+    version: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    settings: SettingsDep,
+) -> list[IterationBackupRead]:
+    project = _get_project(session, name)
+    iteration = _get_iteration(session, project, version)
+    backups = session.exec(
+        select(IterationBackup)
+        .where(IterationBackup.iteration_id == iteration.id)
+        .order_by(IterationBackup.created_at.desc())
+    ).all()
+    return [
+        IterationBackupRead(
+            project=name,
+            version=version,
+            stage=backup.stage,
+            path=str(settings.host_path(Path(backup.path))),
+            created_at=backup.created_at,
+        )
+        for backup in backups
+    ]
+
+
+@router.post(
+    "/projects/{name}/iterations/{version}/backup",
+    response_model=IterationBackupRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def backup_iteration(
+    name: str,
+    version: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+    stage: str = Query(default="dev"),
+) -> IterationBackupRead:
+    project = _get_project(session, name)
+    iteration = _get_iteration(session, project, version)
+    environment = _get_environment(session, project, stage)
+    spec = build_spec(settings, project, environment)
+    created_at = utcnow()
+    destination = (
+        settings.backups_dir
+        / f"{name}-{stage}"
+        / backup_filename(name, stage, created_at).replace(".sql", f"-iteration-{version}.sql")
+    )
+    try:
+        path = provider.backup(spec, destination)
+    except ProviderError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
+    backup = IterationBackup(
+        iteration_id=iteration.id,
+        stage=stage,
+        path=str(path),
+        created_at=created_at,
+    )
+    session.add(backup)
+    record_audit(
+        session,
+        actor=principal.username,
+        action="iteration.backup",
+        target=f"{name}/{version}",
+        details={"stage": stage, "path": str(path)},
+    )
+    session.commit()
+    session.refresh(backup)
+    return IterationBackupRead(
+        project=name,
+        version=version,
+        stage=stage,
+        path=str(settings.host_path(Path(backup.path))),
+        created_at=backup.created_at,
+    )

@@ -92,3 +92,44 @@ def restore_iteration(
         emit(iteration)
         return
     success(f"Iteration {iteration.get('version')} restored.")
+
+
+def diff_iteration(
+    ctx: typer.Context,
+    project: str = argument("arg.project"),
+    version: str = argument("arg.version"),
+    against: str | None = option("opt.against", None, "--against"),
+) -> None:
+    """Compare an iteration against the previous one or an explicit version."""
+    payload = _client(ctx).iteration_diff(project, version, against)
+    if machine_output():
+        emit(payload)
+        return
+    console.print(f"{payload.get('from_version') or '(none)'} -> {payload.get('to_version')}")
+    for label, key in (("Added", "added"), ("Modified", "modified"), ("Deleted", "deleted")):
+        values = payload.get(key, [])
+        if values:
+            console.print(f"[bold]{label}[/bold]")
+            for value in values:
+                console.print(f"  {value}")
+    summary = payload.get("summary", {})
+    console.print(
+        "Summary: "
+        f"+{summary.get('added', 0)} "
+        f"~{summary.get('modified', 0)} "
+        f"-{summary.get('deleted', 0)}"
+    )
+
+
+def backup_iteration(
+    ctx: typer.Context,
+    project: str = argument("arg.project"),
+    version: str = argument("arg.version"),
+    stage: str = option("opt.stage", "dev", "--stage"),
+) -> None:
+    """Create a database dump linked to an iteration."""
+    payload = _client(ctx).backup_iteration(project, version, stage)
+    if machine_output():
+        emit(payload)
+        return
+    success(f"Backup {payload.get('path')} linked to {version}.")

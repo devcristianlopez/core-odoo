@@ -154,6 +154,21 @@ class OrchestratorClient:
     def restore_iteration(self, name: str, version: str) -> dict[str, Any]:
         return self._request("POST", f"/projects/{name}/iterations/{version}/restore")
 
+    def iteration_diff(self, name: str, version: str, against: str | None = None) -> dict[str, Any]:
+        params = {"against": against} if against else None
+        return self._request("GET", f"/projects/{name}/iterations/{version}/diff", params=params)
+
+    def backup_iteration(self, name: str, version: str, stage: str = "dev") -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"/projects/{name}/iterations/{version}/backup",
+            params={"stage": stage},
+        )
+
+    def iteration_backups(self, name: str, version: str) -> list[dict[str, Any]]:
+        payload = self._request("GET", f"/projects/{name}/iterations/{version}/backups")
+        return payload if isinstance(payload, list) else []
+
     # -------------------------------------------------------------- environments
 
     def deploy(

@@ -78,6 +78,8 @@ Projects evolve through immutable, versioned snapshots:
 core-odoo iteration create <project> --version 0.1.0 --title "First release"
 core-odoo iteration list <project>
 core-odoo iteration restore <project> 0.1.0
+core-odoo iteration diff <project> 0.1.0
+core-odoo iteration backup <project> 0.1.0 --stage dev
 core-odoo deploy <project> --stage dev --iteration 0.1.0
 ```
 

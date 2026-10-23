@@ -60,6 +60,8 @@ Para rotar la key, eliminá el proyecto/entorno y volvé a desplegar.
 core-odoo iteration create <proyecto> --version 0.1.0 --title "Primera versión"
 core-odoo iteration list <proyecto>
 core-odoo iteration restore <proyecto> 0.1.0
+core-odoo iteration diff <proyecto> 0.1.0
+core-odoo iteration backup <proyecto> 0.1.0 --stage dev
 core-odoo deploy <proyecto> --stage dev --iteration 0.1.0
 ```
 
@@ -67,6 +69,10 @@ Cada iteración guarda un snapshot del código fuente del proyecto (sin
 `node_modules`, `dist`, cachés ni secretos). Restaurar reemplaza el código actual
 por el snapshot. Desplegar con `--iteration` deja la versión y etapa en el
 historial.
+
+`iteration diff` compara archivos contra la iteración anterior. `iteration
+backup` crea un dump de PostgreSQL y lo asocia a la iteración; restaurar la base
+desde ese dump todavía es una operación manual.
 
 ### Backups
 

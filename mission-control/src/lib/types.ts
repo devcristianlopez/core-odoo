@@ -42,6 +42,16 @@ export interface Iteration {
   deployed_at?: string | null
 }
 
+export interface IterationDiff {
+  project: string
+  from_version?: string | null
+  to_version: string
+  added: string[]
+  modified: string[]
+  deleted: string[]
+  summary: Record<string, number>
+}
+
 export interface Project {
   name: string
   template: string

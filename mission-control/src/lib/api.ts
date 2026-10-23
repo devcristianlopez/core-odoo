@@ -2,6 +2,7 @@ import type {
   AuditEvent,
   Environment,
   Iteration,
+  IterationDiff,
   LoginResponse,
   MeResponse,
   Project,
@@ -296,6 +297,18 @@ export const api = {
       return request<Iteration>(
         `${projectPath(name)}/iterations/${encodeURIComponent(version)}/restore`,
         { method: 'POST' },
+      )
+    },
+    diff(name: string, version: string, against?: string): Promise<IterationDiff> {
+      return request<IterationDiff>(
+        `${projectPath(name)}/iterations/${encodeURIComponent(version)}/diff`,
+        { query: against ? { against } : undefined },
+      )
+    },
+    backup(name: string, version: string, stage: string): Promise<unknown> {
+      return request(
+        `${projectPath(name)}/iterations/${encodeURIComponent(version)}/backup`,
+        { method: 'POST', query: { stage } },
       )
     },
   },

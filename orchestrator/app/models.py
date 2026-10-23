@@ -75,6 +75,18 @@ class Iteration(SQLModel, table=True):
     deployed_at: datetime | None = Field(default=None)
 
 
+class IterationBackup(SQLModel, table=True):
+    """Database dump associated with an iteration snapshot."""
+
+    __tablename__ = "iteration_backups"
+
+    id: int | None = Field(default=None, primary_key=True)
+    iteration_id: int = Field(foreign_key="iterations.id", index=True)
+    stage: str = Field(max_length=16)
+    path: str = Field(max_length=512)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class AuditEvent(SQLModel, table=True):
     __tablename__ = "audit_events"
 
