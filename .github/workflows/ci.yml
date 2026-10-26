@@ -9,6 +9,9 @@ name: CI
 # Node 20 action runtime from hosted runners on 2026-09-23, so checkout@v4,
 # setup-node@v4 and setup-uv@v6 can no longer execute.
 # Source: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+#
+# setup-uv stopped publishing a floating major tag at v8, so @v10 cannot resolve
+# (404); it is pinned to an exact release and must be bumped by hand or Dependabot.
 
 on:
   push:
@@ -34,7 +37,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python 3.12
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           python-version: "3.12"
           enable-cache: true
@@ -60,7 +63,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python 3.12
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           python-version: "3.12"
           enable-cache: true
@@ -86,7 +89,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv and Python 3.12
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           python-version: "3.12"
           enable-cache: true
