@@ -114,6 +114,7 @@ def test_init_json_without_non_interactive_never_prompts(project_root: Path) -> 
 
     result = runner.invoke(app, ["--json", "--lang", "en", "init"])
     assert result.exit_code == 0, result.output
+    assert "\x1b" not in result.output
     payload = json.loads(result.output)
     assert payload["secrets_regenerated"] is False
     assert parse_env_file(project_root / ".env")["CORE_API_TOKEN"] == first["CORE_API_TOKEN"]
@@ -133,6 +134,7 @@ def test_init_json_output_is_machine_readable(project_root: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
+    assert "\x1b" not in result.output
     payload = json.loads(result.output)
     assert payload["lang"] == "en"
     assert payload["domain_suffix"] == "example.test"

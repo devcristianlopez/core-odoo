@@ -37,7 +37,7 @@ def machine_output() -> bool:
 
 def emit(data: Any, *, render: Any | None = None) -> None:
     if state.json_output:
-        console.print_json(json.dumps(data, ensure_ascii=False, default=str))
+        sys.stdout.write(json.dumps(data, ensure_ascii=False, default=str) + "\n")
         return
     if render is not None:
         render(data)
@@ -63,9 +63,8 @@ def warn(message: str) -> None:
 
 def fail(message: str, *, code: str = "error") -> None:
     if state.json_output:
-        error_console.print_json(
-            json.dumps({"error": {"code": code, "message": message}}, ensure_ascii=False)
-        )
+        envelope = {"error": {"code": code, "message": message}}
+        sys.stderr.write(json.dumps(envelope, ensure_ascii=False) + "\n")
         return
     error_console.print(f"[red]✖[/red] {message}")
 
