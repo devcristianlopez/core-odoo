@@ -2,6 +2,8 @@
 
 **Self-hosted, distributable software factory built on Odoo 20.**
 
+[![CI](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache--2.0%20%2F%20LGPL--3.0-blue.svg)](LICENSE)
+
 Core Odoo turns Odoo into a reusable backend backbone and gives you an
 Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
@@ -69,7 +71,7 @@ and the full `make e2e` loop are covered in [Operations](docs/OPERATIONS.md).
 `site/` holds the static presentation page — plain HTML, CSS and JS, no build
 step. Preview it with `python3 -m http.server 8099 --directory site`.
 `.github/workflows/pages.yml` publishes it to GitHub Pages (Settings → Pages →
-Source: GitHub Actions); the expected URL is
+Source: GitHub Actions); it is published at
 <https://devcristianlopez.github.io/core-odoo/>.
 
 ## Documentation
