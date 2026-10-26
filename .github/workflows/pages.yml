@@ -1,0 +1,66 @@
+name: Pages
+
+# Publishes the static landing page in site/ to GitHub Pages. There is no build
+# step: the contents of site/ are uploaded as-is and become the site root.
+#
+# One-time setup, not automatable from here: Settings -> Pages -> Build and
+# deployment -> Source must be "GitHub Actions". While the repository still
+# deploys from a branch, configure-pages fails and the deploy job has no
+# environment to publish to.
+#
+# Pushing changes to this file needs a token with the `workflow` scope. Without
+# it GitHub rejects the push with "refusing to allow a Personal Access Token to
+# create or update workflow ... without `workflow` scope" — the blocker that
+# stopped the previous attempt to land this workflow.
+#
+# Action majors are the current Node 24 based releases: GitHub removed the
+# Node 20 action runtime from hosted runners on 2026-09-23 (see ci.yml).
+# upload-pages-artifact@v4 still pins actions/upload-artifact@v4 (Node 20)
+# internally, so v5 is the oldest usable major.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build (upload site/ artifact)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload site/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: deploy (GitHub Pages)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # deploy-pages needs pages: write (publish) and id-token: write (OIDC).
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

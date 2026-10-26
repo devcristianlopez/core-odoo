@@ -54,8 +54,8 @@ Each stage is an isolated Docker Compose project:
 
 | Stage | Purpose | Data | Limits |
 |---|---|---|---|
-| dev | feature branches, demo data, tests | fresh DB | 2 GB / 2 CPU |
-| staging | production clone, neutralized | prod copy | 3 GB / 2 CPU |
+| dev | day-to-day development and module tests | fresh DB | 2 GB / 2 CPU |
+| staging | isolated environment to validate before release (prod clone + neutralization is planned) | own DB | 3 GB / 2 CPU |
 | prod | live | persistent | 4 GB / 4 CPU |
 
 Naming: `core-<project>-<stage>`. Isolated networks and volumes; attached to the
@@ -64,13 +64,39 @@ shared `core-edge` network only for Traefik routing.
 ## Module lifecycle
 
 ```
-scaffold → dev (install + tests + lint) → staging (prod clone + -u + smoke)
-        → prod (backup + snapshot + -u + healthcheck) → rollback on failure
+scaffold → addon on disk → install on first boot → iteration snapshot
+        → prod deploy (approval + typed confirm + iteration + DB backup + source restore)
 ```
 
-Odoo modules are ordinary addons under `projects/<name>/odoo/addons/`. A version
-bump in `__manifest__.py` triggers `-u` during promotion. Data migrations live in
-`migrations/<version>/`.
+Odoo modules are ordinary addons under `projects/<name>/odoo/addons/`, and a
+deploy is a plain container (re)start of the stage stack. Today the path from
+repo to environment is:
+
+1. **Scaffold** — `core-odoo generate module` writes the manifest, model
+   skeleton, `security/ir.access.csv`, views and a test into
+   `projects/<name>/odoo/addons/<module>/`. The directory is bind-mounted
+   read-only at `/mnt/extra-addons`.
+2. **Install on first boot** — `entrypoint.sh` waits for PostgreSQL and checks
+   `ir_module_module`. An empty database is initialised with `-i` for the
+   declared modules; on later boots `-i` is passed only for modules that are
+   missing (for example a newly mounted addon). An already installed module is
+   not touched, so code changes reach the database only when you upgrade it
+   yourself. Tests and lint are not run by a deploy — run them in the module
+   directory.
+3. **Iteration snapshot** — `iteration create` copies the project source
+   (excluding `node_modules`, `dist`, caches and secrets) into an immutable,
+   versioned snapshot. `iteration restore` puts that source tree back and
+   `iteration backup` dumps the database for the version.
+4. **Production guardrails** — a prod deploy needs the `admin` role, a
+   `--confirm <project>` typed confirmation, an existing iteration and at least
+   one database backup for it; the iteration source tree is restored before the
+   stack starts. Operators request a deploy and an admin approves or rejects it
+   (approvals are recorded in the audit log).
+
+**Not implemented yet — planned for Sprint 2:** applying Odoo module updates
+(upgrade of a changed `__manifest__.py` / `migrations/<version>/`) on redeploy
+instead of install-only, promotion with a prod clone and neutralization, a
+staging smoke gate, and automatic rollback when a deploy fails.
 
 ## Security boundaries
 
@@ -84,15 +110,19 @@ bump in `__manifest__.py` triggers `-u` during promotion. Data migrations live i
 
 ## Observability
 
-Prometheus scrapes the orchestrator, Traefik, cAdvisor, node-exporter and any
-container labelled `core.metrics=true`. Alloy ships container logs to Loki.
+Prometheus scrapes the orchestrator, Traefik, cAdvisor and node-exporter through
+static jobs; containers labelled `core.metrics=true` can be added with Docker
+service discovery (see `observability/README.md`). Alloy ships container logs to
+Loki.
 Grafana provisions two dashboards (overview and per-environment). Alertmanager
 covers availability, latency, errors, disk, backups, deploys and Odoo cron.
 
 ## Roadmap
 
-1. **Sprint 1 (current):** Docker provider, control plane, observability, smoke-test.
-2. GitOps: webhooks, promotion, DB clone/neutralization, quality gates.
+1. **Sprint 1 (done):** Docker provider, control plane, observability, smoke-test.
+2. **Sprint 2 (current):** quality gates/CI; deploys that apply Odoo module
+   updates; DB restore from an iteration dump; promote with prod clone +
+   neutralization; SSO with Odoo accounts.
 3. Reliability: backups/restore, rollback, auto-stop, quotas.
 4. Distribution: installer, GHCR images, releases, upgrade path.
 5. Proxmox provider with parity.

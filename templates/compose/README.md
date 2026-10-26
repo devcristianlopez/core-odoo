@@ -48,9 +48,9 @@ Stage limits (architecture table):
 | `staging` | `3g` | `2` |
 | `prod` | `4g` | `4` |
 
-`dev` uses `CORE_WORKERS=0` and may keep demo data (`ODOO_WITHOUT_DEMO=`,
-`ODOO_DEMO=1`). `staging`/`prod` use `CORE_WORKERS=2` and
-`ODOO_WITHOUT_DEMO=all`.
+`dev` uses `CORE_WORKERS=0`. Demo data is disabled by default in every stage:
+the orchestrator writes `without_demo = True` into `odoo.conf` and renders
+`ODOO_DEMO=0`. `prod` uses `CORE_WORKERS=2`.
 
 ## First boot
 

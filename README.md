@@ -3,7 +3,7 @@
 **Self-hosted, distributable software factory built on Odoo 20.**
 
 Core Odoo turns Odoo into a reusable backend backbone and gives you an
-Odoo.sh-style workflow: Git-driven environments (`dev` → `staging` → `prod`),
+Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
@@ -13,8 +13,8 @@ observability — all on a single Docker host.
 
 ```bash
 git clone <repo> core-odoo && cd core-odoo
-./install.sh            # or: core-odoo init
-core-odoo up
+./install.sh            # or: uv run --project cli core-odoo init
+uv run --project cli core-odoo up   # repo path; `core-odoo` alone needs the CLI installed
 # panel: http://core-odoo.<your-ip>.nip.io
 ```
 
@@ -27,7 +27,7 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Declarative BFF** — expose only the models/fields you declare in `backend.yaml`.
 - **Environment pipeline** — one isolated Compose project per stage.
 - **Versioned iterations** — immutable source snapshots, restore and deploy history.
-- **Module lifecycle** — scaffold, test, lint, migrate, promote.
+- **Module lifecycle** — scaffold, install, snapshot, approved prod deploy.
 - **Observability** — Prometheus, Loki, Grafana, Alertmanager, Uptime Kuma.
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
 - **Bilingual** — Spanish and English (UI, CLI, docs).
@@ -63,6 +63,14 @@ make lint                        # ruff x3 + eslint + tsc --noEmit
 The suites run per subproject because each one owns its `pyproject.toml` or JS
 tooling. CI (`.github/workflows/ci.yml`) runs the same four suites. Module tests
 and the full `make e2e` loop are covered in [Operations](docs/OPERATIONS.md).
+
+### Landing page
+
+`site/` holds the static presentation page — plain HTML, CSS and JS, no build
+step. Preview it with `python3 -m http.server 8099 --directory site`.
+`.github/workflows/pages.yml` publishes it to GitHub Pages (Settings → Pages →
+Source: GitHub Actions); the expected URL is
+<https://devcristianlopez.github.io/core-odoo/>.
 
 ## Documentation
 

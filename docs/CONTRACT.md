@@ -220,8 +220,9 @@ Security rules:
 
 ## 9. Observability
 
-- Prometheus scrapes: orchestrator, Traefik, cAdvisor, node-exporter (host),
-  and any container with label `core.metrics=true`.
+- Prometheus scrapes: orchestrator, Traefik, cAdvisor and node-exporter (host)
+  through static jobs; containers labelled `core.metrics=true` can be added with
+  Docker service discovery (see `observability/README.md`).
 - Loki receives container logs through Alloy (Docker discovery).
 - Grafana datasources and dashboards are provisioned from files.
 - Dashboards: `core-overview` and `core-environment`.
@@ -232,7 +233,7 @@ Security rules:
   `core_backup_last_success_timestamp_seconds{project,stage}` and
   `core_odoo_cron_lag_seconds{project,stage,cron}`.
 - Alertmanager routes to a configurable webhook (default: log only).
-- Uptime Kuma monitors the panel, API and each environment URL.
+- Uptime Kuma is part of the stack; monitors are created from its UI.
 
 ## 10. CLI
 

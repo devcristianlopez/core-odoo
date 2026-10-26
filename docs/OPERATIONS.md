@@ -137,7 +137,8 @@ Copiá los backups fuera del host periódicamente.
 - Loki: interno; Mission Control consulta logs a través del orquestador.
 - Alertmanager: interno, sin UI publicada.
 - Métricas propias: `core_odoo_up`, `core_odoo_environments_total`,
-  `core_deploy_total`, `core_backup_last_success_timestamp_seconds`.
+  `core_deploy_total`, `core_backup_last_success_timestamp_seconds`,
+  `core_odoo_cron_lag_seconds`.
 
 ### Desarrollo
 
@@ -243,7 +244,7 @@ The gateway depends on bootstrap completion and reads the file.
 `data/backups/<project>-<stage>/`. Prometheus/Loki/Alertmanager are internal;
 Grafana and Uptime Kuma are routed through Traefik. Custom metrics:
 `core_odoo_up`, `core_odoo_environments_total`, `core_deploy_total`,
-`core_backup_last_success_timestamp_seconds`.
+`core_backup_last_success_timestamp_seconds`, `core_odoo_cron_lag_seconds`.
 
 ### Development
 

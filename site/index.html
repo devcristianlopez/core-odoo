@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="es" data-lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title data-en="Core Odoo — Turn Odoo into your software factory">Core Odoo — Convertí Odoo en tu fábrica de software</title>
+  <meta name="description" content="Core Odoo es una software factory auto-hospedada sobre Odoo 20: ciclo dev → staging → prod, BFF declarativo, frontends generados, agentes y observabilidad." data-en-content="Core Odoo is a self-hosted software factory on Odoo 20: dev → staging → prod, a declarative BFF, generated frontends, agents and observability.">
+
+  <!--
+    Bootstrap only: restore the persisted language/theme and, for English, the
+    document title/description before first paint. All content is readable
+    without JS; CSS decides which language variant is visible from html[data-lang].
+  -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var savedLang = null;
+
+      try {
+        savedLang = localStorage.getItem("core-odoo-lang");
+        if (savedLang === "en") {
+          root.lang = "en";
+          root.setAttribute("data-lang", "en");
+        }
+        var theme = localStorage.getItem("core-odoo-theme");
+        if (theme === "light" || theme === "dark") {
+          root.setAttribute("data-theme", theme);
+        }
+      } catch (error) {
+        /* Storage can be unavailable in private modes; defaults still work. */
+      }
+
+      if (savedLang === "en") {
+        var title = document.querySelector("title[data-en]");
+        if (title) {
+          if (!title.hasAttribute("data-es")) {
+            title.setAttribute("data-es", title.textContent);
+          }
+          var titleEn = title.getAttribute("data-en");
+          if (titleEn) document.title = titleEn;
+        }
+
+        var description = document.querySelector('meta[name="description"][data-en-content]');
+        if (description) {
+          if (!description.hasAttribute("data-es-content")) {
+            description.setAttribute("data-es-content", description.getAttribute("content") || "");
+          }
+          var descriptionEn = description.getAttribute("data-en-content");
+          if (descriptionEn) description.setAttribute("content", descriptionEn);
+        }
+      }
+
+      root.classList.add("js");
+    })();
+  </script>
+  <meta name="theme-color" id="theme-color" content="#0b0f14">
+  <meta name="color-scheme" content="dark light">
+  <meta name="author" content="Core Odoo contributors">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="main.js" defer></script>
+</head>
+
+<body id="top">
+  <a class="skip-link" href="#main">
+    <span class="t t-inline"><span data-lang="es" lang="es">Saltar al contenido</span><span data-lang="en" lang="en">Skip to content</span></span>
+  </a>
+
+  <p id="copy-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+  <!-- ======================================================================
+       HEADER
+       ====================================================================== -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Core Odoo — inicio" data-en-aria-label="Core Odoo — home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg aria-hidden="true" viewBox="0 0 32 32" focusable="false">
+            <rect x="3" y="5" width="26" height="7" rx="3.5" fill="#22d3ee"></rect>
+            <rect x="3" y="15" width="19" height="7" rx="3.5" fill="#a78bfa"></rect>
+            <rect x="3" y="25" width="11" height="4" rx="2" fill="currentColor" opacity=".55"></rect>
+          </svg>
+        </span>
+        <span class="brand-text">Core Odoo</span>
+        <span class="brand-tag">factory</span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Navegación principal" data-en-aria-label="Main navigation">
+        <a class="nav-link" href="#que-es">
+          <span class="t t-inline"><span data-lang="es" lang="es">Qué es</span><span data-lang="en" lang="en">What it is</span></span>
+        </a>
+        <a class="nav-link" href="#arquitectura">
+          <span class="t t-inline"><span data-lang="es" lang="es">Arquitectura</span><span data-lang="en" lang="en">Architecture</span></span>
+        </a>
+        <a class="nav-link" href="#agentes">
+          <span class="t t-inline"><span data-lang="es" lang="es">Agentes</span><span data-lang="en" lang="en">Agents</span></span>
+        </a>
+        <a class="nav-link" href="#pipeline">
+          <span class="t t-inline"><span data-lang="es" lang="es">Pipeline</span><span data-lang="en" lang="en">Pipeline</span></span>
+        </a>
+        <a class="nav-link" href="#empezar">
+          <span class="t t-inline"><span data-lang="es" lang="es">Empezar</span><span data-lang="en" lang="en">Get started</span></span>
+        </a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Cambiar a inglés" title="Cambiar a inglés">
+          <span class="lang-es">ES</span><span class="lang-sep" aria-hidden="true">/</span><span class="lang-en">EN</span>
+        </button>
+
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Activar tema claro" title="Activar tema claro">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z"></path>
+          </svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+        </button>
+
+        <a class="gh-link" href="https://github.com/devcristianlopez/core-odoo" target="_blank" rel="noopener" aria-label="Core Odoo en GitHub (abre en una pestaña nueva)" data-en-aria-label="Core Odoo on GitHub (opens in a new tab)">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7A4.8 4.8 0 0 0 8 18v4"></path>
+            <path d="M8 19c-3 .9-3-1.5-4-2"></path>
+          </svg>
+          <span class="gh-text">GitHub</span>
+        </a>
+
+        <button class="menu-toggle icon-btn" id="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Abrir menú">
+          <svg class="icon icon-menu" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+          <svg class="icon icon-close" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- ====================================================================
+         HERO
+         ==================================================================== -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline">
+              <span data-lang="es" lang="es">Software factory auto-hospedada · Odoo 20</span>
+              <span data-lang="en" lang="en">Self-hosted software factory · Odoo 20</span>
+            </span>
+          </p>
+
+          <h1 id="hero-title" class="hero-title t">
+            <span data-lang="es" lang="es">Convertí Odoo en tu <em>fábrica de software</em></span>
+            <span data-lang="en" lang="en">Turn Odoo into your <em>software factory</em></span>
+          </h1>
+
+          <p class="hero-lede t">
+            <span data-lang="es" lang="es">Core Odoo es una plataforma auto-hospedada que usa Odoo 20 como backbone —no como ERP— y te da un ciclo estilo Odoo.sh (dev → staging → prod) con frontends generados, agentes de IA y observabilidad completa en un solo host Docker.</span>
+            <span data-lang="en" lang="en">Core Odoo is a self-hosted platform that uses Odoo 20 as a backbone —not as an ERP— and gives you an Odoo.sh-style lifecycle (dev → staging → prod) with generated frontends, AI agents and full observability on a single Docker host.</span>
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/devcristianlopez/core-odoo" target="_blank" rel="noopener">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7A4.8 4.8 0 0 0 8 18v4"></path>
+                <path d="M8 19c-3 .9-3-1.5-4-2"></path>
+              </svg>
+              <span class="t t-inline"><span data-lang="es" lang="es">Ver en GitHub</span><span data-lang="en" lang="en">View on GitHub</span></span>
+            </a>
+            <a class="btn btn-ghost" href="#empezar">
+              <span class="t t-inline"><span data-lang="es" lang="es">Empezar ahora</span><span data-lang="en" lang="en">Get started</span></span>
+              <svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </a>
+          </div>
+
+          <ul class="facts" aria-label="Stack técnico" data-en-aria-label="Technical stack">
+            <li>Apache-2.0</li>
+            <li>Odoo 20</li>
+            <li>PostgreSQL 16</li>
+            <li>Docker</li>
+            <li>ES/EN</li>
+          </ul>
+        </div>
+
+        <aside class="hero-card" aria-label="Resumen del pipeline" data-en-aria-label="Pipeline summary">
+          <div class="hero-card-inner">
+            <div class="hero-card-head">
+              <span class="mono-label">core-odoo</span>
+              <span class="pill pill-status"><span class="t t-inline"><span data-lang="es" lang="es">Sprint 1 · validado</span><span data-lang="en" lang="en">Sprint 1 · validated</span></span></span>
+            </div>
+
+            <p class="hero-card-title t">
+              <span data-lang="es" lang="es">Un host. Tres entornos.</span>
+              <span data-lang="en" lang="en">One host. Three stages.</span>
+            </p>
+
+            <ul class="mini-stages">
+              <li class="mini-stage stage-dev">
+                <span class="mini-stage-name">dev</span>
+                <span class="mini-stage-meta">2 CPU · 2 GB · workers 0</span>
+                <span class="mini-stage-tag">Mailpit</span>
+              </li>
+              <li class="mini-stage stage-staging">
+                <span class="mini-stage-name">staging</span>
+                <span class="mini-stage-meta">2 CPU · 3 GB · workers 0</span>
+                <span class="mini-stage-tag">
+                  <span class="t t-inline"><span data-lang="es" lang="es">DB propia</span><span data-lang="en" lang="en">own DB</span></span>
+                </span>
+              </li>
+              <li class="mini-stage stage-prod">
+                <span class="mini-stage-name">prod</span>
+                <span class="mini-stage-meta">4 CPU · 4 GB · workers 2</span>
+                <span class="mini-stage-tag">SMTP off</span>
+              </li>
+            </ul>
+
+            <p class="hero-card-foot t">
+              <span data-lang="es" lang="es">Solo se publican 80/443. Odoo vive en la red interna.</span>
+              <span data-lang="en" lang="en">Only 80/443 is published. Odoo lives on the internal network.</span>
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         1. QUÉ ES
+         ==================================================================== -->
+    <section class="section" id="que-es" aria-labelledby="que-es-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">01 · Qué es</span><span data-lang="en" lang="en">01 · What it is</span></span>
+          </p>
+          <h2 id="que-es-title" class="t">
+            <span data-lang="es" lang="es">Odoo como columna vertebral, no como ERP</span>
+            <span data-lang="en" lang="en">Odoo as a backbone, not as an ERP</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">No es un ERP nuevo ni un wrapper. Es la capa de ciclo de vida que convierte Odoo 20 en el backend de tus proyectos, sin reconstruir lo que Odoo ya resuelve.</span>
+            <span data-lang="en" lang="en">It is not a new ERP or a wrapper. It is the lifecycle layer that turns Odoo 20 into the backend of your projects, without rebuilding what Odoo already solves.</span>
+          </p>
+        </div>
+
+        <div class="card-grid three reveal">
+          <article class="card">
+            <span class="card-index" aria-hidden="true">01</span>
+            <h3 class="t">
+              <span data-lang="es" lang="es">Odoo como backbone, no como ERP</span>
+              <span data-lang="en" lang="en">Odoo as a backbone, not an ERP</span>
+            </h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Reutilizá <code>res.partner</code>, <code>sale.order</code>, <code>project.task</code>, <code>res.users</code>, ACL, cron, mail y reportes. No se reconstruye auth ni CRUD: los módulos son addons Odoo 20 normales en <code>projects/&lt;nombre&gt;/odoo/addons/</code>.</span>
+              <span data-lang="en" lang="en">Reuse <code>res.partner</code>, <code>sale.order</code>, <code>project.task</code>, <code>res.users</code>, ACL, cron, mail and reports. Auth and CRUD are not rebuilt: modules are ordinary Odoo 20 addons under <code>projects/&lt;name&gt;/odoo/addons/</code>.</span>
+            </p>
+            <ul class="tag-list" aria-label="Modelos y seguridad de Odoo" data-en-aria-label="Odoo models and security">
+              <li><code>res.partner</code></li>
+              <li><code>sale.order</code></li>
+              <li><code>project.task</code></li>
+              <li><code>security/ir.access.csv</code></li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="card-index" aria-hidden="true">02</span>
+            <h3 class="t">
+              <span data-lang="es" lang="es">BFF declarativo</span>
+              <span data-lang="en" lang="en">Declarative BFF</span>
+            </h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Declarás modelos, campos y operaciones en <code>backend.yaml</code>. El gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1; Odoo queda del lado servidor y nunca llega al navegador.</span>
+              <span data-lang="en" lang="en">Declare models, fields and operations in <code>backend.yaml</code>. The gateway exposes <code>/api/{resource}</code> with JWT and OpenAPI 3.1; Odoo stays server-side and never reaches the browser.</span>
+            </p>
+            <ul class="tag-list" aria-label="Contrato del gateway" data-en-aria-label="Gateway contract">
+              <li><code>backend.yaml</code></li>
+              <li><code>/api/{resource}</code></li>
+              <li>JWT</li>
+              <li>OpenAPI 3.1</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="card-index" aria-hidden="true">03</span>
+            <h3 class="t">
+              <span data-lang="es" lang="es">Un Compose por entorno</span>
+              <span data-lang="en" lang="en">One Compose project per stage</span>
+            </h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Cada stage tiene su PostgreSQL, Odoo, gateway y frontend, con redes y volúmenes aislados. dev y staging suman Mailpit. Traefik solo enruta el frontend.</span>
+              <span data-lang="en" lang="en">Each stage gets its own PostgreSQL, Odoo, gateway and frontend, with isolated networks and volumes. dev and staging add Mailpit. Traefik routes only the frontend.</span>
+            </p>
+            <ul class="tag-list" aria-label="Aislamiento de entornos" data-en-aria-label="Environment isolation">
+              <li><code class="t"><span data-lang="es" lang="es">core-&lt;proyecto&gt;-&lt;stage&gt;</span><span data-lang="en" lang="en">core-&lt;project&gt;-&lt;stage&gt;</span></code></li>
+              <li><code>dev</code></li>
+              <li><code>staging</code></li>
+              <li><code>prod</code></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         2. ARQUITECTURA
+         ==================================================================== -->
+    <section class="section section-alt" id="arquitectura" aria-labelledby="arquitectura-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">02 · Arquitectura</span><span data-lang="en" lang="en">02 · Architecture</span></span>
+          </p>
+          <h2 id="arquitectura-title" class="t">
+            <span data-lang="es" lang="es">El navegador nunca habla con Odoo</span>
+            <span data-lang="en" lang="en">The browser never talks to Odoo</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Una sola ruta pública: Traefik en 80/443. El resto vive en la red interna del entorno, y el gateway usa una clave JSON-2 de alcance limitado.</span>
+            <span data-lang="en" lang="en">One public route: Traefik on 80/443. Everything else lives on the environment's internal network, and the gateway uses a scoped JSON-2 key.</span>
+          </p>
+        </div>
+
+        <figure class="arch reveal" aria-labelledby="arch-caption" aria-describedby="diagram-desc">
+          <p id="diagram-desc" class="sr-only">
+            <span class="t"><span data-lang="es" lang="es">El navegador entra por Traefik, que solo enruta el frontend nginx. El frontend llama al gateway BFF, el gateway a Odoo 20 y Odoo a PostgreSQL 16. Odoo no está expuesto. En paralelo, Prometheus, Loki con Alloy, Grafana, Alertmanager y Uptime Kuma observan el stack.</span><span data-lang="en" lang="en">The browser enters through Traefik, which only routes the nginx frontend. The frontend calls the BFF gateway, the gateway calls Odoo 20 and Odoo calls PostgreSQL 16. Odoo is not exposed. In parallel, Prometheus, Loki with Alloy, Grafana, Alertmanager and Uptime Kuma observe the stack.</span></span>
+          </p>
+
+          <div class="arch-grid">
+            <div class="flow-wrap">
+              <p class="diagram-label t">
+                <span data-lang="es" lang="es">Ruta de una petición</span>
+                <span data-lang="en" lang="en">Request path</span>
+              </p>
+
+              <ol class="flow" aria-label="Ruta de una petición" data-en-aria-label="Request path">
+                <li class="flow-node">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M8 20h8M12 18v2"></path></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name t"><span data-lang="es" lang="es">Navegador</span><span data-lang="en" lang="en">Browser</span></span>
+                    <span class="node-meta t"><span data-lang="es" lang="es">Cliente web de la app</span><span data-lang="en" lang="en">Web client for the app</span></span>
+                  </span>
+                  <span class="node-tag">HTTPS</span>
+                </li>
+
+                <li class="flow-node">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M4 12h16M4 17h10"></path><circle cx="18" cy="17" r="2"></circle></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name">Traefik</span>
+                    <span class="node-meta t"><span data-lang="es" lang="es">Único puerto publicado: 80/443</span><span data-lang="en" lang="en">Only published ports: 80/443</span></span>
+                  </span>
+                  <span class="node-tag">core-edge</span>
+                </li>
+
+                <li class="flow-node">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18M7 7h.01M10 7h.01"></path></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name">frontend nginx</span>
+                    <span class="node-meta t"><span data-lang="es" lang="es">App generada · assets estáticos</span><span data-lang="en" lang="en">Generated app · static assets</span></span>
+                  </span>
+                  <span class="node-tag t"><span data-lang="es" lang="es">solo se enruta esto</span><span data-lang="en" lang="en">only this is routed</span></span>
+                </li>
+
+                <li class="flow-node">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 3 4 7v5c0 5 3.4 7.7 8 9 4.6-1.3 8-4 8-9V7l-8-4Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name">gateway BFF</span>
+                    <span class="node-meta"><code>JWT</code> · <code>/api/{resource}</code> · <code>OpenAPI 3.1</code></span>
+                  </span>
+                  <span class="node-tag t"><span data-lang="es" lang="es">clave JSON-2 con alcance</span><span data-lang="en" lang="en">scoped JSON-2 key</span></span>
+                </li>
+
+                <li class="flow-node is-guarded">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name">Odoo 20</span>
+                    <span class="node-meta t"><span data-lang="es" lang="es">Modelos, ACL, cron, mail y reportes</span><span data-lang="en" lang="en">Models, ACL, cron, mail and reports</span></span>
+                  </span>
+                  <span class="guard-badge">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                    <span class="t t-inline"><span data-lang="es" lang="es">Nunca expuesto</span><span data-lang="en" lang="en">Never exposed</span></span>
+                  </span>
+                </li>
+
+                <li class="flow-node">
+                  <span class="node-icon" aria-hidden="true">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg>
+                  </span>
+                  <span class="node-body">
+                    <span class="node-name">PostgreSQL 16</span>
+                    <span class="node-meta t"><span data-lang="es" lang="es">Datos y filestore persistentes</span><span data-lang="en" lang="en">Persistent data and filestore</span></span>
+                  </span>
+                  <span class="node-tag t"><span data-lang="es" lang="es">volumen por entorno</span><span data-lang="en" lang="en">volume per stage</span></span>
+                </li>
+              </ol>
+            </div>
+
+            <aside class="rail" aria-labelledby="rail-title">
+              <p class="diagram-label" id="rail-title">
+                <span class="t t-inline"><span data-lang="es" lang="es">Plano de observabilidad</span><span data-lang="en" lang="en">Observability plane</span></span>
+              </p>
+              <p class="rail-intro t">
+                <span data-lang="es" lang="es">Corre en paralelo. No pasa por el navegador ni por la app.</span>
+                <span data-lang="en" lang="en">Runs in parallel. It never goes through the browser or the app.</span>
+              </p>
+              <ul class="rail-list">
+                <li class="rail-item">
+                  <span class="rail-name">Prometheus</span>
+                  <span class="rail-meta t"><span data-lang="es" lang="es">métricas y exporters</span><span data-lang="en" lang="en">metrics and exporters</span></span>
+                </li>
+                <li class="rail-item">
+                  <span class="rail-name">Loki + Alloy</span>
+                  <span class="rail-meta t"><span data-lang="es" lang="es">logs de contenedores</span><span data-lang="en" lang="en">container logs</span></span>
+                </li>
+                <li class="rail-item">
+                  <span class="rail-name">Grafana</span>
+                  <span class="rail-meta t"><span data-lang="es" lang="es">dashboards provisionados</span><span data-lang="en" lang="en">provisioned dashboards</span></span>
+                </li>
+                <li class="rail-item">
+                  <span class="rail-name">Alertmanager</span>
+                  <span class="rail-meta t"><span data-lang="es" lang="es">reglas y ruteo de alertas</span><span data-lang="en" lang="en">alert rules and routing</span></span>
+                </li>
+                <li class="rail-item">
+                  <span class="rail-name">Uptime Kuma</span>
+                  <span class="rail-meta t"><span data-lang="es" lang="es">disponibilidad de URLs</span><span data-lang="en" lang="en">URL uptime checks</span></span>
+                </li>
+              </ul>
+            </aside>
+          </div>
+
+          <div class="arch-note">
+            <p class="t">
+              <span data-lang="es" lang="es">Mission Control y la CLI hablan con el orquestador FastAPI, que crea los entornos vía Docker Engine API. Este diagrama muestra la ruta de la app, no la del panel. Dentro del entorno, solo el frontend se publica a través de Traefik.</span>
+              <span data-lang="en" lang="en">Mission Control and the CLI talk to the FastAPI orchestrator, which creates environments through the Docker Engine API. This diagram shows the app path, not the panel path. Inside the environment, only the frontend is published through Traefik.</span>
+            </p>
+            <a class="text-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/ARCHITECTURE.md">
+              <span class="t t-inline"><span data-lang="es" lang="es">Leer la arquitectura</span><span data-lang="en" lang="en">Read the architecture</span></span>
+              <svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+            </a>
+          </div>
+
+          <figcaption id="arch-caption" class="t">
+            <span data-lang="es" lang="es">Ruta pública, red interna y plano de observabilidad.</span>
+            <span data-lang="en" lang="en">Public route, internal network and observability plane.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         3. CAPACIDADES
+         ==================================================================== -->
+    <section class="section" id="capacidades" aria-labelledby="capacidades-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">03 · Capacidades</span><span data-lang="en" lang="en">03 · Capabilities</span></span>
+          </p>
+          <h2 id="capacidades-title" class="t">
+            <span data-lang="es" lang="es">Lo que ya está construido</span>
+            <span data-lang="en" lang="en">What is already built</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Solo funcionalidades implementadas en el repositorio. El roadmap va aparte: esta grilla no promete nada que todavía no exista.</span>
+            <span data-lang="en" lang="en">Only features implemented in the repository. The roadmap is separate: this grid promises nothing that does not exist yet.</span>
+          </p>
+        </div>
+
+        <div class="card-grid four reveal">
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Contrato</span><span data-lang="en" lang="en">Contract</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">BFF declarativo + SDK</span><span data-lang="en" lang="en">Declarative BFF + SDK</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Declarás recursos en <code>backend.yaml</code>; el gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1. <code>generate sdk</code> produce un cliente TypeScript tipado.</span>
+              <span data-lang="en" lang="en">Declare resources in <code>backend.yaml</code>; the gateway exposes <code>/api/{resource}</code> with JWT and OpenAPI 3.1. <code>generate sdk</code> produces a typed TypeScript client.</span>
+            </p>
+            <ul class="tag-list" aria-label="Funciones del BFF" data-en-aria-label="BFF features"><li><code>backend.yaml</code></li><li>OpenAPI 3.1</li><li>TypeScript</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/CONTRACT.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Generación</span><span data-lang="en" lang="en">Generation</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Generadores Odoo 20</span><span data-lang="en" lang="en">Odoo 20 generators</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es"><code>generate module</code> escribe manifiesto, modelo, <code>security/ir.access.csv</code>, vistas y test. <code>generate resource</code> agrega o reemplaza recursos en <code>backend.yaml</code> preservando el resto del YAML.</span>
+              <span data-lang="en" lang="en"><code>generate module</code> writes the manifest, model, <code>security/ir.access.csv</code>, views and a test. <code>generate resource</code> adds or replaces resources in <code>backend.yaml</code> while preserving the rest of the YAML.</span>
+            </p>
+            <ul class="tag-list" aria-label="Funciones de los generadores" data-en-aria-label="Generator features"><li><code>ir.access</code></li><li><code>&lt;list&gt;</code></li><li>tests</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/agent/README.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Generación</span><span data-lang="en" lang="en">Generation</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Frontend genérico</span><span data-lang="en" lang="en">Generic frontend</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Copia una app React con login, pestañas por recurso y formularios create/edit/delete. nginx proxya <code>/api</code> y <code>/auth</code> al gateway; <code>generate sdk</code> cubre frontends propios.</span>
+              <span data-lang="en" lang="en">Copies a React app with login, per-resource tabs and create/edit/delete forms. nginx proxies <code>/api</code> and <code>/auth</code> to the gateway; <code>generate sdk</code> covers custom frontends.</span>
+            </p>
+            <ul class="tag-list" aria-label="Funciones del frontend" data-en-aria-label="Frontend features"><li>React</li><li>login</li><li>CRUD</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/agent/frontend.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Catálogo</span><span data-lang="en" lang="en">Catalogue</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Catálogo vivo</span><span data-lang="en" lang="en">Live catalogue</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es"><code>catalog models</code> corre <code>odoo shell</code> en el entorno y devuelve <code>ir.model</code>, <code>ir.model.fields</code> e <code>ir.access</code>. Refleja la base instalada, no el código fuente.</span>
+              <span data-lang="en" lang="en"><code>catalog models</code> runs <code>odoo shell</code> in the environment and returns <code>ir.model</code>, <code>ir.model.fields</code> and <code>ir.access</code>. It reflects the installed database, not the source code.</span>
+            </p>
+            <ul class="tag-list" aria-label="Funciones del catálogo" data-en-aria-label="Catalogue features"><li><code>ir.model</code></li><li><code>fields</code></li><li><code>ir.access</code></li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/agent/model-catalog.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Ciclo de vida</span><span data-lang="en" lang="en">Lifecycle</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Iteraciones versionadas</span><span data-lang="en" lang="en">Versioned iterations</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Snapshots inmutables del código —sin <code>node_modules</code>, <code>dist</code>, cachés ni secretos—, restore, diff contra la versión anterior y dump de PostgreSQL asociado.</span>
+              <span data-lang="en" lang="en">Immutable source snapshots —without <code>node_modules</code>, <code>dist</code>, caches or secrets—, restore, diff against the previous version and an attached PostgreSQL dump.</span>
+            </p>
+            <ul class="tag-list" aria-label="Funciones de las iteraciones" data-en-aria-label="Iteration features"><li>snapshot</li><li>restore</li><li>diff</li><li>backup</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/OPERATIONS.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Producción</span><span data-lang="en" lang="en">Production</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Guardrails de release</span><span data-lang="en" lang="en">Release guardrails</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">prod exige confirmación tipada con el nombre del proyecto, una iteración y un backup. El código se restaura desde el snapshot. Un operator solicita; un admin aprueba.</span>
+              <span data-lang="en" lang="en">prod requires typed confirmation with the project name, an iteration and a backup. The source is restored from the snapshot. An operator requests; an admin approves.</span>
+            </p>
+            <ul class="tag-list" aria-label="Guardrails de producción" data-en-aria-label="Production guardrails"><li>confirm</li><li>iteration</li><li>backup</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/CONTRACT.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Operación</span><span data-lang="en" lang="en">Operations</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">Observabilidad incluida</span><span data-lang="en" lang="en">Observability included</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Prometheus, Loki + Alloy, Grafana, Alertmanager y Uptime Kuma. Dashboards provisionados y reglas para entorno caído, 5xx, p95, disco, backups, deploys y cron.</span>
+              <span data-lang="en" lang="en">Prometheus, Loki + Alloy, Grafana, Alertmanager and Uptime Kuma. Provisioned dashboards and rules for environment down, 5xx, p95, disk, backups, deploys and cron.</span>
+            </p>
+            <ul class="tag-list" aria-label="Stack de observabilidad" data-en-aria-label="Observability stack"><li>Prometheus</li><li>Loki</li><li>Grafana</li><li>Uptime Kuma</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/observability/README.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+
+          <article class="cap-card">
+            <p class="card-kicker t"><span data-lang="es" lang="es">Agentes</span><span data-lang="en" lang="en">Agents</span></p>
+            <h3 class="t"><span data-lang="es" lang="es">CLI, MCP y skills</span><span data-lang="en" lang="en">CLI, MCP and skills</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">La CLI bilingüe tiene salida <code>--json</code>. El servidor MCP expone catálogo, generadores, check, deploy, aprobaciones y logs a OpenCode, Claude Code y Cursor. Las skills empaquetan el mismo flujo.</span>
+              <span data-lang="en" lang="en">The bilingual CLI has <code>--json</code> output. The MCP server exposes catalogue, generators, check, deploy, approvals and logs to OpenCode, Claude Code and Cursor. Skills package the same flow.</span>
+            </p>
+            <ul class="tag-list" aria-label="Herramientas para agentes" data-en-aria-label="Agent tooling"><li><code>--json</code></li><li>MCP</li><li>skills</li></ul>
+            <a class="card-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/agent/mcp.md"><span class="t t-inline"><span data-lang="es" lang="es">Documentación</span><span data-lang="en" lang="en">Documentation</span></span><svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         4. AGENTES
+         ==================================================================== -->
+    <section class="section section-alt" id="agentes" aria-labelledby="agentes-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">04 · Agentes</span><span data-lang="en" lang="en">04 · Agents</span></span>
+          </p>
+          <h2 id="agentes-title" class="t">
+            <span data-lang="es" lang="es">El loop completo sin abrir el panel</span>
+            <span data-lang="en" lang="en">The full loop without opening the panel</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">La CLI, el servidor MCP y las skills son el mismo contrato con distintas caras. Un agente puede catalogar lo que ya existe, generar el módulo y el recurso, validar y desplegar a dev.</span>
+            <span data-lang="en" lang="en">The CLI, the MCP server and the skills are the same contract with different faces. An agent can catalogue what already exists, generate the module and the resource, validate and deploy to dev.</span>
+          </p>
+        </div>
+
+        <div class="agent-grid reveal">
+          <div class="agent-copy">
+            <p class="t">
+              <span data-lang="es" lang="es">El catálogo se lee de la base que está corriendo, no del código. Los generadores escriben Odoo 20 válido y <code>check</code> corta el loop si el contrato, el ACL o el frontend no compilan.</span>
+              <span data-lang="en" lang="en">The catalogue is read from the running database, not from source. Generators write valid Odoo 20 and <code>check</code> stops the loop if the contract, the ACL or the frontend does not build.</span>
+            </p>
+            <p class="t">
+              <span data-lang="es" lang="es">Para agentes: <code>core-odoo mcp serve</code> expone las mismas operaciones por stdio, y <code>--json</code> hace la CLI parseable. No hay una API paralela que mantener sincronizada.</span>
+              <span data-lang="en" lang="en">For agents: <code>core-odoo mcp serve</code> exposes the same operations over stdio, and <code>--json</code> makes the CLI parseable. There is no parallel API to keep in sync.</span>
+            </p>
+
+            <ul class="skill-list" aria-label="Skills de agente" data-en-aria-label="Agent skills">
+              <li>
+                <a href="https://github.com/devcristianlopez/core-odoo/tree/main/skills/odoo-module"><code>skills/odoo-module</code></a>
+                <span class="t t-inline"><span data-lang="es" lang="es">modelo, ACL, vistas y test</span><span data-lang="en" lang="en">model, ACL, views and test</span></span>
+              </li>
+              <li>
+                <a href="https://github.com/devcristianlopez/core-odoo/tree/main/skills/odoo-frontend"><code>skills/odoo-frontend</code></a>
+                <span class="t t-inline"><span data-lang="es" lang="es">consumir el BFF desde el frontend</span><span data-lang="en" lang="en">consume the BFF from the frontend</span></span>
+              </li>
+              <li>
+                <a href="https://github.com/devcristianlopez/core-odoo/tree/main/skills/odoo-deploy"><code>skills/odoo-deploy</code></a>
+                <span class="t t-inline"><span data-lang="es" lang="es">desplegar, inspeccionar y depurar</span><span data-lang="en" lang="en">deploy, inspect and debug</span></span>
+              </li>
+            </ul>
+
+            <a class="text-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/AGENTS.md">
+              <span class="t t-inline"><span data-lang="es" lang="es">Ver las reglas para agentes</span><span data-lang="en" lang="en">Read the agent rules</span></span>
+              <svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+            </a>
+          </div>
+
+          <div class="terminal" role="group" aria-labelledby="agent-terminal-title">
+            <div class="terminal-bar">
+              <span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="terminal-title" id="agent-terminal-title">
+                <span class="t t-inline"><span data-lang="es" lang="es">ruta de agente · bash</span><span data-lang="en" lang="en">agent golden path · bash</span></span>
+              </span>
+              <button class="copy" type="button" data-copy-target="agent-commands" data-copy-kind="commands" aria-label="Copiar comandos">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span class="copy-text">Copiar</span>
+              </button>
+            </div>
+            <pre class="code" tabindex="0" aria-label="Comandos de la ruta de agente" data-en-aria-label="Agent golden path commands"><code id="agent-commands" class="t"><span class="code-variant" data-lang="es" lang="es"><span class="tok-cmd">core-odoo</span> --json catalog models <span class="tok-ph">&lt;proyecto&gt;</span> --stage dev
+<span class="tok-cmd">core-odoo</span> generate module <span class="tok-ph">&lt;proyecto&gt;</span> <span class="tok-ph">&lt;modulo&gt;</span> --model <span class="tok-ph">&lt;modelo&gt;</span> --fields <span class="tok-str">"name:char;stage:selection=new:New|won:Won"</span>
+<span class="tok-cmd">core-odoo</span> generate resource <span class="tok-ph">&lt;proyecto&gt;</span> <span class="tok-ph">&lt;recurso&gt;</span> --model <span class="tok-ph">&lt;modulo&gt;.&lt;modelo&gt;</span> --fields name,stage
+<span class="tok-cmd">core-odoo</span> generate frontend <span class="tok-ph">&lt;proyecto&gt;</span> --stage dev
+<span class="tok-cmd">core-odoo</span> check <span class="tok-ph">&lt;proyecto&gt;</span> --catalog --frontend
+<span class="tok-cmd">core-odoo</span> deploy <span class="tok-ph">&lt;proyecto&gt;</span> --stage dev</span><span class="code-variant" data-lang="en" lang="en"><span class="tok-cmd">core-odoo</span> --json catalog models <span class="tok-ph">&lt;project&gt;</span> --stage dev
+<span class="tok-cmd">core-odoo</span> generate module <span class="tok-ph">&lt;project&gt;</span> <span class="tok-ph">&lt;module&gt;</span> --model <span class="tok-ph">&lt;model&gt;</span> --fields <span class="tok-str">"name:char;stage:selection=new:New|won:Won"</span>
+<span class="tok-cmd">core-odoo</span> generate resource <span class="tok-ph">&lt;project&gt;</span> <span class="tok-ph">&lt;resource&gt;</span> --model <span class="tok-ph">&lt;module&gt;.&lt;model&gt;</span> --fields name,stage
+<span class="tok-cmd">core-odoo</span> generate frontend <span class="tok-ph">&lt;project&gt;</span> --stage dev
+<span class="tok-cmd">core-odoo</span> check <span class="tok-ph">&lt;project&gt;</span> --catalog --frontend
+<span class="tok-cmd">core-odoo</span> deploy <span class="tok-ph">&lt;project&gt;</span> --stage dev</span></code></pre>
+            <p class="terminal-foot t">
+              <span data-lang="es" lang="es">Mismo contrato: CLI, MCP (<code>core-odoo mcp serve</code>) y skills.</span>
+              <span data-lang="en" lang="en">Same contract: CLI, MCP (<code>core-odoo mcp serve</code>) and skills.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         5. PIPELINE
+         ==================================================================== -->
+    <section class="section" id="pipeline" aria-labelledby="pipeline-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">05 · Pipeline</span><span data-lang="en" lang="en">05 · Pipeline</span></span>
+          </p>
+          <h2 id="pipeline-title" class="t">
+            <span data-lang="es" lang="es">dev → staging → prod, aislados de verdad</span>
+            <span data-lang="en" lang="en">dev → staging → prod, truly isolated</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Cada stage es un proyecto Compose con sus redes y volúmenes. Comparten solo <code>core-edge</code>, la red por la que Traefik enruta el frontend.</span>
+            <span data-lang="en" lang="en">Each stage is a Compose project with its own networks and volumes. They only share <code>core-edge</code>, the network Traefik uses to route the frontend.</span>
+          </p>
+        </div>
+
+        <ol class="stepper reveal" aria-label="Etapas del pipeline" data-en-aria-label="Pipeline stages">
+          <li class="stage stage-dev">
+            <div class="stage-head">
+              <span class="stage-index" aria-hidden="true">01</span>
+              <h3>dev</h3>
+            </div>
+            <p class="t"><span data-lang="es" lang="es">Desarrollo diario y tests de módulo.</span><span data-lang="en" lang="en">Day-to-day development and module tests.</span></p>
+            <dl class="stage-specs">
+              <div><dt class="t"><span data-lang="es" lang="es">Datos</span><span data-lang="en" lang="en">Data</span></dt><dd class="t"><span data-lang="es" lang="es">DB limpia</span><span data-lang="en" lang="en">Fresh DB</span></dd></div>
+              <div><dt class="t"><span data-lang="es" lang="es">Límites Odoo</span><span data-lang="en" lang="en">Odoo limits</span></dt><dd>2 CPU · 2 GB</dd></div>
+              <div><dt>Workers</dt><dd>0</dd></div>
+              <div><dt>Mail</dt><dd>Mailpit</dd></div>
+            </dl>
+            <p class="stage-foot"><code class="t"><span data-lang="es" lang="es">core-&lt;proyecto&gt;-dev</span><span data-lang="en" lang="en">core-&lt;project&gt;-dev</span></code></p>
+          </li>
+
+          <li class="stage stage-staging">
+            <div class="stage-head">
+              <span class="stage-index" aria-hidden="true">02</span>
+              <h3>staging</h3>
+            </div>
+            <p class="t"><span data-lang="es" lang="es">Entorno aislado para validar antes de liberar; la promoción con clon de producción está en el roadmap.</span><span data-lang="en" lang="en">Isolated environment to validate before release; promotion with a production clone is on the roadmap.</span></p>
+            <dl class="stage-specs">
+              <div><dt class="t"><span data-lang="es" lang="es">Datos</span><span data-lang="en" lang="en">Data</span></dt><dd class="t"><span data-lang="es" lang="es">base propia</span><span data-lang="en" lang="en">own database</span></dd></div>
+              <div><dt class="t"><span data-lang="es" lang="es">Límites Odoo</span><span data-lang="en" lang="en">Odoo limits</span></dt><dd>2 CPU · 3 GB</dd></div>
+              <div><dt>Workers</dt><dd>0</dd></div>
+              <div><dt>Mail</dt><dd>Mailpit</dd></div>
+            </dl>
+            <p class="stage-foot"><code class="t"><span data-lang="es" lang="es">core-&lt;proyecto&gt;-staging</span><span data-lang="en" lang="en">core-&lt;project&gt;-staging</span></code></p>
+          </li>
+
+          <li class="stage stage-prod">
+            <div class="stage-head">
+              <span class="stage-index" aria-hidden="true">03</span>
+              <h3>prod</h3>
+            </div>
+            <p class="t"><span data-lang="es" lang="es">En vivo, persistente y con workers reales.</span><span data-lang="en" lang="en">Live, persistent and with real workers.</span></p>
+            <dl class="stage-specs">
+              <div><dt class="t"><span data-lang="es" lang="es">Datos</span><span data-lang="en" lang="en">Data</span></dt><dd class="t"><span data-lang="es" lang="es">persistentes</span><span data-lang="en" lang="en">persistent</span></dd></div>
+              <div><dt class="t"><span data-lang="es" lang="es">Límites Odoo</span><span data-lang="en" lang="en">Odoo limits</span></dt><dd>4 CPU · 4 GB</dd></div>
+              <div><dt>Workers</dt><dd>2</dd></div>
+              <div><dt>Mail</dt><dd class="t"><span data-lang="es" lang="es">SMTP desactivado</span><span data-lang="en" lang="en">SMTP off</span></dd></div>
+            </dl>
+            <p class="stage-foot"><code class="t"><span data-lang="es" lang="es">core-&lt;proyecto&gt;-prod</span><span data-lang="en" lang="en">core-&lt;project&gt;-prod</span></code></p>
+          </li>
+        </ol>
+
+        <div class="split-panels reveal">
+          <article class="panel">
+            <h3 class="t"><span data-lang="es" lang="es">Iteraciones</span><span data-lang="en" lang="en">Iterations</span></h3>
+            <p class="t">
+              <span data-lang="es" lang="es">Un release es un snapshot inmutable del código fuente. Podés restaurarlo, compararlo con el anterior y asociarle un dump de PostgreSQL.</span>
+              <span data-lang="en" lang="en">A release is an immutable source snapshot. You can restore it, compare it with the previous one and attach a PostgreSQL dump to it.</span>
+            </p>
+            <p class="panel-note t">
+              <span data-lang="es" lang="es">Restaurar la base desde ese dump todavía es manual; está en el roadmap de Sprint 2.</span>
+              <span data-lang="en" lang="en">Restoring the database from that dump is still manual; it is on the Sprint 2 roadmap.</span>
+            </p>
+          </article>
+
+          <article class="panel">
+            <h3 class="t"><span data-lang="es" lang="es">Política de producción</span><span data-lang="en" lang="en">Production policy</span></h3>
+            <ul class="guard-list">
+              <li class="t"><span data-lang="es" lang="es">Confirmación tipada: escribí el nombre del proyecto.</span><span data-lang="en" lang="en">Typed confirmation: type the project name.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Iteración versionada y al menos un backup de esa iteración.</span><span data-lang="en" lang="en">A versioned iteration and at least one backup for that iteration.</span></li>
+              <li class="t"><span data-lang="es" lang="es">El código se restaura desde el snapshot antes de desplegar.</span><span data-lang="en" lang="en">The source is restored from the snapshot before deploying.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Un operator crea la solicitud; un admin la aprueba y ejecuta.</span><span data-lang="en" lang="en">An operator creates the request; an admin approves and runs it.</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         6. OBSERVABILIDAD
+         ==================================================================== -->
+    <section class="section section-alt" id="observabilidad" aria-labelledby="observabilidad-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">06 · Observabilidad</span><span data-lang="en" lang="en">06 · Observability</span></span>
+          </p>
+          <h2 id="observabilidad-title" class="t">
+            <span data-lang="es" lang="es">Todo el stack, a la vista</span>
+            <span data-lang="en" lang="en">The whole stack, in view</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Prometheus, Loki, Grafana, Alertmanager y Uptime Kuma corren junto al plano de control. Los dashboards se aprovisionan desde archivos; las alertas no dependen del panel.</span>
+            <span data-lang="en" lang="en">Prometheus, Loki, Grafana, Alertmanager and Uptime Kuma run next to the control plane. Dashboards are provisioned from files; alerts do not depend on the panel.</span>
+          </p>
+        </div>
+
+        <div class="obs-grid reveal">
+          <article class="obs-card">
+            <h3>Prometheus</h3>
+            <p class="t"><span data-lang="es" lang="es">Scrapea el orquestador, Traefik, cAdvisor y node-exporter; los contenedores etiquetados <code>core.metrics=true</code> se pueden sumar con service discovery.</span><span data-lang="en" lang="en">Scrapes the orchestrator, Traefik, cAdvisor and node-exporter; containers labelled <code>core.metrics=true</code> can be added via service discovery.</span></p>
+          </article>
+          <article class="obs-card">
+            <h3>Loki + Alloy</h3>
+            <p class="t"><span data-lang="es" lang="es">Alloy descubre contenedores y envía sus logs a Loki.</span><span data-lang="en" lang="en">Alloy discovers containers and ships their logs to Loki.</span></p>
+          </article>
+          <article class="obs-card">
+            <h3>Grafana</h3>
+            <p class="t"><span data-lang="es" lang="es">Dos dashboards provisionados: <code>core-overview</code> y <code>core-environment</code>.</span><span data-lang="en" lang="en">Two provisioned dashboards: <code>core-overview</code> and <code>core-environment</code>.</span></p>
+          </article>
+          <article class="obs-card">
+            <h3>Alertmanager</h3>
+            <p class="t"><span data-lang="es" lang="es">Entorno caído, tasa 5xx, p95 &gt; 2 s, disco &gt; 85 %, backup faltante, deploy fallido y cron de Odoo atrasado. Ruteo a un webhook configurable; por defecto, solo log.</span><span data-lang="en" lang="en">Environment down, 5xx rate, p95 &gt; 2 s, disk &gt; 85%, missing backup, failed deploy and lagging Odoo cron. Routes to a configurable webhook; log only by default.</span></p>
+          </article>
+          <article class="obs-card">
+            <h3>Uptime Kuma</h3>
+            <p class="t"><span data-lang="es" lang="es">Incluido en el stack; los monitores se crean desde su UI.</span><span data-lang="en" lang="en">Included in the stack; monitors are created from its UI.</span></p>
+          </article>
+        </div>
+
+        <div class="metrics reveal" aria-label="Métricas propias" data-en-aria-label="Custom metrics">
+          <p class="metrics-label t"><span data-lang="es" lang="es">Métricas propias</span><span data-lang="en" lang="en">Custom metrics</span></p>
+          <ul>
+            <li><code>core_odoo_up</code></li>
+            <li><code>core_odoo_environments_total</code></li>
+            <li><code>core_deploy_total</code></li>
+            <li><code>core_backup_last_success_timestamp_seconds</code></li>
+            <li><code>core_odoo_cron_lag_seconds</code></li>
+          </ul>
+        </div>
+
+        <div class="obs-links reveal">
+          <a class="text-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/docs/OPERATIONS.md">
+            <span class="t t-inline"><span data-lang="es" lang="es">Operación y métricas</span><span data-lang="en" lang="en">Operations and metrics</span></span>
+            <svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </a>
+          <a class="text-link" href="https://github.com/devcristianlopez/core-odoo/blob/main/observability/README.md">
+            <span class="t t-inline"><span data-lang="es" lang="es">Configuración de observabilidad</span><span data-lang="en" lang="en">Observability configuration</span></span>
+            <svg class="icon icon-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         7. QUICK START
+         ==================================================================== -->
+    <section class="section" id="empezar" aria-labelledby="empezar-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">07 · Empezar</span><span data-lang="en" lang="en">07 · Get started</span></span>
+          </p>
+          <h2 id="empezar-title" class="t">
+            <span data-lang="es" lang="es">De cero a un entorno dev</span>
+            <span data-lang="en" lang="en">From zero to a dev environment</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Un host Linux con Docker y 6 GB de RAM recomendados. Sin Kubernetes y sin DNS externo: nip.io resuelve la IP del host.</span>
+            <span data-lang="en" lang="en">A Linux host with Docker and 6 GB of RAM recommended. No Kubernetes and no external DNS: nip.io resolves the host IP.</span>
+          </p>
+        </div>
+
+        <div class="start-grid reveal">
+          <ol class="start-steps" aria-label="Pasos de instalación" data-en-aria-label="Installation steps">
+            <li>
+              <span class="start-index" aria-hidden="true">01</span>
+              <div class="start-body">
+                <h3 class="t"><span data-lang="es" lang="es">Cloná el repositorio</span><span data-lang="en" lang="en">Clone the repository</span></h3>
+                <div class="cmd-row">
+                  <code id="cmd-clone" tabindex="0">git clone https://github.com/devcristianlopez/core-odoo.git</code>
+                  <button class="copy copy-compact" type="button" data-copy-target="cmd-clone" data-copy-kind="command" aria-label="Copiar comando">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span class="copy-text">Copiar</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <span class="start-index" aria-hidden="true">02</span>
+              <div class="start-body">
+                <h3 class="t"><span data-lang="es" lang="es">Generá secretos y levantá el stack</span><span data-lang="en" lang="en">Generate secrets and bring up the stack</span></h3>
+                <div class="cmd-row">
+                  <code id="cmd-install" tabindex="0">cd core-odoo &amp;&amp; ./install.sh</code>
+                  <button class="copy copy-compact" type="button" data-copy-target="cmd-install" data-copy-kind="command" aria-label="Copiar comando">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span class="copy-text">Copiar</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <span class="start-index" aria-hidden="true">03</span>
+              <div class="start-body">
+                <h3 class="t"><span data-lang="es" lang="es">Creá el proyecto</span><span data-lang="en" lang="en">Create the project</span></h3>
+                <div class="cmd-row">
+                  <code id="cmd-create" tabindex="0">uv run --project cli core-odoo project create mi-app</code>
+                  <button class="copy copy-compact" type="button" data-copy-target="cmd-create" data-copy-kind="command" aria-label="Copiar comando">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span class="copy-text">Copiar</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <span class="start-index" aria-hidden="true">04</span>
+              <div class="start-body">
+                <h3 class="t"><span data-lang="es" lang="es">Desplegá a dev</span><span data-lang="en" lang="en">Deploy to dev</span></h3>
+                <div class="cmd-row">
+                  <code id="cmd-deploy" tabindex="0">uv run --project cli core-odoo deploy mi-app --stage dev</code>
+                  <button class="copy copy-compact" type="button" data-copy-target="cmd-deploy" data-copy-kind="command" aria-label="Copiar comando">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span class="copy-text">Copiar</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ol>
+
+          <aside class="start-aside">
+            <div class="start-card">
+              <p class="card-kicker">Panel</p>
+              <p class="panel-url"><code class="t"><span data-lang="es" lang="es">http://core-odoo.&lt;tu-ip&gt;.nip.io</span><span data-lang="en" lang="en">http://core-odoo.&lt;your-ip&gt;.nip.io</span></code></p>
+              <p class="t"><span data-lang="es" lang="es">Las credenciales quedan en <code>.env</code>.</span><span data-lang="en" lang="en">Credentials are written to <code>.env</code>.</span></p>
+            </div>
+
+            <div class="start-card">
+              <p class="card-kicker t"><span data-lang="es" lang="es">Requisitos</span><span data-lang="en" lang="en">Requirements</span></p>
+              <ul class="req-list">
+                <li>Docker Engine 24+</li>
+                <li>Docker Compose v2</li>
+                <li class="t"><span data-lang="es" lang="es">6 GB de RAM recomendados</span><span data-lang="en" lang="en">6 GB of RAM recommended</span></li>
+                <li class="t"><span data-lang="es" lang="es">Puertos 80/443 libres</span><span data-lang="en" lang="en">Ports 80/443 free</span></li>
+              </ul>
+              <p class="note t"><span data-lang="es" lang="es">Validado con Odoo 20.0 y Traefik 3.6.</span><span data-lang="en" lang="en">Validated with Odoo 20.0 and Traefik 3.6.</span></p>
+            </div>
+
+            <p class="note t">
+              <span data-lang="es" lang="es">El CLI corre desde el repo con <code>uv</code>; podés crear un alias de <code>uv run --project cli core-odoo</code>.</span>
+              <span data-lang="en" lang="en">The CLI runs from the repo with <code>uv</code>; you can alias <code>uv run --project cli core-odoo</code>.</span>
+            </p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         8. ROADMAP
+         ==================================================================== -->
+    <section class="section section-alt" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">08 · Roadmap</span><span data-lang="en" lang="en">08 · Roadmap</span></span>
+          </p>
+          <h2 id="roadmap-title" class="t">
+            <span data-lang="es" lang="es">Lo que hay y lo que falta</span>
+            <span data-lang="en" lang="en">What exists and what is next</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Sprint 1 está validado end-to-end. Sprint 2 está en progreso. El repositorio es la fuente de verdad: si esta página y el código difieren, mandan el código y <code>docs/</code>.</span>
+            <span data-lang="en" lang="en">Sprint 1 is validated end-to-end. Sprint 2 is in progress. The repository is the source of truth: if this page and the code differ, the code and <code>docs/</code> win.</span>
+          </p>
+        </div>
+
+        <div class="roadmap-grid reveal">
+          <article class="roadmap-col">
+            <div class="roadmap-head">
+              <h3 class="t"><span data-lang="es" lang="es">Disponible hoy</span><span data-lang="en" lang="en">Available today</span></h3>
+              <span class="pill pill-live"><span class="pill-dot" aria-hidden="true"></span><span class="t t-inline"><span data-lang="es" lang="es">Sprint 1</span><span data-lang="en" lang="en">Sprint 1</span></span></span>
+            </div>
+            <ul class="roadmap-list check-list">
+              <li class="t"><span data-lang="es" lang="es">Plano de control, Mission Control y CLI bilingüe.</span><span data-lang="en" lang="en">Control plane, Mission Control and bilingual CLI.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Provider Docker y tres stages aislados.</span><span data-lang="en" lang="en">Docker provider and three isolated stages.</span></li>
+              <li class="t"><span data-lang="es" lang="es">BFF declarativo con JWT, OpenAPI 3.1 y SDK TypeScript.</span><span data-lang="en" lang="en">Declarative BFF with JWT, OpenAPI 3.1 and TypeScript SDK.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Generadores de módulo, recurso y frontend.</span><span data-lang="en" lang="en">Module, resource and frontend generators.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Catálogo vivo de modelos, campos y ACL.</span><span data-lang="en" lang="en">Live catalogue of models, fields and ACL.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Iteraciones con snapshot, restore, diff y backup de base.</span><span data-lang="en" lang="en">Iterations with snapshot, restore, diff and database backup.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Guardrails de producción y aprobaciones.</span><span data-lang="en" lang="en">Production guardrails and approvals.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Observabilidad con Prometheus, Loki, Grafana, Alertmanager y Uptime Kuma.</span><span data-lang="en" lang="en">Observability with Prometheus, Loki, Grafana, Alertmanager and Uptime Kuma.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Roles admin/operator/viewer y roles por proyecto.</span><span data-lang="en" lang="en">admin/operator/viewer roles and per-project roles.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Servidor MCP y skills para agentes.</span><span data-lang="en" lang="en">MCP server and skills for agents.</span></li>
+            </ul>
+          </article>
+
+          <article class="roadmap-col">
+            <div class="roadmap-head">
+              <h3 class="t"><span data-lang="es" lang="es">En camino</span><span data-lang="en" lang="en">In progress / next</span></h3>
+              <span class="pill pill-next"><span class="pill-dot" aria-hidden="true"></span><span class="t t-inline"><span data-lang="es" lang="es">Sprint 2</span><span data-lang="en" lang="en">Sprint 2</span></span></span>
+            </div>
+
+            <h4 class="roadmap-sub t"><span data-lang="es" lang="es">Sprint 2 · en progreso</span><span data-lang="en" lang="en">Sprint 2 · in progress</span></h4>
+            <ul class="roadmap-list next-list">
+              <li class="t"><span data-lang="es" lang="es">Deploys que aplican actualizaciones de módulos Odoo.</span><span data-lang="en" lang="en">Deploys that apply Odoo module updates.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Restauración de la base desde el dump de una iteración (hoy manual).</span><span data-lang="en" lang="en">Database restore from an iteration dump (manual today).</span></li>
+              <li class="t"><span data-lang="es" lang="es">Promoción con clon de producción y neutralización.</span><span data-lang="en" lang="en">Promotion with a production clone and neutralization.</span></li>
+              <li class="t"><span data-lang="es" lang="es">SSO con cuentas de Odoo.</span><span data-lang="en" lang="en">SSO with Odoo accounts.</span></li>
+            </ul>
+
+            <h4 class="roadmap-sub t"><span data-lang="es" lang="es">Después</span><span data-lang="en" lang="en">Later</span></h4>
+            <ul class="roadmap-list next-list">
+              <li class="t"><span data-lang="es" lang="es">Git webhooks y promoción GitOps.</span><span data-lang="en" lang="en">Git webhooks and GitOps promotion.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Imágenes publicadas en GHCR.</span><span data-lang="en" lang="en">Images published on GHCR.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Retención y backups programados.</span><span data-lang="en" lang="en">Retention and scheduled backups.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Provider Proxmox con paridad.</span><span data-lang="en" lang="en">Proxmox provider with parity.</span></li>
+            </ul>
+          </article>
+        </div>
+
+        <p class="roadmap-note reveal t">
+          <span data-lang="es" lang="es">El repositorio es la fuente de verdad. Esta página resume el estado, pero no lo define: mirá el README, <code>docs/</code> y el historial de commits para el detalle real.</span>
+          <span data-lang="en" lang="en">The repository is the source of truth. This page summarizes the state but does not define it: check the README, <code>docs/</code> and the commit history for the real detail.</span>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================================
+       FOOTER
+       ====================================================================== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="Core Odoo — inicio" data-en-aria-label="Core Odoo — home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg aria-hidden="true" viewBox="0 0 32 32" focusable="false">
+              <rect x="3" y="5" width="26" height="7" rx="3.5" fill="#22d3ee"></rect>
+              <rect x="3" y="15" width="19" height="7" rx="3.5" fill="#a78bfa"></rect>
+              <rect x="3" y="25" width="11" height="4" rx="2" fill="currentColor" opacity=".55"></rect>
+            </svg>
+          </span>
+          <span class="brand-text">Core Odoo</span>
+        </a>
+        <p class="t">
+          <span data-lang="es" lang="es">Software factory auto-hospedada sobre Odoo 20. Plataforma Apache-2.0; módulos Odoo LGPL-3.0.</span>
+          <span data-lang="en" lang="en">Self-hosted software factory on Odoo 20. Platform Apache-2.0; Odoo modules LGPL-3.0.</span>
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h2 class="footer-title t"><span data-lang="es" lang="es">Repositorio</span><span data-lang="en" lang="en">Repository</span></h2>
+        <ul>
+          <li><a href="https://github.com/devcristianlopez/core-odoo">GitHub</a></li>
+          <li><a href="https://github.com/devcristianlopez/core-odoo/blob/main/AGENTS.md">AGENTS.md</a></li>
+          <li><a href="https://github.com/devcristianlopez/core-odoo/tree/main/docs">docs/</a></li>
+          <li><a href="https://github.com/devcristianlopez/core-odoo/issues">Issues</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h2 class="footer-title t"><span data-lang="es" lang="es">Licencia</span><span data-lang="en" lang="en">License</span></h2>
+        <ul>
+          <li><a href="https://github.com/devcristianlopez/core-odoo/blob/main/LICENSE">Apache-2.0</a></li>
+          <li><a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL-3.0</a></li>
+        </ul>
+        <p class="footer-note t">
+          <span data-lang="es" lang="es">Sin correo de contacto: usá las issues del repositorio.</span>
+          <span data-lang="en" lang="en">No contact email: use the repository issues.</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>© <span id="year">2026</span> Core Odoo</p>
+      <p class="t"><span data-lang="es" lang="es">Hecho para correr en tu propio host.</span><span data-lang="en" lang="en">Built to run on your own host.</span></p>
+      <a href="#top"><span class="t t-inline"><span data-lang="es" lang="es">Volver arriba</span><span data-lang="en" lang="en">Back to top</span></span> <span aria-hidden="true">↑</span></a>
+    </div>
+  </footer>
+</body>
+</html>

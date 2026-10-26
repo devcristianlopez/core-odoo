@@ -24,6 +24,9 @@ core-odoo status
 `install.sh` genera `.env` con secretos aleatorios, crea `data/`, levanta el plano
 de control y la observabilidad. Si preferís hacerlo por separado:
 
+> En esta guía se asume que el CLI `core-odoo` está instalado y en el `PATH`.
+> Desde el repo, sin instalarlo, usá `uv run --project cli core-odoo <comando>`.
+
 ```bash
 core-odoo init --lang es --non-interactive
 core-odoo up
@@ -72,7 +75,7 @@ que no queden contenedores, redes ni volúmenes.
 
 ```bash
 git pull
-core-odoo up --build
+core-odoo upgrade
 ```
 
 Los datos viven en volúmenes Docker y en `data/`; un `up` normal no los borra.
@@ -111,6 +114,9 @@ core-odoo status
 `install.sh` writes `.env` with random secrets, creates `data/`, and starts the
 control plane plus observability. To do it step by step:
 
+> This guide assumes the `core-odoo` CLI is installed and on `PATH`. From the
+> repository, without installing it, use `uv run --project cli core-odoo <command>`.
+
 ```bash
 core-odoo init --lang en --non-interactive
 core-odoo up
@@ -146,7 +152,7 @@ asserts no containers, networks or volumes remain.
 
 ```bash
 git pull
-core-odoo up --build
+core-odoo upgrade
 
 core-odoo down
 docker compose -f docker-compose.yml -f docker-compose.observability.yml down -v
