@@ -20,34 +20,58 @@ COPY index.html /usr/share/nginx/html/index.html
 _FALLBACK_NGINX = """server {
     listen 80;
     server_name _;
+
     root /usr/share/nginx/html;
     index index.html;
 
     location /api/ {
         proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
     }
 
     location /auth/ {
         proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
-    }
-
-    location = /openapi.json {
-        proxy_pass http://gateway:8000/openapi.json;
-        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
     }
 
     location = /health {
-        proxy_pass http://gateway:8000/health;
+        proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location = /openapi.json {
+        proxy_pass http://gateway:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
     }
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "ok\\n";
     }
 }
 """

@@ -281,6 +281,7 @@ core-odoo/
 ├── projects/                # project sources (MVP: local dirs)
 ├── docs/                    # docs ES/EN + agent recipes
 ├── skills/                  # optional agent workflows
+├── .github/                 # CI: one job per subproject (ruff+pytest / npm)
 ├── AGENTS.md                # agent rules and golden path
 ├── opencode.json            # OpenCode MCP config
 ├── .mcp.json                # Claude Code MCP config

@@ -139,6 +139,48 @@ Copiá los backups fuera del host periódicamente.
 - Métricas propias: `core_odoo_up`, `core_odoo_environments_total`,
   `core_deploy_total`, `core_backup_last_success_timestamp_seconds`.
 
+### Desarrollo
+
+Los comandos de desarrollo corren por subproyecto, nunca desde la raíz del repo:
+
+```bash
+npm --prefix mission-control ci   # requisito previo de make test / make lint
+make test    # pytest en orchestrator/, gateway/, cli/ + vitest en mission-control/
+make lint    # ruff x3 + eslint + tsc --noEmit (app y tsconfig.node.json)
+make fmt     # ruff format en orchestrator/, gateway/ y cli/
+```
+
+`test` y `lint` paran en el primer subproyecto que falla y dicen cuál falló. Si
+falta `mission-control/node_modules`, abortan antes del paso de JS con el mensaje
+que pide ejecutar `npm --prefix mission-control ci`.
+
+Por qué por directorio: cada subproyecto es dueño de su configuración.
+`orchestrator/`, `gateway/` y `cli/` declaran `pytest` (`testpaths = ["tests"]`)
+y `ruff` en su propio `pyproject.toml`; `mission-control/` tiene su `eslint`,
+`vitest` y `tsconfig`. Correr `pytest` desde la raíz no encuentra ese
+`pyproject.toml` y en cambio recolecta `projects/`, `templates/` y
+`data/iterations/`, y termina en `ImportPathMismatchError` (o
+`ModuleNotFoundError: odoo`).
+
+Tests de módulos Odoo: los `TransactionCase` bajo
+`projects/*/odoo/addons/*/tests` no los corre `make test`, porque necesitan una
+base Odoo inicializada. Se ejecutan dentro de un entorno ya desplegado:
+
+```bash
+docker exec core-<proyecto>-<stage>-odoo \
+  odoo -c /etc/odoo/odoo.conf -d <db> \
+  --test-enable --stop-after-init -u <modulo>
+# si el contenedor ya sirve en 8069: agregá --http-port=8070
+```
+
+Ciclo completo: `make e2e` (o `./scripts/e2e.sh`) crea `smoke-test`, despliega
+`dev`, ejercita navegador → nginx → gateway → Odoo, verifica Mission Control,
+borra el proyecto y comprueba que el host queda limpio.
+
+CI: `.github/workflows/ci.yml` corre los mismos cuatro conjuntos, un job por
+subproyecto (`orchestrator`, `gateway`, `cli`, `mission-control`), en cada push a
+`main` y en cada pull request.
+
 ### Troubleshooting
 
 | Síntoma | Causa probable | Acción |
@@ -202,6 +244,48 @@ The gateway depends on bootstrap completion and reads the file.
 Grafana and Uptime Kuma are routed through Traefik. Custom metrics:
 `core_odoo_up`, `core_odoo_environments_total`, `core_deploy_total`,
 `core_backup_last_success_timestamp_seconds`.
+
+### Development
+
+Development commands run per subproject, never from the repository root:
+
+```bash
+npm --prefix mission-control ci   # prerequisite for make test / make lint
+make test    # pytest in orchestrator/, gateway/, cli/ + vitest in mission-control/
+make lint    # ruff x3 + eslint + tsc --noEmit (app and tsconfig.node.json)
+make fmt     # ruff format in orchestrator/, gateway/ and cli/
+```
+
+`test` and `lint` stop at the first failing subproject and name it. If
+`mission-control/node_modules` is missing, both abort before the JS step with a
+message telling you to run `npm --prefix mission-control ci`.
+
+Each subproject owns its tool configuration: `orchestrator/`, `gateway/` and
+`cli/` declare `pytest` (`testpaths = ["tests"]`) and `ruff` in their own
+`pyproject.toml`; `mission-control/` ships its own `eslint`, `vitest` and
+`tsconfig`. Running `pytest` from the root does not pick up that
+`pyproject.toml`; it collects `projects/`, `templates/` and `data/iterations/`
+instead and fails with `ImportPathMismatchError` (or
+`ModuleNotFoundError: odoo`).
+
+Odoo module tests (`projects/*/odoo/addons/*/tests`) are `TransactionCase`
+classes that need an initialised Odoo database, so `make test` does not run them.
+Run them inside a deployed environment:
+
+```bash
+docker exec core-<project>-<stage>-odoo \
+  odoo -c /etc/odoo/odoo.conf -d <db> \
+  --test-enable --stop-after-init -u <module>
+# add --http-port=8070 when the container already serves on 8069
+```
+
+Full loop: `make e2e` (or `./scripts/e2e.sh`) creates `smoke-test`, deploys
+`dev`, exercises browser → nginx → gateway → Odoo, checks Mission Control,
+deletes the project and asserts a clean host.
+
+CI: `.github/workflows/ci.yml` runs the same four suites, one job per subproject
+(`orchestrator`, `gateway`, `cli`, `mission-control`), on every push to `main`
+and every pull request.
 
 ### Troubleshooting
 

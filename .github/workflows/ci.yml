@@ -1,0 +1,131 @@
+name: CI
+
+# One job per subproject. Each subproject keeps its own tool configuration
+# (pyproject.toml with testpaths = ["tests"] and ruff settings; eslint / vitest /
+# tsconfig for mission-control), so every job runs inside its own directory and
+# never from the repository root.
+#
+# Action majors are the current Node 24 based releases: GitHub removed the
+# Node 20 action runtime from hosted runners on 2026-09-23, so checkout@v4,
+# setup-node@v4 and setup-uv@v6 can no longer execute.
+# Source: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  orchestrator:
+    name: orchestrator (ruff + pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: orchestrator
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: orchestrator/uv.lock
+
+      - name: Sync dependencies
+        run: uv sync --locked --group dev
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  gateway:
+    name: gateway (ruff + pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: gateway
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: gateway/uv.lock
+
+      - name: Sync dependencies
+        run: uv sync --locked --group dev
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  cli:
+    name: cli (ruff + pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: cli/uv.lock
+
+      - name: Sync dependencies
+        run: uv sync --locked --group dev
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  mission-control:
+    name: mission-control (lint + vitest + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mission-control
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mission-control/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Vitest
+        run: npm run test
+
+      - name: Build (tsc --noEmit + vite build)
+        run: npm run build

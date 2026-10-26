@@ -14,6 +14,7 @@ const en = {
     create: 'Create',
     delete: 'Delete',
     confirm: 'Confirm',
+    confirmValue: 'Type {{value}} to confirm.',
     search: 'Search',
     actions: 'Actions',
     back: 'Back',

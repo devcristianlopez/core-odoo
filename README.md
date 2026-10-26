@@ -52,6 +52,18 @@ core-odoo mcp serve   # MCP tools for OpenCode/Claude/Cursor
 core-odoo iteration create <project> --version 0.1.0 --title "First release"
 ```
 
+### Development
+
+```bash
+npm --prefix mission-control ci   # once; prerequisite for make test / make lint
+make test                        # pytest (orchestrator, gateway, cli) + vitest (panel)
+make lint                        # ruff x3 + eslint + tsc --noEmit
+```
+
+The suites run per subproject because each one owns its `pyproject.toml` or JS
+tooling. CI (`.github/workflows/ci.yml`) runs the same four suites. Module tests
+and the full `make e2e` loop are covered in [Operations](docs/OPERATIONS.md).
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
