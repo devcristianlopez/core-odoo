@@ -263,6 +263,15 @@ const es = {
     rollbackProdWarning:
       'Esto afecta a producción: los contenedores se recrean desde la instantánea anterior y el tráfico se interrumpe brevemente.',
     rollbackUnavailable: 'Todavía no hay una iteración exitosa a la que revertir.',
+    promote: 'Promover a prod',
+    promoteTitle: 'Promover a producción',
+    promoteDescription:
+      'Clona la base de {{stage}} de {{project}} en producción y la redespliega.',
+    promoteWarning:
+      'Producción se reemplaza: la base actual se descarta. Se desactivan correo y cron y se desactivan los usuarios de prueba antes del deploy.',
+    promoting: 'Promoviendo…',
+    promoted: '{{project}} promovido a {{stage}}.',
+    promoteFailed: 'No se pudo promover a producción.',
     rollingBack: 'Revirtiendo…',
     rollbackSuccess: 'Se revirtió {{project}} · {{stage}} a la iteración {{version}}.',
     rollbackFailed: 'No se pudo revertir el entorno.',

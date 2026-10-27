@@ -13,6 +13,7 @@ core-odoo check <project> --catalog --frontend
 core-odoo deploy <project> --stage dev --iteration 0.1.0
 core-odoo logs <project> --stage dev --tail 200
 core-odoo env rollback <project> --stage dev   # back to the last good iteration
+core-odoo promote <project> --source staging --confirm <project>   # clone staging into prod
 ```
 
 A redeploy applies module updates (`-u`) and only succeeds when the gateway

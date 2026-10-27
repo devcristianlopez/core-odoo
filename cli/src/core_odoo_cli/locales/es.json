@@ -169,5 +169,9 @@
   "opt.reason": "Motivo de la solicitud.",
   "arg.request_id": "ID de la solicitud.",
   "cmd.iteration.restore_db": "Restaura el dump de base de datos de una iteración en un entorno.",
-  "msg.db_restored": "Base de datos de {project}/{stage} restaurada desde {version} ({status})."
+  "msg.db_restored": "Base de datos de {project}/{stage} restaurada desde {version} ({status}).",
+  "cmd.promote": "Clona la base del entorno de origen en producción y la neutraliza.",
+  "msg.promoted": "{project}/prod promovido desde {source} ({status}).",
+  "opt.source_stage": "Entorno de origen de la promoción.",
+  "opt.neutralize": "Neutralizar la base clonada (correo, cron y usuarios de prueba)."
 }

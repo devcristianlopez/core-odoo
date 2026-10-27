@@ -419,6 +419,12 @@ export const api = {
     restart(name: string, stage: string): Promise<Environment> {
       return request<Environment>(`${environmentPath(name, stage)}/restart`, { method: 'POST' })
     },
+    promote(name: string, sourceStage: string, confirm: string): Promise<Environment> {
+      return request<Environment>(`${projectPath(name)}/promote`, {
+        method: 'POST',
+        body: { source_stage: sourceStage, confirm },
+      })
+    },
     rollbackEnvironment(name: string, stage: string, confirm?: string): Promise<Environment> {
       return request<Environment>(`${environmentPath(name, stage)}/rollback`, {
         method: 'POST',

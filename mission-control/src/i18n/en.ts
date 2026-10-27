@@ -262,6 +262,15 @@ const en = {
     rollbackProdWarning:
       'This affects production: containers are recreated from the previous snapshot and traffic is briefly interrupted.',
     rollbackUnavailable: 'No successful iteration to roll back to yet.',
+    promote: 'Promote to prod',
+    promoteTitle: 'Promote to production',
+    promoteDescription:
+      'Clone the {{stage}} database of {{project}} into production and redeploy it.',
+    promoteWarning:
+      'Production is replaced: the current database is discarded. Mail servers and cron are disabled and test users deactivated before the deploy.',
+    promoting: 'Promoting…',
+    promoted: '{{project}} promoted to {{stage}}.',
+    promoteFailed: 'Could not promote to production.',
     rollingBack: 'Rolling back…',
     rollbackSuccess: 'Rolled back {{project}} · {{stage}} to iteration {{version}}.',
     rollbackFailed: 'Could not roll back the environment.',

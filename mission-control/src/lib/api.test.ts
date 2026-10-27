@@ -165,6 +165,17 @@ describe('api client', () => {
     expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
   })
 
+  it('posts a promotion with the typed confirmation', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'prod' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.environments.promote('demo', 'staging', 'demo')
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/projects/demo/promote')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(JSON.stringify({ source_stage: 'staging', confirm: 'demo' }))
+  })
+
   it('posts the password change to the auth route', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ changed: true }))
     vi.stubGlobal('fetch', fetchMock)

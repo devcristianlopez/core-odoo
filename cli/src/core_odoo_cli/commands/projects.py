@@ -194,6 +194,65 @@ def perform_rollback(
     return client.rollback_environment(project, stage, confirm)
 
 
+def perform_promote(
+    client: OrchestratorClient,
+    project: str,
+    *,
+    source_stage: str = "staging",
+    confirm: str | None = None,
+    neutralize: bool = True,
+) -> dict[str, Any]:
+    """Shared CLI/MCP policy: a promotion always needs the typed confirmation."""
+    if confirm is None:
+        raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+    if confirm != project:
+        raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
+    return client.promote_environment(project, source_stage, confirm, neutralize)
+
+
+def promote(
+    ctx: typer.Context,
+    name: str = argument("arg.name"),
+    source_stage: Stage = option("opt.source_stage", Stage.staging, "--source"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
+    neutralize: bool = option("opt.neutralize", True, "--neutralize/--no-neutralize"),
+) -> None:
+    """Clone a source environment into production and neutralize the data."""
+    if confirm is None:
+        if machine_output():
+            raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+        confirm = typer.prompt(t("prompt.type_project_name", name=name))
+        if confirm != name:
+            info(t("msg.cancelled"))
+            return
+    environment = perform_promote(
+        _client(ctx),
+        name,
+        source_stage=source_stage.value,
+        confirm=confirm,
+        neutralize=neutralize,
+    )
+    if machine_output():
+        emit(
+            {
+                "project": name,
+                "stage": environment.get("stage", "prod"),
+                "source": source_stage.value,
+                "status": environment.get("status", "-"),
+                "neutralized": neutralize,
+            }
+        )
+        return
+    success(
+        t(
+            "msg.promoted",
+            project=name,
+            source=source_stage.value,
+            status=environment.get("status", "-"),
+        )
+    )
+
+
 def env_rollback(
     ctx: typer.Context,
     name: str = argument("arg.name", ...),

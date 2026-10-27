@@ -46,6 +46,7 @@ from ..schemas import (
     ProjectMemberRead,
     ProjectMemberUpdate,
     ProjectRead,
+    PromoteRequest,
     RollbackRequest,
 )
 from ..services import (
@@ -850,6 +851,132 @@ def rollback_environment(
     session.commit()
     session.refresh(environment)
     return environment_read(name, environment)
+
+
+@router.post("/projects/{name}/promote", response_model=EnvironmentRead)
+def promote_environment(
+    name: str,
+    payload: PromoteRequest,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+) -> EnvironmentRead:
+    """Clone a source environment database into production and neutralize it."""
+    if principal.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="promotions require the admin role",
+        )
+    if payload.confirm != name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="confirm must exactly match the project name for production",
+        )
+    if payload.source_stage == "prod":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="the source stage must be dev or staging",
+        )
+    project = _get_project(session, name)
+    source = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == payload.source_stage,
+        )
+    ).first()
+    if source is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"source environment {payload.source_stage} not found",
+        )
+
+    now = utcnow()
+    target = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == "prod",
+        )
+    ).first()
+    target_existed = target is not None
+    if target is None:
+        target = Environment(
+            project_id=project.id,
+            stage="prod",
+            status="provisioning",
+            url=environment_url(settings, project.name, "prod"),
+            compose_project=compose_project_name(project.name, "prod"),
+            services=[],
+            modules=[],
+            db_name=database_name(project.name, "prod"),
+            db_password=new_secret(24),
+            master_password=new_secret(24),
+            odoo_api_key=new_secret(32),
+            gateway_jwt_secret=new_secret(32),
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(target)
+    else:
+        target.status = "provisioning"
+        target.updated_at = now
+    session.commit()
+    session.refresh(target)
+
+    source_spec = build_spec(settings, project, source)
+    target_spec = build_spec(settings, project, target)
+    dump = (
+        settings.backups_dir
+        / f"{name}-{source.stage}"
+        / f"promote-{now.strftime('%Y%m%dT%H%M%S')}.sql"
+    )
+
+    try:
+        provider.prepare(target_spec)
+        provider.backup(source_spec, dump)
+        provider.restore_database(target_spec, dump)
+        if payload.neutralize:
+            provider.neutralize_database(target_spec, target_spec.url)
+        result = provider.deploy(target_spec, update=target_existed)
+    except ProviderError as exc:
+        target.status = "error"
+        target.updated_at = utcnow()
+        session.add(target)
+        record_deploy(name, "prod", "failed")
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action="environment.promote",
+            target=f"{name}/prod",
+            exc=exc,
+        )
+        code = (
+            status.HTTP_409_CONFLICT
+            if "has not been deployed" in exc.message
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code=code, detail=exc.message) from exc
+
+    target.status = result.status
+    target.services = result.services
+    target.url = target_spec.url
+    target.updated_at = utcnow()
+    session.add(target)
+    record_deploy(name, "prod", "success")
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.promote",
+        target=f"{name}/prod",
+        details={
+            "source": source.stage,
+            "dump": str(dump),
+            "neutralized": payload.neutralize,
+        },
+    )
+    session.commit()
+    session.refresh(target)
+    return environment_read(name, target)
 
 
 @router.delete("/projects/{name}/environments/{stage}", response_model=DeletedResponse)

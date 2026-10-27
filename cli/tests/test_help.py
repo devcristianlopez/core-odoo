@@ -32,6 +32,7 @@ COMMAND_PATHS: tuple[tuple[str, ...], ...] = (
     ("env", "rollback"),
     ("env", "delete"),
     ("iteration", "restore-db"),
+    ("promote",),
 )
 
 

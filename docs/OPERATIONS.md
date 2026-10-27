@@ -142,6 +142,23 @@ Borrar un proyecto sin `--purge` desregistra el proyecto y elimina sus entornos,
 pero conserva el código fuente y las iteraciones. `--purge` elimina también el
 código, los snapshots y los backups.
 
+### Promover a producción
+
+Un admin clona staging (o dev) en producción sin empezar de cero:
+
+```bash
+core-odoo promote <proyecto> --source staging --confirm <proyecto>
+```
+
+El orquestador vuelca la base de origen, recrea la de producción con ese dump,
+la neutraliza y redespliega con `-u` y health gate. La neutralización desactiva
+`ir_cron` e `ir_mail_server`, desactiva todos los usuarios salvo `admin` y
+`core_gateway`, y apunta `web.base.url` a la URL de producción. El dump queda en
+`data/backups/<proyecto>-<origen>/`.
+
+Usa `--no-neutralize` sólo si querés conservar los usuarios y los crons tal como
+estaban en el origen. La base de producción anterior se descarta.
+
 ### Aprobaciones de producción
 
 Un `operator` no despliega directo a producción: crea una solicitud.
@@ -362,6 +379,23 @@ The one-shot `bootstrap` service waits for Odoo, creates `core_gateway`, grants
 `base.group_user` and `base.group_partner_manager`, generates a persistent
 JSON-2 key and writes it to `/run/core/odoo_api_key` in the `secrets` volume.
 The gateway depends on bootstrap completion and reads the file.
+
+### Promoting to production
+
+An admin clones staging (or dev) into production instead of starting from zero:
+
+```bash
+core-odoo promote <project> --source staging --confirm <project>
+```
+
+The orchestrator dumps the source database, recreates production from that dump,
+neutralizes it and redeploys with `-u` and the health gate. Neutralization
+disables `ir_cron` and `ir_mail_server`, deactivates every user except `admin`
+and `core_gateway`, and points `web.base.url` at the production URL. The dump is
+kept under `data/backups/<project>-<source>/`.
+
+Use `--no-neutralize` only when you want the source users and crons as they are.
+The previous production database is discarded.
 
 ### Backups and observability
 

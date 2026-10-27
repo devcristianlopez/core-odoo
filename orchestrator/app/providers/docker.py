@@ -52,6 +52,20 @@ sys.exit(0 if data.get("odoo") is True else 1)
 """
 
 
+# Runs against a cloned staging database before it becomes production. It is
+# additive and idempotent: no outgoing mail, no cron firing at real data, only
+# the admin and the gateway service user stay active, and the public URL points
+# at the new environment.
+NEUTRALIZE_SQL = """\
+UPDATE ir_cron SET active = false WHERE active;
+UPDATE ir_mail_server SET active = false WHERE active;
+UPDATE res_users SET active = false
+ WHERE active AND login NOT IN ('admin', 'core_gateway');
+UPDATE ir_config_parameter SET value = '{base_url}'
+ WHERE key = 'web.base.url';
+"""
+
+
 def run_command(
     args: Sequence[str],
     *,
@@ -87,13 +101,17 @@ class DockerProvider:
 
     # ----------------------------------------------------------------- public API
 
-    def deploy(self, spec: EnvironmentSpec, *, update: bool = False) -> ProviderStatus:
+    def prepare(self, spec: EnvironmentSpec) -> None:
+        """Write the project layout, runtime files and compose file."""
         ensure_project_layout(self._settings, spec.project, template=spec.template)
         spec.env_dir.mkdir(parents=True, exist_ok=True)
         self._write_odoo_conf(spec)
         self._write_backend_config(spec)
         self._write_runtime_files(spec)
         self._render_compose(spec)
+
+    def deploy(self, spec: EnvironmentSpec, *, update: bool = False) -> ProviderStatus:
+        self.prepare(spec)
         if update:
             self._update_modules(spec)
         self._run(spec, "up", "-d", "--build", timeout=COMPOSE_TIMEOUT_SECONDS)
@@ -223,6 +241,27 @@ class DockerProvider:
             "ON_ERROR_STOP=1",
             timeout=COMPOSE_TIMEOUT_SECONDS,
             input=dump.read_text(encoding="utf-8"),
+        )
+
+    def neutralize_database(self, spec: EnvironmentSpec, base_url: str) -> None:
+        """Prepare a cloned database to receive real traffic as production."""
+        self._require_rendered(spec)
+        self._ensure_database_ready(spec)
+        sql = NEUTRALIZE_SQL.replace("{base_url}", base_url.replace("'", "''"))
+        self._run(
+            spec,
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "odoo",
+            "-d",
+            spec.db_name,
+            "-v",
+            "ON_ERROR_STOP=1",
+            timeout=DATABASE_PROBE_TIMEOUT_SECONDS,
+            input=sql,
         )
 
     def docker_info(self) -> DockerInfo:

@@ -100,6 +100,7 @@ def build_app(language: str | None = None) -> typer.Typer:
     app.add_typer(iteration_app, name="iteration")
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)
+    app.command("promote", help=t("cmd.promote"))(project_commands.promote)
     app.command("check", help=t("cmd.check"))(check_commands.check)
 
     approval_app = typer.Typer(help=t("cmd.approval"), no_args_is_help=True)

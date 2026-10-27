@@ -28,6 +28,7 @@ class FakeProvider:
         self.specs: list[EnvironmentSpec] = []
         self.deploy_updates: list[bool] = []
         self.restored_dumps: list[Path] = []
+        self.neutralized: list[str] = []
         self.deploy_status = ProviderStatus(
             status="running",
             services=[{"name": "odoo", "state": "running", "health": "", "status": "Up"}],
@@ -39,6 +40,9 @@ class FakeProvider:
         self.specs.append(spec)
         if self.fail_with is not None:
             raise self.fail_with
+
+    def prepare(self, spec: EnvironmentSpec) -> None:
+        self._record("prepare", spec)
 
     def deploy(self, spec: EnvironmentSpec, *, update: bool = False) -> ProviderStatus:
         self.deploy_updates.append(update)
@@ -76,6 +80,10 @@ class FakeProvider:
     def restore_database(self, spec: EnvironmentSpec, dump: Path) -> None:
         self.restored_dumps.append(dump)
         self._record("restore_database", spec)
+
+    def neutralize_database(self, spec: EnvironmentSpec, base_url: str) -> None:
+        self.neutralized.append(base_url)
+        self._record("neutralize_database", spec)
 
     def docker_info(self) -> DockerInfo:
         return DockerInfo(available=True, version="test")

@@ -188,6 +188,21 @@ class OrchestratorClient:
             params={"stage": stage},
         )
 
+    def promote_environment(
+        self,
+        name: str,
+        source_stage: str = "staging",
+        confirm: str | None = None,
+        neutralize: bool = True,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "source_stage": source_stage,
+            "neutralize": neutralize,
+        }
+        if confirm is not None:
+            body["confirm"] = confirm
+        return self._request("POST", f"/projects/{name}/promote", json=body)
+
     def restore_iteration_database(
         self,
         name: str,

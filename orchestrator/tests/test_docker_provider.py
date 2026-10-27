@@ -273,6 +273,35 @@ def test_backup_writes_dump(
     assert env_spec.db_name in runner.calls[-1]
 
 
+def test_prepare_renders_compose_without_starting(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+
+    provider.prepare(env_spec)
+
+    assert env_spec.compose_file.is_file()
+    assert all("up" not in call for call in runner.calls)
+
+
+def test_neutralize_database_disables_mail_cron_and_test_users(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    env_spec.compose_file.write_text("name: x\n", encoding="utf-8")
+
+    provider.neutralize_database(env_spec, "http://demo-prod.core-odoo.test")
+
+    sql = runner.inputs[-1] or ""
+    assert "UPDATE ir_cron SET active = false" in sql
+    assert "UPDATE ir_mail_server SET active = false" in sql
+    assert "NOT IN ('admin', 'core_gateway')" in sql
+    assert "http://demo-prod.core-odoo.test" in sql
+    assert env_spec.db_name in runner.calls[-1]
+
+
 def test_restore_database_recreates_db_and_streams_dump(
     provider_settings: Settings, env_spec: EnvironmentSpec, tmp_path: Path
 ) -> None:

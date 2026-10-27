@@ -169,5 +169,9 @@
   "opt.reason": "Request reason.",
   "arg.request_id": "Request ID.",
   "cmd.iteration.restore_db": "Restore the database dump of an iteration into an environment.",
-  "msg.db_restored": "Database of {project}/{stage} restored from {version} ({status})."
+  "msg.db_restored": "Database of {project}/{stage} restored from {version} ({status}).",
+  "cmd.promote": "Clone a source environment database into production and neutralize it.",
+  "msg.promoted": "{project}/prod promoted from {source} ({status}).",
+  "opt.source_stage": "Environment the promotion clones from.",
+  "opt.neutralize": "Neutralize the cloned database (mail, cron and test users)."
 }

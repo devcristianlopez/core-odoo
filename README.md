@@ -10,9 +10,9 @@ custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
 > Estado: Sprint 2 en curso. Rollback de entorno, health gate, actualización de
-> módulos, DB restore y autoservicio del panel ya están; faltan promote con
-> neutralización, smoke gate y auto-rollback. Docker provider first; Proxmox
-> provider is next.
+> módulos, DB restore, promote con neutralización y autoservicio del panel ya
+> están; faltan smoke gate en staging y auto-rollback. Docker provider first;
+> Proxmox provider is next.
 
 ## Quick start
 

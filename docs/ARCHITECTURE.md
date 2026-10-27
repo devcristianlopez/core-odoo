@@ -107,9 +107,9 @@ recreates the database and redeploys through the same gate. The panel is locked
 to the dev network (`CORE_PANEL_ALLOWED_CIDRS`) and each user rotates their own
 password with `POST /auth/password`.
 
-**Still planned:** promotion with a prod clone and neutralization, a staging
-smoke gate, and automatic rollback when a deploy fails. Recovery is manual today
-with `core-odoo env rollback`.
+**Still planned:** a staging smoke gate and automatic rollback when a deploy
+fails. Promotion with a prod clone and neutralization shipped as
+`core-odoo promote`; recovery is still manual with `core-odoo env rollback`.
 
 ## Security boundaries
 
@@ -133,9 +133,8 @@ covers availability, latency, errors, disk, backups, deploys and Odoo cron.
 ## Roadmap
 
 1. **Sprint 1 (done):** Docker provider, control plane, observability, smoke-test.
-2. **Sprint 2 (current):** quality gates/CI; promote with prod clone +
-   neutralization; staging smoke gate. Identity model in
-   [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
+2. **Sprint 2 (current):** quality gates/CI; staging smoke gate. Identity model
+   in [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
 3. Reliability: automatic rollback on failed deploys, auto-stop, quotas.
 4. Distribution: installer, GHCR images, releases, upgrade path.
 5. Proxmox provider with parity.

@@ -146,6 +146,12 @@ class RollbackRequest(BaseModel):
     confirm: str | None = Field(default=None, max_length=64)
 
 
+class PromoteRequest(BaseModel):
+    source_stage: Stage = "staging"
+    confirm: str | None = Field(default=None, max_length=64)
+    neutralize: bool = True
+
+
 class RestoreDatabaseRequest(BaseModel):
     stage: Stage = "dev"
     confirm: str | None = Field(default=None, max_length=64)

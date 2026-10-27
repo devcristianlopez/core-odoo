@@ -11,7 +11,7 @@ from .api import OrchestratorClient
 from .checker import check_project as run_check
 from .commands.catalog import read_catalog
 from .commands.iterations import perform_restore_database
-from .commands.projects import perform_rollback
+from .commands.projects import perform_promote, perform_rollback
 from .frontend_generator import generate_frontend as run_frontend
 from .generator import generate_module as run_module
 from .generator import generate_resource as run_resource
@@ -173,6 +173,28 @@ def build_server() -> FastMCP:
             return {
                 "ok": True,
                 "backup": OrchestratorClient(_settings()).backup_iteration(project, version, stage),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def promote_environment(
+        project: str,
+        source_stage: str = "staging",
+        confirm: str | None = None,
+        neutralize: bool = True,
+    ) -> dict[str, Any]:
+        """Clone a source environment database into production and neutralize it."""
+        try:
+            return {
+                "ok": True,
+                "environment": perform_promote(
+                    OrchestratorClient(_settings()),
+                    project,
+                    source_stage=source_stage,
+                    confirm=confirm,
+                    neutralize=neutralize,
+                ),
             }
         except Exception as exc:  # noqa: BLE001
             return _fail(exc)

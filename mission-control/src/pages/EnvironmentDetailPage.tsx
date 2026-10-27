@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Pause,
   Play,
+  Rocket,
   RotateCw,
   Search,
   Square,
@@ -64,6 +65,7 @@ export default function EnvironmentDetailPage() {
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [rollbackOpen, setRollbackOpen] = useState(false)
+  const [promoteOpen, setPromoteOpen] = useState(false)
   const [metricsPaused, setMetricsPaused] = useState(false)
   const [logsPaused, setLogsPaused] = useState(false)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -148,6 +150,28 @@ export default function EnvironmentDetailPage() {
   })
 
   const rollbackMutation = useRollbackEnvironment(name)
+
+  const promoteMutation = useMutation({
+    mutationFn: () => api.environments.promote(name, stage, name),
+    onSuccess: (promoted) => {
+      setPromoteOpen(false)
+      invalidate()
+      pushToast({
+        title: t('environment.promoted', {
+          project: name,
+          stage: stageLabel(promoted.stage),
+        }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('environment.promoteFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
 
   const logLines = useMemo(() => splitLogLines(logsQuery.data?.logs), [logsQuery.data?.logs])
   const filteredLines = useMemo(() => filterLogLines(logLines, logFilter), [logLines, logFilter])
@@ -329,6 +353,19 @@ export default function EnvironmentDetailPage() {
             {lastGoodIteration ? null : (
               <span className="sr-only">{t('environment.rollbackUnavailable')}</span>
             )}
+            {stage === 'staging' && isAdmin ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setPromoteOpen(true)}
+                disabled={pending || promoteMutation.isPending}
+                aria-label={t('environment.promote')}
+                title={t('environment.promote')}
+              >
+                <Rocket className="h-4 w-4" aria-hidden="true" />
+                {t('environment.promote')}
+              </Button>
+            ) : null}
               </>
             ) : null}
             {url ? (
@@ -716,6 +753,27 @@ export default function EnvironmentDetailPage() {
         requireTextHint={isProd ? t('common.confirmValue', { value: name }) : undefined}
         destructive={isProd}
         loading={rollbackMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={promoteOpen}
+        onClose={() => {
+          if (!promoteMutation.isPending) setPromoteOpen(false)
+        }}
+        onConfirm={() => promoteMutation.mutate()}
+        title={t('environment.promoteTitle')}
+        description={t('environment.promoteDescription', {
+          project: name,
+          stage: stageLabel(stage),
+        })}
+        warning={t('environment.promoteWarning')}
+        confirmLabel={
+          promoteMutation.isPending ? t('environment.promoting') : t('environment.promote')
+        }
+        requireText={name}
+        requireTextHint={t('common.confirmValue', { value: name })}
+        destructive
+        loading={promoteMutation.isPending}
       />
     </>
   )

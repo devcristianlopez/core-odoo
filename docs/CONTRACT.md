@@ -121,6 +121,7 @@ password: the current one must match and the new one must differ and be at least
 | GET | `/projects/{name}/iterations/{version}/backups` | – | `[IterationBackup]` |
 | POST | `/projects/{name}/iterations/{version}/backup` | `?stage=dev` | `IterationBackup` |
 | POST | `/projects/{name}/iterations/{version}/restore-db` | `{stage?, confirm?}` | `Environment` |
+| POST | `/projects/{name}/promote` | `{source_stage?, confirm?, neutralize?}` | `Environment` (admin) |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -169,6 +170,18 @@ environment is missing, and `502` when the restore or the redeploy fails (the
 environment is then `error`). Production requires `admin` and `confirm` equal to
 the project name. `last_good_iteration` is left untouched: a data restore is not
 a deploy.
+
+`POST /projects/{name}/promote` clones a `dev`/`staging` environment into
+production: it dumps the source database, recreates the production database
+from that dump, neutralizes it and redeploys with module updates and the health
+gate. Promotion always requires `admin` and `confirm` equal to the project name,
+and creates the `prod` environment when it does not exist yet. Neutralization
+(`neutralize`, default `true`) disables `ir_cron` and `ir_mail_server`, deactivates
+every user except `admin` and `core_gateway`, and points `web.base.url` at the
+production URL. The dump is kept under `data/backups/<project>-<source>/`. It
+returns `404` when the source environment is missing, `409` when the source has
+never been deployed and `502` when the clone, the neutralization or the deploy
+fails (production is then `error`).
 
 
 ## 6. Gateway (BFF) contract
