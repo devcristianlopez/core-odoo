@@ -1,9 +1,13 @@
 """Drift guard for the nginx configs that front the gateway.
 
-Every copy of the reverse-proxy config — templates, project sources and the
-orchestrator fallback — must expose the same gateway routes. A divergent copy
-breaks login, health checks or SDK bootstrap for one deployment only, which is
-easy to miss in review.
+Every copy of the reverse-proxy config — templates and the orchestrator
+fallback — must expose the same gateway routes. A divergent copy breaks login,
+health checks or SDK bootstrap for one deployment only, which is easy to miss in
+review.
+
+Generated projects live in ``projects/`` on the host and are gitignored, so CI
+cannot inspect their copies; keeping the templates and the fallback in sync is
+what protects new projects.
 """
 
 from __future__ import annotations
@@ -19,8 +23,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONCRETE_CONFIGS = (
     "templates/agent-frontend/nginx.conf",
     "templates/frontend-starter/nginx.conf",
-    "projects/smoke-test/frontend/nginx.conf",
-    "projects/crm-demo/frontend/nginx.conf",
 )
 FALLBACK_CONFIG = "app/scaffold.py::_FALLBACK_NGINX"
 CONFIG_SOURCES = (*CONCRETE_CONFIGS, FALLBACK_CONFIG)

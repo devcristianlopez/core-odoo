@@ -22,7 +22,9 @@ already there. Do not rebuild them.
 5. **Never expose Odoo to the browser.** Browser → frontend nginx → gateway →
    Odoo. The gateway allowlist is the API contract.
 6. **Every generated module needs a real test.** A deploy is not proof.
-7. **Keep generated sections intact.** Put business logic in the model methods
+7. **Projects are local.** `projects/<name>` is gitignored and never committed;
+   only `templates/` and the platform live in this repository.
+8. **Keep generated sections intact.** Put business logic in the model methods
    and UI logic in the frontend; do not fight the generator.
 
 ## Golden path

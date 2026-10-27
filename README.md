@@ -14,6 +14,10 @@ observability — all on a single Docker host.
 > Reliability: auto-stop, quotas y retención. Docker provider first; Proxmox
 > provider is next.
 
+Projects created by the factory live in `projects/` on the host and are
+**local-only** (gitignored): the repository ships the templates, not the apps.
+Keep each project's history in its own repository when it needs one.
+
 ## Quick start
 
 ```bash
