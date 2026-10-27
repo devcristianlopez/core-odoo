@@ -84,11 +84,16 @@ LOKI_RETENTION=336h
 Base path `/api/v1`. Auth: `Authorization: Bearer <CORE_API_TOKEN>` for machine
 calls, or a JWT obtained from `POST /auth/login` (UI).
 
+`POST /auth/password` lets any authenticated panel user rotate their own
+password: the current one must match and the new one must differ and be at least
+8 characters. The machine API token has no password and gets `400`.
+
 | Method | Path | Body / query | Response |
 |---|---|---|---|
 | GET | `/health` | – | `{status, version}` |
 | POST | `/auth/login` | `{username, password}` | `{access_token, token_type}` |
 | GET | `/auth/me` | – | `{username, role}` |
+| POST | `/auth/password` | `{current_password, new_password}` | `{changed: true}` |
 | GET | `/users` | – | `[User]` (admin) |
 | POST | `/users` | `{username, password, role}` | `User` (admin) |
 | PATCH | `/users/{username}` | `{password?, role?, active?}` | `User` (admin) |
@@ -115,6 +120,7 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | GET | `/projects/{name}/iterations/{version}/diff` | `?against=<version>` | `IterationDiff` |
 | GET | `/projects/{name}/iterations/{version}/backups` | – | `[IterationBackup]` |
 | POST | `/projects/{name}/iterations/{version}/backup` | `?stage=dev` | `IterationBackup` |
+| POST | `/projects/{name}/iterations/{version}/restore-db` | `{stage?, confirm?}` | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -154,6 +160,16 @@ health check. It returns `409` when there is no last good iteration (or its
 snapshot is gone), `404` when the iteration record is missing, and `502` when
 the redeploy fails (the environment is then `error`). Production rollback
 requires `admin` and `confirm` equal to the project name.
+`POST /projects/{name}/iterations/{version}/restore-db` loads the newest backup
+of that iteration for `stage` into the environment and redeploys it with module
+updates and the health gate. The database is recreated first and connections are
+terminated, so the dump is the only source of truth afterwards. It returns `409`
+when the iteration has no backup for that stage, `404` when the iteration or the
+environment is missing, and `502` when the restore or the redeploy fails (the
+environment is then `error`). Production requires `admin` and `confirm` equal to
+the project name. `last_good_iteration` is left untouched: a data restore is not
+a deploy.
+
 
 ## 6. Gateway (BFF) contract
 

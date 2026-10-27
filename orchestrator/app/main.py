@@ -30,8 +30,8 @@ from .routers import (
     status,
     users,
 )
-from .routers.auth import login, me
-from .schemas import MeResponse, TokenResponse
+from .routers.auth import change_password, login, me
+from .schemas import MeResponse, PasswordChangeResponse, TokenResponse
 from .security import SecurityService
 
 logger = logging.getLogger("core_odoo.orchestrator")
@@ -96,6 +96,13 @@ def create_app(
     )
     app.add_api_route(
         "/auth/me", me, methods=["GET"], response_model=MeResponse, include_in_schema=False
+    )
+    app.add_api_route(
+        "/auth/password",
+        change_password,
+        methods=["POST"],
+        response_model=PasswordChangeResponse,
+        include_in_schema=False,
     )
 
     @app.get("/metrics", include_in_schema=False)

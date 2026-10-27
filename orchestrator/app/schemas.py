@@ -29,6 +29,15 @@ class TokenResponse(BaseModel):
 Role = Literal["admin", "operator", "viewer"]
 
 
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
+
+
+class PasswordChangeResponse(BaseModel):
+    changed: bool = True
+
+
 class MeResponse(BaseModel):
     username: str
     role: Role = "viewer"
@@ -134,6 +143,11 @@ class DeployRequest(BaseModel):
 
 
 class RollbackRequest(BaseModel):
+    confirm: str | None = Field(default=None, max_length=64)
+
+
+class RestoreDatabaseRequest(BaseModel):
+    stage: Stage = "dev"
     confirm: str | None = Field(default=None, max_length=64)
 
 

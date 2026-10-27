@@ -280,6 +280,15 @@ export const api = {
     me(): Promise<MeResponse> {
       return request<MeResponse>('/auth/me')
     },
+    changePassword(input: {
+      current_password: string
+      new_password: string
+    }): Promise<{ changed: boolean }> {
+      return request<{ changed: boolean }>('/auth/password', {
+        method: 'POST',
+        body: input,
+      })
+    },
   },
   health(): Promise<{ status: string; version?: string }> {
     return request('/health', { auth: false })
@@ -378,6 +387,16 @@ export const api = {
       return request(
         `${projectPath(name)}/iterations/${encodeURIComponent(version)}/backup`,
         { method: 'POST', query: { stage } },
+      )
+    },
+    restoreDatabase(
+      name: string,
+      version: string,
+      input: { stage: string; confirm?: string },
+    ): Promise<Environment> {
+      return request<Environment>(
+        `${projectPath(name)}/iterations/${encodeURIComponent(version)}/restore-db`,
+        { method: 'POST', body: input },
       )
     },
   },

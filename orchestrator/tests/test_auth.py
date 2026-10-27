@@ -74,3 +74,64 @@ def test_audit_requires_auth(harness: AppHarness) -> None:
         ).status_code
         == 200
     )
+
+
+def _login(harness: AppHarness, password: str, username: str = "admin"):
+    return harness.client.post(
+        "/api/v1/auth/login", json={"username": username, "password": password}
+    )
+
+
+def test_change_password_rotates_credentials(harness: AppHarness) -> None:
+    token = _login(harness, "admin-password").json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = harness.client.post(
+        "/api/v1/auth/password",
+        json={"current_password": "admin-password", "new_password": "new-password-123"},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {"changed": True}
+
+    assert _login(harness, "admin-password").status_code == 401
+    assert _login(harness, "new-password-123").status_code == 200
+
+    audit = harness.client.get("/api/v1/audit", headers=headers).json()
+    event = next(item for item in audit if item["action"] == "user.password_change")
+    assert event["target"] == "admin"
+    assert event["details"] == {"self": True}
+
+
+def test_change_password_rejects_wrong_current(harness: AppHarness) -> None:
+    token = _login(harness, "admin-password").json()["access_token"]
+    response = harness.client.post(
+        "/api/v1/auth/password",
+        json={"current_password": "wrong", "new_password": "new-password-123"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "current password is incorrect"
+
+
+def test_change_password_requires_a_different_value(harness: AppHarness) -> None:
+    token = _login(harness, "admin-password").json()["access_token"]
+    response = harness.client.post(
+        "/api/v1/auth/password",
+        json={"current_password": "admin-password", "new_password": "admin-password"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "new password must differ from the current one"
+
+
+def test_change_password_rejects_the_api_token(
+    harness: AppHarness, auth_headers: dict[str, str]
+) -> None:
+    response = harness.client.post(
+        "/api/v1/auth/password",
+        json={"current_password": "x", "new_password": "new-password-123"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "the API token has no password to change"

@@ -94,6 +94,9 @@ def build_app(language: str | None = None) -> typer.Typer:
     iteration_app.command("backup", help=t("cmd.iteration.backup"))(
         iteration_commands.backup_iteration
     )
+    iteration_app.command("restore-db", help=t("cmd.iteration.restore_db"))(
+        iteration_commands.restore_database
+    )
     app.add_typer(iteration_app, name="iteration")
     app.command("logs", help=t("cmd.logs"))(project_commands.logs)
     app.command("backup", help=t("cmd.backup"))(project_commands.backup)

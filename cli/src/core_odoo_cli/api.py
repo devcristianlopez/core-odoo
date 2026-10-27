@@ -188,6 +188,22 @@ class OrchestratorClient:
             params={"stage": stage},
         )
 
+    def restore_iteration_database(
+        self,
+        name: str,
+        version: str,
+        stage: str = "dev",
+        confirm: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {"stage": stage}
+        if confirm is not None:
+            body["confirm"] = confirm
+        return self._request(
+            "POST",
+            f"/projects/{name}/iterations/{version}/restore-db",
+            json=body,
+        )
+
     def iteration_backups(self, name: str, version: str) -> list[dict[str, Any]]:
         payload = self._request("GET", f"/projects/{name}/iterations/{version}/backups")
         return payload if isinstance(payload, list) else []

@@ -165,6 +165,39 @@ describe('api client', () => {
     expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
   })
 
+  it('posts the password change to the auth route', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ changed: true }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.auth.changePassword({ current_password: 'old-pass', new_password: 'new-pass-123' })
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/auth/password')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(
+      JSON.stringify({ current_password: 'old-pass', new_password: 'new-pass-123' }),
+    )
+  })
+
+  it('restores an iteration database into the requested stage', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'staging' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.iterations.restoreDatabase('demo', '0.1.0', { stage: 'staging' })
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/projects/demo/iterations/0.1.0/restore-db')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(JSON.stringify({ stage: 'staging' }))
+  })
+
+  it('sends the typed confirmation when restoring into production', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'prod' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.iterations.restoreDatabase('demo', '0.1.0', { stage: 'prod', confirm: 'demo' })
+    const [, init] = firstFetchCall(fetchMock)
+    expect(init.body).toBe(JSON.stringify({ stage: 'prod', confirm: 'demo' }))
+  })
+
   it('requests logs with the tail query parameter', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ logs: 'hello' }))
     vi.stubGlobal('fetch', fetchMock)

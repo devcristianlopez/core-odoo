@@ -1,17 +1,17 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Database, GitCompare, History, Plus, RotateCcw, Rocket, ShieldCheck } from 'lucide-react'
+import { Database, Download, GitCompare, History, Plus, RotateCcw, Rocket, ShieldCheck } from 'lucide-react'
 import { api, type CreateIterationInput } from '../../lib/api'
 import { queryKeys } from '../../lib/query'
-import { isStage, type Iteration, type IterationDiff } from '../../lib/types'
+import { STAGES, isStage, type Iteration, type IterationDiff, type Stage } from '../../lib/types'
 import { formatDate } from '../../lib/format'
 import { describeError } from '../../lib/errors'
 import { useToast } from '../../lib/toast-context'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
-import { Input, Label, FieldHint, FieldError } from '../ui/Input'
+import { Input, Label, Select, FieldHint, FieldError } from '../ui/Input'
 import { Modal } from '../ui/Modal'
 import { EmptyState } from '../ui/EmptyState'
 import { ErrorState } from '../ui/ErrorState'
@@ -36,6 +36,9 @@ export function IterationsPanel({
   const [notes, setNotes] = useState('')
   const [diff, setDiff] = useState<IterationDiff | null>(null)
   const [diffOpen, setDiffOpen] = useState(false)
+  const [dbTarget, setDbTarget] = useState<Iteration | null>(null)
+  const [dbStage, setDbStage] = useState<Stage>('dev')
+  const [dbConfirm, setDbConfirm] = useState('')
 
   const iterationsQuery = useQuery({
     queryKey: queryKeys.iterations(project),
@@ -174,6 +177,37 @@ export function IterationsPanel({
     },
   })
 
+  const restoreDbMutation = useMutation({
+    mutationFn: ({
+      iteration,
+      stage,
+      confirm,
+    }: {
+      iteration: Iteration
+      stage: Stage
+      confirm?: string
+    }) => api.iterations.restoreDatabase(project, iteration.version, { stage, confirm }),
+    onSuccess: (_environment, variables) => {
+      setDbTarget(null)
+      setDbConfirm('')
+      refresh()
+      pushToast({
+        title: t('iterations.restoredDb', {
+          version: variables.iteration.version,
+          stage: variables.stage,
+        }),
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('iterations.restoreDbFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
+
   const iterations = iterationsQuery.data ?? []
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -290,6 +324,19 @@ export function IterationsPanel({
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          setDbTarget(iteration)
+                          setDbStage(isStage(iteration.stage) ? iteration.stage : 'dev')
+                          setDbConfirm('')
+                        }}
+                        disabled={!iteration.has_snapshot || restoreDbMutation.isPending}
+                      >
+                        <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t('iterations.restoreDb')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => requestMutation.mutate(iteration)}
                         disabled={!iteration.has_snapshot || requestMutation.isPending}
                       >
@@ -354,6 +401,81 @@ export function IterationsPanel({
           </div>
           {createMutation.isError ? <FieldError>{describeError(createMutation.error, t)}</FieldError> : null}
         </form>
+      </Modal>
+
+      <Modal
+        open={dbTarget !== null}
+        onClose={() => {
+          if (!restoreDbMutation.isPending) setDbTarget(null)
+        }}
+        title={t('iterations.restoreDbTitle')}
+        description={
+          dbTarget
+            ? t('iterations.restoreDbDescription', { version: dbTarget.version })
+            : undefined
+        }
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setDbTarget(null)}
+              disabled={restoreDbMutation.isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              loading={restoreDbMutation.isPending}
+              disabled={dbTarget === null || (dbStage === 'prod' && dbConfirm.trim() !== project)}
+              onClick={() => {
+                if (dbTarget === null) return
+                restoreDbMutation.mutate({
+                  iteration: dbTarget,
+                  stage: dbStage,
+                  confirm: dbStage === 'prod' ? dbConfirm.trim() : undefined,
+                })
+              }}
+            >
+              {restoreDbMutation.isPending
+                ? t('iterations.restoringDb')
+                : t('iterations.restoreDb')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="iteration-db-stage">{t('iterations.restoreDbStage')}</Label>
+            <Select
+              id="iteration-db-stage"
+              value={dbStage}
+              onChange={(event) => {
+                const value = event.target.value
+                if (isStage(value)) setDbStage(value)
+              }}
+            >
+              {STAGES.map((stage) => (
+                <option key={stage} value={stage}>
+                  {t(`stages.${stage}`)}
+                </option>
+              ))}
+            </Select>
+            <FieldHint>{t('iterations.restoreDbHint')}</FieldHint>
+          </div>
+          {dbStage === 'prod' ? (
+            <div>
+              <Label htmlFor="iteration-db-confirm">
+                {t('iterations.restoreDbConfirmLabel', { project })}
+              </Label>
+              <Input
+                id="iteration-db-confirm"
+                value={dbConfirm}
+                onChange={(event) => setDbConfirm(event.target.value)}
+                autoComplete="off"
+              />
+            </div>
+          ) : null}
+        </div>
       </Modal>
 
       <Modal

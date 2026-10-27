@@ -273,6 +273,35 @@ def test_backup_writes_dump(
     assert env_spec.db_name in runner.calls[-1]
 
 
+def test_restore_database_recreates_db_and_streams_dump(
+    provider_settings: Settings, env_spec: EnvironmentSpec, tmp_path: Path
+) -> None:
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    env_spec.compose_file.write_text("name: x\n", encoding="utf-8")
+    dump = tmp_path / "backup.sql"
+    dump.write_text("CREATE TABLE demo (id int);\n", encoding="utf-8")
+
+    provider.restore_database(env_spec, dump)
+
+    statements = [call[-1] for call in runner.calls if "psql" in call]
+    joined = "\n".join(statements)
+    assert "pg_terminate_backend" in joined
+    assert f'DROP DATABASE IF EXISTS "{env_spec.db_name}"' in joined
+    assert f'CREATE DATABASE "{env_spec.db_name}" OWNER "odoo"' in joined
+    assert runner.inputs[-1] == "CREATE TABLE demo (id int);\n"
+    assert env_spec.db_name in runner.calls[-1]
+
+
+def test_restore_database_requires_dump_file(
+    provider_settings: Settings, env_spec: EnvironmentSpec, tmp_path: Path
+) -> None:
+    provider = DockerProvider(provider_settings, runner=RecordingRunner())
+    env_spec.compose_file.write_text("name: x\n", encoding="utf-8")
+    with pytest.raises(ProviderError, match="database dump not found"):
+        provider.restore_database(env_spec, tmp_path / "missing.sql")
+
+
 def test_docker_info_unavailable(provider_settings: Settings) -> None:
     class BrokenRunner:
         def __call__(self, args, *, input=None, timeout=600):

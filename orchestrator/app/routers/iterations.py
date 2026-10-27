@@ -15,19 +15,23 @@ from ..deps import (
     require_project_access,
     require_write,
 )
+from ..metrics import record_deploy
 from ..models import Environment, Iteration, IterationBackup, Project, utcnow
 from ..providers.base import ProviderError
 from ..providers.docker import backup_filename
 from ..schemas import (
+    EnvironmentRead,
     IterationBackupRead,
     IterationCreate,
     IterationDiff,
     IterationRead,
+    RestoreDatabaseRequest,
 )
 from ..services import (
     build_spec,
     create_iteration_snapshot,
     diff_snapshots,
+    environment_read,
     iteration_read,
     record_audit,
     restore_iteration_snapshot,
@@ -315,3 +319,94 @@ def backup_iteration(
         path=str(settings.host_path(Path(backup.path))),
         created_at=backup.created_at,
     )
+
+
+@router.post(
+    "/projects/{name}/iterations/{version}/restore-db",
+    response_model=EnvironmentRead,
+)
+def restore_iteration_database(
+    name: str,
+    version: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+    payload: RestoreDatabaseRequest | None = None,
+) -> EnvironmentRead:
+    stage = payload.stage if payload is not None else "dev"
+    confirm = payload.confirm if payload is not None else None
+    if stage == "prod" and principal.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="production restores require the admin role",
+        )
+    if stage == "prod" and confirm != name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="confirm must exactly match the project name for production",
+        )
+    project = _get_project(session, name)
+    iteration = _get_iteration(session, project, version)
+    environment = _get_environment(session, project, stage)
+    backup = session.exec(
+        select(IterationBackup)
+        .where(
+            IterationBackup.iteration_id == iteration.id,
+            IterationBackup.stage == stage,
+        )
+        .order_by(IterationBackup.created_at.desc())
+    ).first()
+    if backup is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"iteration {version} has no database backup for {stage}",
+        )
+    dump = Path(backup.path)
+    spec = build_spec(settings, project, environment)
+
+    environment.status = "provisioning"
+    environment.updated_at = utcnow()
+    session.add(environment)
+    session.commit()
+    session.refresh(environment)
+
+    try:
+        provider.restore_database(spec, dump)
+        # The dump may predate the code: apply pending module updates and
+        # require the same health gate as a normal redeploy.
+        result = provider.deploy(spec, update=True)
+    except ProviderError as exc:
+        environment.status = "error"
+        environment.updated_at = utcnow()
+        session.add(environment)
+        record_deploy(name, stage, "failed")
+        record_audit(
+            session,
+            actor=principal.username,
+            action="iteration.restore_db",
+            target=f"{name}/{version}",
+            status="failed",
+            details={"stage": stage, "error": exc.message, "output": exc.details},
+        )
+        session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message
+        ) from exc
+
+    environment.status = result.status
+    environment.services = result.services
+    environment.url = spec.url
+    environment.updated_at = utcnow()
+    session.add(environment)
+    record_deploy(name, stage, "success")
+    record_audit(
+        session,
+        actor=principal.username,
+        action="iteration.restore_db",
+        target=f"{name}/{version}",
+        details={"stage": stage, "backup": str(dump), "status": result.status},
+    )
+    session.commit()
+    session.refresh(environment)
+    return environment_read(name, environment)

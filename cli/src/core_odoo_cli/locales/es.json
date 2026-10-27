@@ -158,7 +158,7 @@
   "prompt.type_project_name": "Escribe el nombre del proyecto ({name}) para confirmar:",
   "prompt.type_environment": "Escribe '{value}' para confirmar:",
   "error.confirmation_mismatch": "La confirmación no coincide.",
-  "error.prod_confirm_required": "El rollback a producción requiere --confirm <proyecto>.",
+  "error.prod_confirm_required": "La operación en producción requiere --confirm <proyecto>.",
   "opt.purge": "Elimina también código fuente, snapshots y backups.",
   "cmd.approval": "Gestiona aprobaciones de despliegue a producción.",
   "cmd.approval.list": "Lista solicitudes de despliegue.",
@@ -167,5 +167,7 @@
   "cmd.approval.reject": "Rechaza una solicitud (admin).",
   "opt.status": "Filtra por estado.",
   "opt.reason": "Motivo de la solicitud.",
-  "arg.request_id": "ID de la solicitud."
+  "arg.request_id": "ID de la solicitud.",
+  "cmd.iteration.restore_db": "Restaura el dump de base de datos de una iteración en un entorno.",
+  "msg.db_restored": "Base de datos de {project}/{stage} restaurada desde {version} ({status})."
 }

@@ -162,6 +162,69 @@ class DockerProvider:
         destination.write_text(result.stdout or "", encoding="utf-8")
         return destination
 
+    def restore_database(self, spec: EnvironmentSpec, dump: Path) -> None:
+        """Replace the environment database with a plain SQL dump.
+
+        ``backup`` writes ``pg_dump --clean --if-exists`` output, so the dump
+        drops and recreates its own objects. The database is recreated first to
+        drop anything the dump does not know about, and connections are
+        terminated because Odoo keeps sessions open.
+        """
+        self._require_rendered(spec)
+        if not dump.is_file():
+            raise ProviderError(f"database dump not found: {dump}")
+        self._ensure_database_ready(spec)
+        self._run(
+            spec,
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "odoo",
+            "-d",
+            "postgres",
+            "-tAc",
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+            f"WHERE datname='{spec.db_name}' AND pid <> pg_backend_pid()",
+            timeout=DATABASE_PROBE_TIMEOUT_SECONDS,
+        )
+        for statement in (
+            f'DROP DATABASE IF EXISTS "{spec.db_name}"',
+            f'CREATE DATABASE "{spec.db_name}" OWNER "odoo"',
+        ):
+            self._run(
+                spec,
+                "exec",
+                "-T",
+                "db",
+                "psql",
+                "-U",
+                "odoo",
+                "-d",
+                "postgres",
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-c",
+                statement,
+                timeout=DATABASE_READY_TIMEOUT_SECONDS,
+            )
+        self._run(
+            spec,
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "odoo",
+            "-d",
+            spec.db_name,
+            "-v",
+            "ON_ERROR_STOP=1",
+            timeout=COMPOSE_TIMEOUT_SECONDS,
+            input=dump.read_text(encoding="utf-8"),
+        )
+
     def docker_info(self) -> DockerInfo:
         try:
             result = self._runner(
@@ -520,17 +583,19 @@ class DockerProvider:
         spec: EnvironmentSpec,
         *args: str,
         timeout: int = DEFAULT_TIMEOUT_SECONDS,
+        input: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
-        return self._runner(self._compose(spec, *args), timeout=timeout)
+        return self._runner(self._compose(spec, *args), input=input, timeout=timeout)
 
     def _run(
         self,
         spec: EnvironmentSpec,
         *args: str,
         timeout: int = DEFAULT_TIMEOUT_SECONDS,
+        input: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
         try:
-            result = self._execute(spec, *args, timeout=timeout)
+            result = self._execute(spec, *args, input=input, timeout=timeout)
         except subprocess.TimeoutExpired as exc:
             raise ProviderError(
                 f"docker compose {args[0]} timed out",

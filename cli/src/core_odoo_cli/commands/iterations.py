@@ -9,9 +9,12 @@ from rich.console import Console
 from rich.table import Table
 
 from ..api import OrchestratorClient
+from ..errors import CliError
+from ..i18n import t
 from ..options import argument, option
-from ..output import emit, machine_output, success
+from ..output import emit, info, machine_output, success
 from ..settings import RuntimeSettings
+from .projects import Stage
 
 console = Console()
 
@@ -133,3 +136,58 @@ def backup_iteration(
         emit(payload)
         return
     success(f"Backup {payload.get('path')} linked to {version}.")
+
+
+def perform_restore_database(
+    client: OrchestratorClient,
+    project: str,
+    version: str,
+    stage: str,
+    confirm: str | None = None,
+) -> dict[str, Any]:
+    """Shared CLI/MCP policy: production restores need the typed confirmation."""
+    if stage == "prod":
+        if confirm is None:
+            raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+        if confirm != project:
+            raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
+    return client.restore_iteration_database(project, version, stage, confirm)
+
+
+def restore_database(
+    ctx: typer.Context,
+    project: str = argument("arg.project"),
+    version: str = argument("arg.version"),
+    stage: Stage = option("opt.stage", Stage.dev, "--stage"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
+) -> None:
+    """Restore the database dump of an iteration into an environment."""
+    if stage == Stage.prod and confirm is None:
+        if machine_output():
+            raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+        confirm = typer.prompt(t("prompt.type_project_name", name=project))
+        if confirm != project:
+            info(t("msg.cancelled"))
+            return
+    environment = perform_restore_database(
+        _client(ctx), project, version, stage.value, confirm
+    )
+    if machine_output():
+        emit(
+            {
+                "project": project,
+                "version": version,
+                "stage": stage.value,
+                "status": environment.get("status", "-"),
+            }
+        )
+        return
+    success(
+        t(
+            "msg.db_restored",
+            project=project,
+            version=version,
+            stage=stage.value,
+            status=environment.get("status", "-"),
+        )
+    )

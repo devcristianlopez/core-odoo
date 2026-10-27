@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Check, Globe2, Info, KeyRound, LogOut, Moon, Server } from 'lucide-react'
 import { API_BASE, api } from '../lib/api'
@@ -12,13 +13,44 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { cn } from '../lib/utils'
+import { describeError } from '../lib/errors'
+import { formatDateTime } from '../lib/format'
+import { tokenExpiresAt } from '../lib/jwt'
+import { Input, Label } from '../components/ui/Input'
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.1.0'
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
-  const { user, logout } = useAuth()
+  const { user, token, logout } = useAuth()
   const { pushToast } = useToast()
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [repeatPassword, setRepeatPassword] = useState('')
+  const sessionExpiry = tokenExpiresAt(token)
+  const passwordMismatch = repeatPassword !== '' && repeatPassword !== newPassword
+  const passwordTooShort = newPassword !== '' && newPassword.length < 8
+
+  const changePasswordMutation = useMutation({
+    mutationFn: () =>
+      api.auth.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    onSuccess: () => {
+      setCurrentPassword('')
+      setNewPassword('')
+      setRepeatPassword('')
+      pushToast({ title: t('settings.passwordChanged'), variant: 'success' })
+    },
+    onError: (error) => {
+      pushToast({
+        title: t('settings.passwordChangeFailed'),
+        description: describeError(error, t),
+        variant: 'error',
+      })
+    },
+  })
   const currentLanguage = ((i18n.resolvedLanguage ?? i18n.language ?? 'en').split('-')[0] ??
     'en') as string
 
@@ -107,6 +139,13 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
+            {sessionExpiry ? (
+              <p className="text-[11px] text-slate-500">
+                {t('settings.sessionExpires', {
+                  date: formatDateTime(sessionExpiry, currentLanguage),
+                })}
+              </p>
+            ) : null}
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-slate-500">{t('settings.logoutHint')}</p>
               <Button
@@ -120,6 +159,80 @@ export default function SettingsPage() {
                 {t('common.logout')}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title={t('settings.passwordTitle')}
+            description={t('settings.passwordDescription')}
+          />
+          <CardContent>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                changePasswordMutation.mutate()
+              }}
+            >
+              <div>
+                <Label htmlFor="current-password">{t('settings.currentPassword')}</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-password">{t('settings.newPassword')}</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  invalid={passwordTooShort}
+                  required
+                />
+                {passwordTooShort ? (
+                  <p className="mt-1 text-xs text-danger-400">{t('settings.passwordTooShort')}</p>
+                ) : null}
+              </div>
+              <div>
+                <Label htmlFor="repeat-password">{t('settings.repeatPassword')}</Label>
+                <Input
+                  id="repeat-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={repeatPassword}
+                  onChange={(event) => setRepeatPassword(event.target.value)}
+                  invalid={passwordMismatch}
+                  required
+                />
+                {passwordMismatch ? (
+                  <p className="mt-1 text-xs text-danger-400">{t('settings.passwordMismatch')}</p>
+                ) : null}
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={changePasswordMutation.isPending}
+                  disabled={
+                    currentPassword === '' ||
+                    newPassword.length < 8 ||
+                    newPassword !== repeatPassword
+                  }
+                >
+                  {changePasswordMutation.isPending
+                    ? t('settings.changingPassword')
+                    : t('settings.changePassword')}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
 

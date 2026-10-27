@@ -102,6 +102,10 @@ the path from repo to environment is:
 **Implemented:** module updates on redeploy — the one-shot `-u` described above,
 guarded by the database probe and followed by the health gate.
 `core-odoo env rollback` redeploys the same way.
+`core-odoo iteration restore-db` loads an iteration dump into an environment,
+recreates the database and redeploys through the same gate. The panel is locked
+to the dev network (`CORE_PANEL_ALLOWED_CIDRS`) and each user rotates their own
+password with `POST /auth/password`.
 
 **Still planned:** promotion with a prod clone and neutralization, a staging
 smoke gate, and automatic rollback when a deploy fails. Recovery is manual today
@@ -129,10 +133,9 @@ covers availability, latency, errors, disk, backups, deploys and Odoo cron.
 ## Roadmap
 
 1. **Sprint 1 (done):** Docker provider, control plane, observability, smoke-test.
-2. **Sprint 2 (current):** quality gates/CI; DB restore from an iteration dump;
-   promote with prod clone + neutralization; staging smoke gate; panel
-   self-service (password, session expiry) with the panel locked to the dev
-   network. Identity model in [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
+2. **Sprint 2 (current):** quality gates/CI; promote with prod clone +
+   neutralization; staging smoke gate. Identity model in
+   [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
 3. Reliability: automatic rollback on failed deploys, auto-stop, quotas.
 4. Distribution: installer, GHCR images, releases, upgrade path.
 5. Proxmox provider with parity.

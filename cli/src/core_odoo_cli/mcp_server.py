@@ -10,6 +10,7 @@ from mcp.server.fastmcp import FastMCP
 from .api import OrchestratorClient
 from .checker import check_project as run_check
 from .commands.catalog import read_catalog
+from .commands.iterations import perform_restore_database
 from .commands.projects import perform_rollback
 from .frontend_generator import generate_frontend as run_frontend
 from .generator import generate_module as run_module
@@ -172,6 +173,24 @@ def build_server() -> FastMCP:
             return {
                 "ok": True,
                 "backup": OrchestratorClient(_settings()).backup_iteration(project, version, stage),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def restore_iteration_db(
+        project: str,
+        version: str,
+        stage: str = "dev",
+        confirm: str | None = None,
+    ) -> dict[str, Any]:
+        """Restore the database dump of an iteration into an environment."""
+        try:
+            return {
+                "ok": True,
+                "environment": perform_restore_database(
+                    OrchestratorClient(_settings()), project, version, stage, confirm
+                ),
             }
         except Exception as exc:  # noqa: BLE001
             return _fail(exc)

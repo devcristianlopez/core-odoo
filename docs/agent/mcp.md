@@ -24,6 +24,7 @@ Tools:
 | `check_project` | Contract/module/ACL/frontend validation |
 | `deploy_project` | Deploy through the orchestrator (`confirm` required for prod) |
 | `rollback_environment` | Roll back to the last successful iteration (`confirm` required for prod) |
+| `restore_iteration_db` | Load an iteration dump into an environment (`confirm` required for prod) |
 | `list_deploy_requests` | List production requests |
 | `request_deploy` | Request production approval |
 | `approve_deploy` / `reject_deploy` | Admin decision |

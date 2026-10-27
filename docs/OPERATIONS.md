@@ -56,6 +56,17 @@ docker compose up -d mission-control
 Con el perfil `tunnel` (cloudflared) el allowlist no filtra: Traefik ve la IP
 del contenedor del túnel, no la del cliente.
 
+### Autoservicio del panel
+
+Cada usuario del panel cambia su propia contraseña en **Ajustes →
+Contraseña** (`POST /auth/password`): pide la actual, la nueva (mínimo 8
+caracteres) y su repetición. El token de API no tiene contraseña.
+
+La sesión es un JWT con vencimiento (`CORE_JWT_TTL`); Ajustes muestra hasta
+cuándo es válida y, al expirar, el panel vuelve al login. No hay recuperación
+por correo: si alguien pierde la contraseña, un `admin` la resetea con
+`PATCH /users/{username}`.
+
 ### Proyectos y entornos
 
 ```bash
@@ -154,6 +165,20 @@ core-odoo backup <nombre> dev
 Los archivos quedan en `data/backups/<proyecto>-<stage>/`. El orquestador expone
 `core_backup_last_success_timestamp_seconds` para la alerta `BackupMissing`.
 Copia los backups fuera del host periódicamente.
+
+### Restaurar base de datos desde una iteración
+
+```bash
+core-odoo iteration backup <proyecto> 0.1.0 --stage dev
+core-odoo iteration restore-db <proyecto> 0.1.0 --stage staging
+# Producción: admin y confirmación tipada
+core-odoo iteration restore-db <proyecto> 0.1.0 --stage prod --confirm <proyecto>
+```
+
+Se usa el backup más reciente de esa iteración para el entorno elegido. El
+orquestador termina las conexiones, recrea la base, carga el dump y redespliega
+con `-u` y el health gate; si algo falla, el entorno queda en `error`. No cambia
+`last_good_iteration`: restaurar datos no es un deploy.
 
 ### Métricas y logs
 
@@ -297,6 +322,17 @@ docker compose up -d mission-control
 With the `tunnel` profile (cloudflared) the allowlist does not filter: Traefik
 sees the tunnel container IP, not the client IP.
 
+### Panel accounts
+
+Each panel user rotates their own password in **Settings → Password**
+(`POST /auth/password`): it asks for the current one, the new one (8 characters
+minimum) and a repetition. The API token has no password.
+
+The session is a JWT with an expiry (`CORE_JWT_TTL`); Settings shows how long it
+is valid and the panel returns to the login page when it expires. There is no
+email recovery: an `admin` resets a lost password with
+`PATCH /users/{username}`.
+
 ### Projects and environments
 
 ```bash
@@ -334,6 +370,20 @@ The gateway depends on bootstrap completion and reads the file.
 Grafana and Uptime Kuma are routed through Traefik. Custom metrics:
 `core_odoo_up`, `core_odoo_environments_total`, `core_deploy_total`,
 `core_backup_last_success_timestamp_seconds`, `core_odoo_cron_lag_seconds`.
+
+### Restoring a database from an iteration
+
+```bash
+core-odoo iteration backup <project> 0.1.0 --stage dev
+core-odoo iteration restore-db <project> 0.1.0 --stage staging
+# Production: admin plus a typed confirmation
+core-odoo iteration restore-db <project> 0.1.0 --stage prod --confirm <project>
+```
+
+The newest backup of that iteration for the chosen environment is used. The
+orchestrator terminates connections, recreates the database, loads the dump and
+redeploys with `-u` and the health gate; a failure leaves the environment in
+`error`. `last_good_iteration` is untouched: a data restore is not a deploy.
 
 ### Updates, healthcheck and rollback
 

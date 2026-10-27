@@ -27,6 +27,7 @@ class FakeProvider:
         self.calls: list[tuple[str, EnvironmentSpec]] = []
         self.specs: list[EnvironmentSpec] = []
         self.deploy_updates: list[bool] = []
+        self.restored_dumps: list[Path] = []
         self.deploy_status = ProviderStatus(
             status="running",
             services=[{"name": "odoo", "state": "running", "health": "", "status": "Up"}],
@@ -71,6 +72,10 @@ class FakeProvider:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text("-- dump\n", encoding="utf-8")
         return destination
+
+    def restore_database(self, spec: EnvironmentSpec, dump: Path) -> None:
+        self.restored_dumps.append(dump)
+        self._record("restore_database", spec)
 
     def docker_info(self) -> DockerInfo:
         return DockerInfo(available=True, version="test")
@@ -171,6 +176,7 @@ class RecordingRunner:
         failing_fragment: str | None = None,
     ) -> None:
         self.calls: list[list[str]] = []
+        self.inputs: list[str | None] = []
         self.ps_payload = ps_payload
         self.db_probe_output = db_probe_output
         self.failing_fragment = failing_fragment
@@ -183,6 +189,7 @@ class RecordingRunner:
         timeout: int = 600,
     ) -> subprocess.CompletedProcess[str]:
         self.calls.append(list(args))
+        self.inputs.append(input)
         if self.failing_fragment and self.failing_fragment in args:
             return subprocess.CompletedProcess(args, 1, "", "boom")
         if "ps" in args:

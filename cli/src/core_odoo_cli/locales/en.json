@@ -158,7 +158,7 @@
   "prompt.type_project_name": "Type the project name ({name}) to confirm:",
   "prompt.type_environment": "Type '{value}' to confirm:",
   "error.confirmation_mismatch": "Confirmation does not match.",
-  "error.prod_confirm_required": "Production rollback requires --confirm <project>.",
+  "error.prod_confirm_required": "Production operations require --confirm <project>.",
   "opt.purge": "Also remove source code, snapshots and backups.",
   "cmd.approval": "Manage production deployment approvals.",
   "cmd.approval.list": "List deployment requests.",
@@ -167,5 +167,7 @@
   "cmd.approval.reject": "Reject a request (admin).",
   "opt.status": "Filter by status.",
   "opt.reason": "Request reason.",
-  "arg.request_id": "Request ID."
+  "arg.request_id": "Request ID.",
+  "cmd.iteration.restore_db": "Restore the database dump of an iteration into an environment.",
+  "msg.db_restored": "Database of {project}/{stage} restored from {version} ({status})."
 }

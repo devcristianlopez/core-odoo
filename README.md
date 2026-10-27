@@ -9,9 +9,9 @@ Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
-> Estado: Sprint 2 en curso. Rollback de entorno, health gate y actualización de
-> módulos ya están; faltan DB restore, promote con neutralización, smoke gate,
-> auto-rollback y autoservicio del panel. Docker provider first; Proxmox
+> Estado: Sprint 2 en curso. Rollback de entorno, health gate, actualización de
+> módulos, DB restore y autoservicio del panel ya están; faltan promote con
+> neutralización, smoke gate y auto-rollback. Docker provider first; Proxmox
 > provider is next.
 
 ## Quick start
@@ -31,7 +31,7 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Odoo 20 backbone** — reuse `res.partner`, `sale.order`, `project.task`, etc.
 - **Declarative BFF** — expose only the models/fields you declare in `backend.yaml`.
 - **Environment pipeline** — one isolated Compose project per stage.
-- **Versioned iterations** — immutable source snapshots, restore and deploy history.
+- **Versioned iterations** — immutable source snapshots, database backup/restore and deploy history.
 - **Module lifecycle** — scaffold, install, snapshot, approved prod deploy.
 - **Observability** — Prometheus, Loki, Grafana, Alertmanager, Uptime Kuma.
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
