@@ -24,7 +24,7 @@ Después, un admin puede crear más usuarios en **Mission Control → Users**:
 - `operator`: despliega dev/staging, lifecycle, iteraciones, backups y logs.
 - `viewer`: solo lectura.
 
-El token de API se considera siempre admin; usalo para automatización, no para
+El token de API se considera siempre admin; úsalo para automatización, no para
 usuarios humanos.
 
 Los roles globales definen el alcance general y el rol de proyecto define la
@@ -52,6 +52,12 @@ Cada entorno es un proyecto Compose aislado (`core-<proyecto>-<stage>`) con
 PostgreSQL, Odoo, gateway, frontend y Mailpit (dev/staging). Solo el frontend se
 publica a través de Traefik.
 
+`--template odoo-module` instala el addon en `odoo/addons/<slug>`, el único
+directorio del proyecto que se monta en Odoo. Al crear el proyecto y en cada
+deploy el orquestador además hace `chown` del árbol al dueño de
+`CORE_PROJECTS_DIR` (es un bind mount del host), así el usuario del host puede
+editar los archivos.
+
 ### Módulos Odoo 20
 
 Odoo 20 cambió el modelo de permisos:
@@ -74,7 +80,7 @@ El servicio `bootstrap` se ejecuta una sola vez, después de que Odoo está sano
 3. La escribe en el volumen `secrets`, en `/run/core/odoo_api_key`.
 
 El gateway espera a que `bootstrap` termine y lee `file:/run/core/odoo_api_key`.
-Para rotar la key, eliminá el proyecto/entorno y volvé a desplegar.
+Para rotar la key, elimina el proyecto/entorno y vuelve a desplegar.
 
 ### Iteraciones
 
@@ -128,7 +134,7 @@ core-odoo backup <nombre> dev
 
 Los archivos quedan en `data/backups/<proyecto>-<stage>/`. El orquestador expone
 `core_backup_last_success_timestamp_seconds` para la alerta `BackupMissing`.
-Copiá los backups fuera del host periódicamente.
+Copia los backups fuera del host periódicamente.
 
 ### Métricas y logs
 
@@ -139,6 +145,46 @@ Copiá los backups fuera del host periódicamente.
 - Métricas propias: `core_odoo_up`, `core_odoo_environments_total`,
   `core_deploy_total`, `core_backup_last_success_timestamp_seconds`,
   `core_odoo_cron_lag_seconds`.
+
+### Actualizaciones, healthcheck y rollback
+
+Un redeploy de un entorno existente actualiza los módulos antes de levantar el
+stack: un contenedor one-shot corre `odoo -u <módulos> --stop-after-init`. Los
+módulos son la lista explícita del deploy o, si no la pasas, todos los addons
+bajo `projects/<proyecto>/odoo/addons` con `__manifest__.py`. El primer deploy
+solo instala (`-i`), nunca actualiza; el entrypoint instala al arrancar los
+módulos que todavía falten.
+
+Ciclo normal para cambiar un módulo, sin borrar el entorno: editas el addon,
+subes la versión en `__manifest__.py` y despliegas.
+
+```bash
+core-odoo deploy <proyecto> --stage dev   # -u de los módulos + healthcheck
+```
+
+Odoo solo corre `migrations/` cuando cambió la versión del manifiesto. Una
+migración de datos va en `odoo/addons/<módulo>/migrations/<versión>/`, con
+scripts `pre-*.py` y `post-*.py`; `<versión>` tiene que coincidir con la del
+`__manifest__.py`. Se ejecutan como parte del `-u`.
+
+Un deploy solo se da por bueno cuando el gateway reporta `odoo=true` en su
+`/health` dentro de `CORE_DEPLOY_HEALTH_TIMEOUT` (300 s), reintentando cada
+`CORE_DEPLOY_HEALTH_INTERVAL` (5 s). Si se agota el tiempo o falla la
+actualización, el entorno queda en `status=error`, la falla se audita y se
+conserva el `last_good_iteration` anterior. Cada deploy exitoso con
+`--iteration` registra `last_good_iteration` / `last_good_at`.
+
+`status=error` no borra nada: el código y la base siguen ahí, pero el entorno no
+está sano. Un deploy nuevo sobre un entorno en `error` —o detenido— igual aplica
+`-u`: el proveedor levanta el servicio `db`, espera `pg_isready` y consulta si
+la base existe, así que recuperas desplegando, sin rollback previo.
+
+`core-odoo env rollback <proyecto> --stage dev` restaura el snapshot de código
+de la última iteración buena y vuelve a desplegar con actualización y
+healthcheck. Sin iteración buena devuelve `409`; en `prod` exige admin y
+`--confirm <proyecto>`. Restaurar reemplaza `backend.yaml`, `odoo/`,
+`frontend/`, `odoo-sh.yaml` y `README.md` con el snapshot, así que guarda en git
+o en una iteración lo que no quieras perder.
 
 ### Desarrollo
 
@@ -171,7 +217,7 @@ base Odoo inicializada. Se ejecutan dentro de un entorno ya desplegado:
 docker exec core-<proyecto>-<stage>-odoo \
   odoo -c /etc/odoo/odoo.conf -d <db> \
   --test-enable --stop-after-init -u <modulo>
-# si el contenedor ya sirve en 8069: agregá --http-port=8070
+# si el contenedor ya sirve en 8069: agrega --http-port=8070
 ```
 
 Ciclo completo: `make e2e` (o `./scripts/e2e.sh`) crea `smoke-test`, despliega
@@ -224,6 +270,11 @@ core-odoo env restart <name> dev
 core-odoo env delete <name> dev
 ```
 
+`--template odoo-module` installs the addon under `odoo/addons/<slug>`, the only
+project directory mounted into Odoo. Scaffolding and every deploy also `chown`
+the project tree to the owner of `CORE_PROJECTS_DIR` (a host bind mount) so the
+host user can edit it.
+
 ### Odoo 20 permissions
 
 Odoo 20 replaced `ir.model.access` with `ir.access`. Use
@@ -245,6 +296,47 @@ The gateway depends on bootstrap completion and reads the file.
 Grafana and Uptime Kuma are routed through Traefik. Custom metrics:
 `core_odoo_up`, `core_odoo_environments_total`, `core_deploy_total`,
 `core_backup_last_success_timestamp_seconds`, `core_odoo_cron_lag_seconds`.
+
+### Updates, healthcheck and rollback
+
+Redeploying an existing environment updates the modules before the stack
+starts: a one-shot container runs `odoo -u <modules> --stop-after-init`. The
+modules are the explicit deploy list or, when you omit it, every addon under
+`projects/<project>/odoo/addons` with a `__manifest__.py`. A first deploy only
+installs (`-i`) and never updates; the entrypoint installs at boot whatever is
+still missing.
+
+Normal loop for a module change, no need to delete the environment: edit the
+addon, bump the version in `__manifest__.py`, deploy.
+
+```bash
+core-odoo deploy <project> --stage dev   # -u for project modules + healthcheck
+```
+
+Odoo only runs `migrations/` when the manifest version changed. Put data
+migrations in `odoo/addons/<module>/migrations/<version>/` as `pre-*.py` and
+`post-*.py`; `<version>` must match the `__manifest__.py` you deploy. They run
+as part of `-u`.
+
+A deploy only succeeds when the gateway reports `odoo=true` on its `/health`
+within `CORE_DEPLOY_HEALTH_TIMEOUT` (300s), retried every
+`CORE_DEPLOY_HEALTH_INTERVAL` (5s). On timeout or update failure the environment
+is marked `status=error`, the failure is audited and the previous
+`last_good_iteration` is kept. Every successful deploy with `--iteration`
+records `last_good_iteration` / `last_good_at`.
+
+`status=error` deletes nothing: the code and the database stay, but the
+environment is not healthy. A new deploy on an `error` — or stopped —
+environment still applies `-u`: the provider starts the `db` service, waits for
+`pg_isready` and probes whether the database exists, so deploying again is the
+recovery path — no rollback first.
+
+`core-odoo env rollback <project> --stage dev` restores the source snapshot of
+the last good iteration and redeploys it with updates and the healthcheck. With
+no good iteration it returns `409`; `prod` requires admin and
+`--confirm <project>`. Restoring replaces `backend.yaml`, `odoo/`, `frontend/`,
+`odoo-sh.yaml` and `README.md` with the snapshot, so keep in git or in an
+iteration anything you do not want to lose.
 
 ### Development
 

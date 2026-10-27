@@ -43,11 +43,19 @@ _ENV_ORDER = (
     "CORE_HOST_GATEWAY_DIR",
     "CORE_LOG_LEVEL",
     "CORE_DOCKER_SOCKET",
+    "CORE_DEPLOY_HEALTH_TIMEOUT",
+    "CORE_DEPLOY_HEALTH_INTERVAL",
     "GRAFANA_ADMIN_USER",
     "GRAFANA_ADMIN_PASSWORD",
     "PROMETHEUS_RETENTION",
     "LOKI_RETENTION",
 )
+
+_ENV_COMMENTS = {
+    "CORE_DEPLOY_HEALTH_TIMEOUT": (
+        "# Deploy health gate: the gateway must report odoo=true within this timeout (s)."
+    ),
+}
 
 _DOMAIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$")
 
@@ -111,6 +119,9 @@ def _render_env(values: dict[str, str]) -> str:
     keys = list(_ENV_ORDER) + [key for key in values if key not in _ENV_ORDER]
     for key in keys:
         if key in values:
+            comment = _ENV_COMMENTS.get(key)
+            if comment:
+                lines.append(comment)
             lines.append(f"{key}={_format_value(values[key])}")
     return "\n".join(lines) + "\n"
 
@@ -155,6 +166,8 @@ def _build_values(
         "CORE_TEMPLATES_DIR": existing.get("CORE_TEMPLATES_DIR") or "./templates",
         "CORE_LOG_LEVEL": existing.get("CORE_LOG_LEVEL") or "INFO",
         "CORE_DOCKER_SOCKET": existing.get("CORE_DOCKER_SOCKET") or "/var/run/docker.sock",
+        "CORE_DEPLOY_HEALTH_TIMEOUT": existing.get("CORE_DEPLOY_HEALTH_TIMEOUT") or "300",
+        "CORE_DEPLOY_HEALTH_INTERVAL": existing.get("CORE_DEPLOY_HEALTH_INTERVAL") or "5",
         "GRAFANA_ADMIN_USER": existing.get("GRAFANA_ADMIN_USER") or "admin",
         "GRAFANA_ADMIN_PASSWORD": _password(),
         "PROMETHEUS_RETENTION": existing.get("PROMETHEUS_RETENTION") or "15d",

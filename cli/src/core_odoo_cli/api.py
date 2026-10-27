@@ -223,6 +223,17 @@ class OrchestratorClient:
             timeout=DEPLOY_TIMEOUT,
         )
 
+    def rollback_environment(
+        self, name: str, stage: str, confirm: str | None = None
+    ) -> dict[str, Any]:
+        body = {"confirm": confirm} if confirm is not None else None
+        return self._request(
+            "POST",
+            f"/projects/{name}/environments/{stage}/rollback",
+            json=body,
+            timeout=DEPLOY_TIMEOUT,
+        )
+
     def delete_environment(self, name: str, stage: str, confirm: str) -> dict[str, Any]:
         return self._request(
             "DELETE",

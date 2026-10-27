@@ -55,6 +55,7 @@ core-odoo check <project> --catalog --frontend
 
 # 6. Deploy and inspect
 core-odoo deploy crm-demo --stage dev
+# A redeploy applies module updates (-u); `core-odoo env rollback` recovers a failed deploy.
 core-odoo logs crm-demo --stage dev
 ```
 

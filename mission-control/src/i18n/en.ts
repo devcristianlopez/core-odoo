@@ -252,6 +252,19 @@ const en = {
     deleteDescription: 'Delete the {{stage}} environment of “{{project}}”?',
     deleteWarning:
       'Containers, network and volumes for this environment will be removed. This cannot be undone.',
+    lastGoodIteration: 'Last good iteration',
+    lastGoodAt: 'Last good deploy',
+    rollback: 'Rollback',
+    rollbackTo: 'Roll back to {{version}}',
+    rollbackTitle: 'Roll back environment',
+    rollbackDescription:
+      'Roll back the {{stage}} environment of “{{project}}” to iteration {{version}}? The current source will be replaced by that snapshot and redeployed.',
+    rollbackProdWarning:
+      'This affects production: containers are recreated from the previous snapshot and traffic is briefly interrupted.',
+    rollbackUnavailable: 'No successful iteration to roll back to yet.',
+    rollingBack: 'Rolling back…',
+    rollbackSuccess: 'Rolled back {{project}} · {{stage}} to iteration {{version}}.',
+    rollbackFailed: 'Could not roll back the environment.',
     metricsTitle: 'Metrics',
     metricsHint: 'Queried from Prometheus through the orchestrator.',
     metricsError: 'Metrics are unavailable.',

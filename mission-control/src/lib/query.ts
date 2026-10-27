@@ -1,4 +1,5 @@
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from './api'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,4 +34,30 @@ export const queryKeys = {
   audit: (limit: number) => ['audit', limit] as const,
   users: ['users'] as const,
   approvals: (status?: string) => ['approvals', status ?? 'all'] as const,
+}
+
+export interface RollbackVariables {
+  stage: string
+  /** Required on prod: must match the project name exactly. */
+  confirm?: string
+}
+
+/**
+ * Rolls an environment back to its last good iteration. Shares the
+ * post-mutation invalidation used by the other environment actions so the
+ * environment detail, project detail and project list all refresh.
+ */
+export function useRollbackEnvironment(project: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ stage, confirm }: RollbackVariables) =>
+      api.environments.rollbackEnvironment(project, stage, confirm),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.project(project) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.environments(project) })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.status })
+      void queryClient.invalidateQueries({ queryKey: ['audit'] })
+    },
+  })
 }

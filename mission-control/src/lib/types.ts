@@ -23,6 +23,9 @@ export interface Environment {
   modules?: string[]
   /** The orchestrator may report services as a list or a map; normalize it. */
   services?: unknown
+  /** Last iteration that deployed successfully here; the rollback target. */
+  last_good_iteration?: string | null
+  last_good_at?: string | null
   created_at?: string | null
   updated_at?: string | null
 }

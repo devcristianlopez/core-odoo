@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import time
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -31,6 +32,24 @@ STAGE_LIMITS: dict[str, tuple[str, str]] = {
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 COMPOSE_TIMEOUT_SECONDS = 1800
 DEFAULT_TIMEOUT_SECONDS = 600
+HEALTH_PROBE_TIMEOUT_SECONDS = 15
+DATABASE_PROBE_TIMEOUT_SECONDS = 30
+DATABASE_READY_TIMEOUT_SECONDS = 60
+DATABASE_READY_INTERVAL_SECONDS = 1.0
+DATABASE_READY_PROBE_TIMEOUT_SECONDS = 10
+
+# Runs inside the gateway container. urllib is part of the standard library, so
+# the probe needs no extra dependency in the gateway image.
+HEALTH_PROBE_SCRIPT = """\
+import json
+import sys
+import urllib.request
+
+with urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=10) as response:
+    data = json.load(response)
+print(json.dumps(data))
+sys.exit(0 if data.get("odoo") is True else 1)
+"""
 
 
 def run_command(
@@ -68,14 +87,17 @@ class DockerProvider:
 
     # ----------------------------------------------------------------- public API
 
-    def deploy(self, spec: EnvironmentSpec) -> ProviderStatus:
+    def deploy(self, spec: EnvironmentSpec, *, update: bool = False) -> ProviderStatus:
         ensure_project_layout(self._settings, spec.project, template=spec.template)
         spec.env_dir.mkdir(parents=True, exist_ok=True)
         self._write_odoo_conf(spec)
         self._write_backend_config(spec)
         self._write_runtime_files(spec)
         self._render_compose(spec)
+        if update:
+            self._update_modules(spec)
         self._run(spec, "up", "-d", "--build", timeout=COMPOSE_TIMEOUT_SECONDS)
+        self._wait_for_health(spec)
         return self.inspect(spec)
 
     def start(self, spec: EnvironmentSpec) -> ProviderStatus:
@@ -295,6 +317,191 @@ class DockerProvider:
             target.write_text((TEMPLATE_DIR / name).read_text(encoding="utf-8"), encoding="utf-8")
             target.chmod(mode)
 
+    # --------------------------------------------------------------- health/update
+
+    def _ensure_database_ready(self, spec: EnvironmentSpec) -> None:
+        """Make sure the Postgres service accepts connections.
+
+        ``docker compose stop`` leaves the database container stopped, and
+        ``docker compose exec db ...`` then fails without a live server. Probing
+        in that state would report "no database" and silently skip ``-u`` on an
+        already initialized environment. Starting only the ``db`` service is
+        idempotent and keeps the rest of the environment down until the module
+        update has finished.
+        """
+        self._run(spec, "up", "-d", "db", timeout=DEFAULT_TIMEOUT_SECONDS)
+        deadline = time.monotonic() + DATABASE_READY_TIMEOUT_SECONDS
+        last_output = ""
+        while True:
+            ready, last_output = self._probe_database(spec)
+            if ready:
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(DATABASE_READY_INTERVAL_SECONDS, remaining))
+        raise ProviderError(
+            "database did not become ready before module update",
+            details=last_output or None,
+        )
+
+    def _probe_database(self, spec: EnvironmentSpec) -> tuple[bool, str]:
+        """Return readiness plus the last ``pg_isready`` output for diagnostics."""
+        try:
+            result = self._execute(
+                spec,
+                "exec",
+                "-T",
+                "db",
+                "pg_isready",
+                "-U",
+                "odoo",
+                "-q",
+                timeout=DATABASE_READY_PROBE_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return False, (f"pg_isready timed out after {DATABASE_READY_PROBE_TIMEOUT_SECONDS}s")
+        except FileNotFoundError as exc:
+            raise ProviderError("docker CLI is not available") from exc
+        output = ((result.stdout or "") + (result.stderr or "")).strip()
+        return result.returncode == 0, output
+
+    def _database_exists(self, spec: EnvironmentSpec) -> bool:
+        """Return whether the Postgres volume already holds this database.
+
+        The environment status is not a reliable signal: a deploy that failed
+        after the first boot still has a database, while a first deploy that
+        never started Postgres does not. Only an actual query can tell them
+        apart. This probe is diagnostic input for :meth:`_update_modules`, so
+        every failure means "no database" instead of aborting the deploy.
+        """
+        try:
+            result = self._execute(
+                spec,
+                "exec",
+                "-T",
+                "db",
+                "psql",
+                "-U",
+                "odoo",
+                "-d",
+                "postgres",
+                "-tAc",
+                f"SELECT 1 FROM pg_database WHERE datname='{spec.db_name}'",
+                timeout=DATABASE_PROBE_TIMEOUT_SECONDS,
+            )
+        except Exception:  # a failed probe must never block a deploy
+            return False
+        return (result.stdout or "").strip() == "1"
+
+    def _update_modules(self, spec: EnvironmentSpec) -> None:
+        """Apply module upgrades before the environment is started again.
+
+        Mirrors ``scripts/e2e.sh::ensure_modules``: a one-shot container with
+        ``--stop-after-init`` updates the installed modules in the existing
+        database. Unlike the first boot, this never installs new modules with
+        demo data.
+
+        ``-u`` only makes sense on an initialized database, so a first deploy
+        (or a deploy that never created the database) silently falls back to
+        the install path. The database service is therefore started and probed
+        for readiness first: a stopped environment must not be mistaken for a
+        fresh one.
+        """
+        self._ensure_database_ready(spec)
+        if not self._database_exists(spec):
+            return
+        # Use the same discovery as the first boot: an explicit module list wins,
+        # otherwise every addon under the project mount that has a manifest.
+        modules = self._init_modules(spec)
+        if not modules:
+            return
+        args = (
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "odoo",
+            "odoo",
+            "--stop-after-init",
+            "-c",
+            "/etc/odoo/odoo.conf",
+            "-d",
+            spec.db_name,
+            "-u",
+            ",".join(modules),
+            "--without-demo=True",
+        )
+        try:
+            result = self._execute(spec, *args, timeout=COMPOSE_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired as exc:
+            raise ProviderError(
+                "odoo module update failed",
+                details=f"timeout after {COMPOSE_TIMEOUT_SECONDS}s",
+            ) from exc
+        except FileNotFoundError as exc:
+            raise ProviderError(
+                "odoo module update failed",
+                details="docker CLI is not available",
+            ) from exc
+        if result.returncode != 0:
+            output = ((result.stderr or "") + (result.stdout or "")).strip()
+            raise ProviderError("odoo module update failed", details=output[-4000:] or None)
+
+    def _wait_for_health(self, spec: EnvironmentSpec) -> None:
+        timeout = self._settings.core_deploy_health_timeout
+        interval = self._settings.core_deploy_health_interval
+        deadline = time.monotonic() + timeout
+        last_output = ""
+        while True:
+            ready, last_output = self._probe_health(spec)
+            if ready:
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(interval, remaining))
+
+        log_tail = self._logs_tail(spec, 80)
+        details = "\n".join(part for part in (last_output, log_tail) if part) or None
+        raise ProviderError(
+            f"environment {spec.project}/{spec.stage} did not become healthy within {timeout}s",
+            details=details,
+        )
+
+    def _probe_health(self, spec: EnvironmentSpec) -> tuple[bool, str]:
+        """Return readiness plus the last probe/gateway output for diagnostics."""
+        status = self.inspect(spec)
+        if not status.services or any(
+            service.get("state") != "running" for service in status.services
+        ):
+            return False, _describe_services(status.services)
+        try:
+            result = self._execute(
+                spec,
+                "exec",
+                "-T",
+                "gateway",
+                "python",
+                "-c",
+                HEALTH_PROBE_SCRIPT,
+                timeout=HEALTH_PROBE_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return False, f"health probe timed out after {HEALTH_PROBE_TIMEOUT_SECONDS}s"
+        except FileNotFoundError:
+            return False, "docker CLI is not available"
+        output = ((result.stdout or "") + (result.stderr or "")).strip()
+        return result.returncode == 0, output
+
+    def _logs_tail(self, spec: EnvironmentSpec, tail: int) -> str:
+        # Diagnostics must never replace the real health failure: swallow every
+        # error raised while collecting the log tail.
+        try:
+            return self.logs(spec, tail)
+        except Exception:
+            return ""
+
     # -------------------------------------------------------------------- commands
 
     def _compose(self, spec: EnvironmentSpec, *args: str) -> list[str]:
@@ -416,6 +623,15 @@ def _parse_compose_ps(stdout: str | None) -> list[dict[str, Any]]:
             }
         )
     return services
+
+
+def _describe_services(services: list[dict[str, Any]]) -> str:
+    if not services:
+        return "no services reported by docker compose ps"
+    return ", ".join(
+        f"{service.get('name', 'unknown')}={service.get('state', 'unknown')}"
+        for service in services
+    )
 
 
 def _aggregate_state(services: list[dict[str, Any]]) -> str:

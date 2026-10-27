@@ -70,6 +70,8 @@ def environment_read(project_name: str, environment: Environment) -> Environment
         services=list(environment.services or []),
         branch=environment.branch,
         modules=list(environment.modules or []),
+        last_good_iteration=environment.last_good_iteration,
+        last_good_at=environment.last_good_at,
         created_at=environment.created_at,
         updated_at=environment.updated_at,
     )

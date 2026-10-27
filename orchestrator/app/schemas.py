@@ -62,6 +62,8 @@ class EnvironmentRead(BaseModel):
     services: list[dict[str, Any]] = Field(default_factory=list)
     branch: str | None = None
     modules: list[str] = Field(default_factory=list)
+    last_good_iteration: str | None = None
+    last_good_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -128,6 +130,10 @@ class DeployRequest(BaseModel):
     branch: str | None = Field(default=None, max_length=255)
     modules: list[str] | None = None
     iteration: str | None = Field(default=None, max_length=32)
+    confirm: str | None = Field(default=None, max_length=64)
+
+
+class RollbackRequest(BaseModel):
     confirm: str | None = Field(default=None, max_length=64)
 
 

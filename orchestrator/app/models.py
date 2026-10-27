@@ -63,6 +63,10 @@ class Environment(SQLModel, table=True):
     branch: str | None = Field(default=None, max_length=255)
     modules: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
 
+    # Last iteration that deployed successfully here; the rollback target.
+    last_good_iteration: str | None = Field(default=None, max_length=32)
+    last_good_at: datetime | None = Field(default=None)
+
     # Per-environment secrets. Never serialized by the API.
     db_name: str = Field(max_length=64)
     db_password: str = Field(max_length=128)

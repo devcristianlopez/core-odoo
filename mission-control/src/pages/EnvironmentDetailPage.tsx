@@ -11,9 +11,10 @@ import {
   Search,
   Square,
   Trash2,
+  Undo2,
 } from 'lucide-react'
 import { api } from '../lib/api'
-import { queryKeys } from '../lib/query'
+import { queryKeys, useRollbackEnvironment } from '../lib/query'
 import { findEnvironment, safeHttpUrl } from '../lib/services'
 import { buildEnvironmentQueries } from '../lib/metrics'
 import { isRunningStatus } from '../lib/status'
@@ -59,8 +60,10 @@ export default function EnvironmentDetailPage() {
   const projectRole = accessQuery.data?.role
   const canOperate =
     isAdmin || (user?.role === 'operator' && (projectRole === 'owner' || projectRole === 'developer'))
+  const isProd = stage === 'prod'
 
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [rollbackOpen, setRollbackOpen] = useState(false)
   const [metricsPaused, setMetricsPaused] = useState(false)
   const [logsPaused, setLogsPaused] = useState(false)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -143,6 +146,8 @@ export default function EnvironmentDetailPage() {
       })
     },
   })
+
+  const rollbackMutation = useRollbackEnvironment(name)
 
   const logLines = useMemo(() => splitLogLines(logsQuery.data?.logs), [logsQuery.data?.logs])
   const filteredLines = useMemo(() => filterLogLines(logLines, logFilter), [logLines, logFilter])
@@ -227,6 +232,37 @@ export default function EnvironmentDetailPage() {
     }
   }
 
+  const lastGoodIteration = environment.last_good_iteration ?? null
+  const rollbackHint = lastGoodIteration
+    ? t('environment.rollbackTo', { version: lastGoodIteration })
+    : t('environment.rollbackUnavailable')
+
+  const confirmRollback = () => {
+    rollbackMutation.mutate(
+      { stage, confirm: isProd ? name : undefined },
+      {
+        onSuccess: (rolledBack) => {
+          setRollbackOpen(false)
+          pushToast({
+            title: t('environment.rollbackSuccess', {
+              project: name,
+              stage: stageLabel(stage),
+              version: rolledBack.last_good_iteration ?? lastGoodIteration ?? '',
+            }),
+            variant: 'success',
+          })
+        },
+        onError: (error) => {
+          pushToast({
+            title: t('environment.rollbackFailed'),
+            description: describeError(error, t),
+            variant: 'error',
+          })
+        },
+      },
+    )
+  }
+
   return (
     <>
       <PageHeader
@@ -277,6 +313,22 @@ export default function EnvironmentDetailPage() {
             >
               <RotateCw className="h-4 w-4" aria-hidden="true" />
             </Button>
+            <span title={rollbackHint}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setRollbackOpen(true)}
+                disabled={!lastGoodIteration || pending || rollbackMutation.isPending}
+                aria-label={rollbackHint}
+                title={rollbackHint}
+              >
+                <Undo2 className="h-4 w-4" aria-hidden="true" />
+                {t('environment.rollback')}
+              </Button>
+            </span>
+            {lastGoodIteration ? null : (
+              <span className="sr-only">{t('environment.rollbackUnavailable')}</span>
+            )}
               </>
             ) : null}
             {url ? (
@@ -362,6 +414,29 @@ export default function EnvironmentDetailPage() {
                   {environment.compose_project || t('common.notAvailable')}
                 </dd>
               </div>
+              {environment.last_good_iteration ? (
+                <div className="min-w-0">
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">
+                    {t('environment.lastGoodIteration')}
+                  </dt>
+                  <dd className="mt-1 truncate font-mono text-xs text-slate-300">
+                    {environment.last_good_iteration}
+                  </dd>
+                </div>
+              ) : null}
+              {environment.last_good_at ? (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">
+                    {t('environment.lastGoodAt')}
+                  </dt>
+                  <dd
+                    className="mt-1 text-sm text-slate-300"
+                    title={formatDate(environment.last_good_at, language)}
+                  >
+                    {formatRelativeTime(environment.last_good_at, language)}
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-[11px] uppercase tracking-wide text-slate-500">
                   {t('common.updatedAt')}
@@ -619,6 +694,28 @@ export default function EnvironmentDetailPage() {
         requireTextHint={t('common.confirmValue', { value: `${name}/${stage}` })}
         destructive
         loading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={rollbackOpen}
+        onClose={() => {
+          if (!rollbackMutation.isPending) setRollbackOpen(false)
+        }}
+        onConfirm={confirmRollback}
+        title={t('environment.rollbackTitle')}
+        description={t('environment.rollbackDescription', {
+          project: name,
+          stage: stageLabel(stage),
+          version: lastGoodIteration ?? '',
+        })}
+        warning={isProd ? t('environment.rollbackProdWarning') : undefined}
+        confirmLabel={
+          rollbackMutation.isPending ? t('environment.rollingBack') : t('environment.rollback')
+        }
+        requireText={isProd ? name : undefined}
+        requireTextHint={isProd ? t('common.confirmValue', { value: name }) : undefined}
+        destructive={isProd}
+        loading={rollbackMutation.isPending}
       />
     </>
   )

@@ -141,6 +141,30 @@ describe('api client', () => {
     expect(init.method).toBe('POST')
   })
 
+  it('rolls an environment back without a body on non-production stages', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'dev' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.environments.rollbackEnvironment('smoke test', 'dev')
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/projects/smoke%20test/environments/dev/rollback')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBeUndefined()
+    expect(new Headers(init.headers).has('Content-Type')).toBe(false)
+  })
+
+  it('sends the confirm value in the rollback body for production', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'prod' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.environments.rollbackEnvironment('demo', 'prod', 'demo')
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/projects/demo/environments/prod/rollback')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(JSON.stringify({ confirm: 'demo' }))
+    expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
+  })
+
   it('requests logs with the tail query parameter', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ logs: 'hello' }))
     vi.stubGlobal('fetch', fetchMock)

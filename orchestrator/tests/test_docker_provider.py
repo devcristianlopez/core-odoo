@@ -2,16 +2,107 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
 
 from app.config import Settings
+from app.providers import docker as docker_module
 from app.providers.base import EnvironmentSpec, ProviderError
 from app.providers.docker import DockerProvider
 
 from .conftest import RecordingRunner
+
+RUNNING_PS_PAYLOAD = json.dumps(
+    [{"Service": "odoo", "State": "running", "Health": "", "Status": "Up"}]
+)
+
+
+class FakeClock:
+    """Virtual clock so healthcheck tests never sleep for real."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def monotonic(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
+class ProbeRunner:
+    """Fake docker CLI that reports services and a controllable probe result."""
+
+    def __init__(
+        self,
+        *,
+        ps_payload: str = RUNNING_PS_PAYLOAD,
+        db_probe_output: str = "1\n",
+        probe_returncode: int = 0,
+        probe_output: str = '{"odoo": true}',
+        logs_output: str = "gateway: waiting for odoo\n",
+    ) -> None:
+        self.calls: list[list[str]] = []
+        self.ps_payload = ps_payload
+        self.db_probe_output = db_probe_output
+        self.probe_returncode = probe_returncode
+        self.probe_output = probe_output
+        self.logs_output = logs_output
+
+    def __call__(
+        self,
+        args: list[str],
+        *,
+        input: str | None = None,
+        timeout: int = 600,
+    ) -> subprocess.CompletedProcess[str]:
+        self.calls.append(list(args))
+        if "ps" in args:
+            return subprocess.CompletedProcess(args, 0, self.ps_payload, "")
+        if "pg_isready" in args:
+            return subprocess.CompletedProcess(args, 0, "", "")
+        if "psql" in args:
+            return subprocess.CompletedProcess(args, 0, self.db_probe_output, "")
+        if "logs" in args:
+            return subprocess.CompletedProcess(args, 0, self.logs_output, "")
+        if "exec" in args:
+            return subprocess.CompletedProcess(args, self.probe_returncode, self.probe_output, "")
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+
+class DatabaseStartupRunner(RecordingRunner):
+    """Recording fake whose ``pg_isready`` answers follow a script.
+
+    A stopped environment is simulated by returning a non-zero exit code for
+    the first answers; once the script is exhausted the database reports ready.
+    """
+
+    def __init__(self, *, pg_isready_returncodes: list[int]) -> None:
+        super().__init__()
+        self.pg_isready_returncodes = list(pg_isready_returncodes)
+
+    def __call__(
+        self,
+        args: list[str],
+        *,
+        input: str | None = None,
+        timeout: int = 600,
+    ) -> subprocess.CompletedProcess[str]:
+        result = super().__call__(args, input=input, timeout=timeout)
+        if "pg_isready" not in args:
+            return result
+        returncode = self.pg_isready_returncodes.pop(0) if self.pg_isready_returncodes else 0
+        stderr = "" if returncode == 0 else "no response\n"
+        return subprocess.CompletedProcess(args, returncode, "", stderr)
+
+
+def _small_health_settings(settings: Settings) -> Settings:
+    return settings.model_copy(
+        update={"core_deploy_health_timeout": 10, "core_deploy_health_interval": 5.0}
+    )
 
 
 @pytest.fixture
@@ -202,3 +293,264 @@ def test_scaffold_creates_fallback_frontend(
     frontend = provider_settings.core_projects_dir / "smoke-test" / "frontend"
     assert (frontend / "Dockerfile").is_file()
     assert (frontend / "nginx.conf").is_file()
+
+
+def test_deploy_without_update_skips_module_update(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=False)
+
+    assert not any("--stop-after-init" in call for call in runner.calls)
+    assert runner.calls[0][-3:] == ["up", "-d", "--build"]
+
+
+def test_deploy_with_update_runs_module_update_before_up(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo", "crm_extra"])
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    update_call = next(call for call in runner.calls if "--stop-after-init" in call)
+    assert update_call[6:] == [
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "odoo",
+        "odoo",
+        "--stop-after-init",
+        "-c",
+        "/etc/odoo/odoo.conf",
+        "-d",
+        env_spec.db_name,
+        "-u",
+        "crm_demo,crm_extra",
+        "--without-demo=True",
+    ]
+    assert runner.calls.index(update_call) < len(runner.calls) - 1
+    up_call = runner.calls[runner.calls.index(update_call) + 1]
+    assert up_call[-3:] == ["up", "-d", "--build"]
+
+
+def test_update_skips_when_no_explicit_modules_or_addons(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    # The fixture creates an (empty) addons directory, matching a project with
+    # no installable modules.
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    assert not any("-u" in call for call in runner.calls)
+    assert not any("--stop-after-init" in call for call in runner.calls)
+
+
+def test_update_skips_when_database_does_not_exist(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    # A deploy that never initialised the database must take the install path,
+    # even when the caller asked for an update.
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = RecordingRunner(db_probe_output="")
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    commands = [" ".join(call) for call in runner.calls]
+    assert not any("--stop-after-init" in command for command in commands)
+    assert not any(" -u " in command for command in commands)
+    # The db service is started first for the readiness probe; the install path
+    # is still a full build-up of every service.
+    assert any(call[-3:] == ["up", "-d", "--build"] for call in runner.calls)
+
+
+def test_update_runs_when_database_exists(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = RecordingRunner(db_probe_output="1\n")
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    update_call = next(call for call in runner.calls if "--stop-after-init" in call)
+    assert update_call[update_call.index("-u") + 1] == "crm_demo"
+
+
+def test_database_probe_queries_the_db_service(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    probe_call = next(call for call in runner.calls if "psql" in call)
+    assert probe_call[6:] == [
+        "exec",
+        "-T",
+        "db",
+        "psql",
+        "-U",
+        "odoo",
+        "-d",
+        "postgres",
+        "-tAc",
+        f"SELECT 1 FROM pg_database WHERE datname='{env_spec.db_name}'",
+    ]
+
+
+def test_database_probe_failure_never_blocks_deploy(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+
+    def runner(args: list[str], *, input: str | None = None, timeout: int = 600):
+        if "psql" in args:
+            raise OSError("docker socket unavailable")
+        return RecordingRunner()(args, input=input, timeout=timeout)
+
+    provider = DockerProvider(provider_settings, runner=runner)
+    status = provider.deploy(env_spec, update=True)
+
+    assert status.status == "running"
+
+
+def test_update_starts_database_and_waits_for_readiness(
+    provider_settings: Settings, env_spec: EnvironmentSpec, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A stopped environment must still run ``-u``: bring the db service up and
+    # wait for pg_isready instead of mistaking the stopped server for a fresh one.
+    clock = FakeClock()
+    monkeypatch.setattr(docker_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(docker_module.time, "sleep", clock.sleep)
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = DatabaseStartupRunner(pg_isready_returncodes=[1, 1, 0])
+    provider = DockerProvider(provider_settings, runner=runner)
+
+    provider.deploy(env_spec, update=True)
+
+    calls = runner.calls
+    db_up_index = next(index for index, call in enumerate(calls) if call[-3:] == ["up", "-d", "db"])
+    probe_indexes = [index for index, call in enumerate(calls) if "pg_isready" in call]
+    psql_index = next(index for index, call in enumerate(calls) if "psql" in call)
+    update_index = next(index for index, call in enumerate(calls) if "--stop-after-init" in call)
+
+    assert [calls[index][calls[index].index("exec") :] for index in probe_indexes] == [
+        ["exec", "-T", "db", "pg_isready", "-U", "odoo", "-q"]
+    ] * 3
+    assert db_up_index < probe_indexes[0]
+    assert max(probe_indexes) < psql_index < update_index
+    assert calls[update_index][calls[update_index].index("-u") + 1] == "crm_demo"
+    assert clock.now == 2.0
+
+
+def test_update_fails_when_database_never_becomes_ready(
+    provider_settings: Settings, env_spec: EnvironmentSpec, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = FakeClock()
+    monkeypatch.setattr(docker_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(docker_module.time, "sleep", clock.sleep)
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    runner = DatabaseStartupRunner(pg_isready_returncodes=[1] * 120)
+    provider = DockerProvider(provider_settings, runner=runner)
+
+    with pytest.raises(ProviderError) as excinfo:
+        provider.deploy(env_spec, update=True)
+
+    assert excinfo.value.message == "database did not become ready before module update"
+    assert "no response" in (excinfo.value.details or "")
+    # Only the db service is started, and the update/install path never runs.
+    assert [call[-3:] for call in runner.calls].count(["up", "-d", "db"]) == 1
+    assert not any("--stop-after-init" in call for call in runner.calls)
+    assert not any("-u" in call for call in runner.calls)
+    assert not any(call[-3:] == ["up", "-d", "--build"] for call in runner.calls)
+    assert clock.now >= docker_module.DATABASE_READY_TIMEOUT_SECONDS - 1
+
+
+def test_update_discovers_addons_when_spec_modules_is_empty(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    module_dir = env_spec.addons_dir / "upgrade_check"
+    module_dir.mkdir()
+    (module_dir / "__manifest__.py").write_text("{'name': 'Upgrade Check'}\n", encoding="utf-8")
+    assert env_spec.modules == []
+
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    provider.deploy(env_spec, update=True)
+
+    update_call = next(call for call in runner.calls if "--stop-after-init" in call)
+    assert update_call[update_call.index("-u") + 1] == "upgrade_check"
+
+
+def test_module_update_failure_is_wrapped(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    env_spec = dataclasses.replace(env_spec, modules=["crm_demo"])
+    provider = DockerProvider(provider_settings, runner=RecordingRunner(failing_fragment="-u"))
+    with pytest.raises(ProviderError) as excinfo:
+        provider.deploy(env_spec, update=True)
+    assert excinfo.value.message == "odoo module update failed"
+    assert excinfo.value.details == "boom"
+
+
+def test_healthcheck_returns_when_probe_succeeds(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    runner = ProbeRunner(probe_returncode=0)
+    provider = DockerProvider(provider_settings, runner=runner)
+    status = provider.deploy(env_spec)
+
+    assert status.status == "running"
+    probe_calls = [call for call in runner.calls if "exec" in call]
+    assert len(probe_calls) == 1
+    assert probe_calls[0][probe_calls[0].index("exec") :] == [
+        "exec",
+        "-T",
+        "gateway",
+        "python",
+        "-c",
+        docker_module.HEALTH_PROBE_SCRIPT,
+    ]
+
+
+def test_healthcheck_times_out_with_log_tail(
+    provider_settings: Settings, env_spec: EnvironmentSpec, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = FakeClock()
+    monkeypatch.setattr(docker_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(docker_module.time, "sleep", clock.sleep)
+    runner = ProbeRunner(probe_returncode=1, probe_output="connection refused")
+    provider = DockerProvider(_small_health_settings(provider_settings), runner=runner)
+
+    with pytest.raises(ProviderError) as excinfo:
+        provider.deploy(env_spec)
+
+    assert excinfo.value.message == "environment smoke-test/dev did not become healthy within 10s"
+    assert "connection refused" in (excinfo.value.details or "")
+    assert "gateway: waiting for odoo" in (excinfo.value.details or "")
+    assert any("logs" in call for call in runner.calls)
+
+
+def test_healthcheck_treats_exited_services_as_not_ready(
+    provider_settings: Settings, env_spec: EnvironmentSpec, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    clock = FakeClock()
+    monkeypatch.setattr(docker_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(docker_module.time, "sleep", clock.sleep)
+    exited = json.dumps(
+        [{"Service": "odoo", "State": "exited", "Health": "", "Status": "Exited (1)"}]
+    )
+    runner = ProbeRunner(ps_payload=exited, probe_returncode=0)
+    provider = DockerProvider(_small_health_settings(provider_settings), runner=runner)
+
+    with pytest.raises(ProviderError) as excinfo:
+        provider.deploy(env_spec)
+
+    assert "odoo=exited" in (excinfo.value.details or "")
+    # The gateway probe must not run while a service is not running.
+    assert not any("exec" in call for call in runner.calls)

@@ -76,6 +76,7 @@ def build_app(language: str | None = None) -> typer.Typer:
     env_app.command("stop", help=t("cmd.env.stop"))(project_commands.env_stop)
     env_app.command("start", help=t("cmd.env.start"))(project_commands.env_start)
     env_app.command("restart", help=t("cmd.env.restart"))(project_commands.env_restart)
+    env_app.command("rollback", help=t("cmd.env.rollback"))(project_commands.env_rollback)
     env_app.command("delete", help=t("cmd.env.delete"))(project_commands.env_delete)
     app.add_typer(env_app, name="env")
 

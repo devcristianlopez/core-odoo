@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     loki_url: str = Field(default="http://loki:3100")
     gateway_healthcheck_timeout: float = Field(default=2.0, gt=0)
 
+    # How long a deploy waits for Odoo and the gateway to report healthy, and
+    # how often the readiness probe is retried.
+    core_deploy_health_timeout: int = Field(default=300, ge=10)
+    core_deploy_health_interval: float = Field(default=5.0, ge=0.5)
+
     @field_validator(
         "core_data_dir",
         "core_projects_dir",

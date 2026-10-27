@@ -29,6 +29,7 @@ COMMAND_PATHS: tuple[tuple[str, ...], ...] = (
     ("env", "stop"),
     ("env", "start"),
     ("env", "restart"),
+    ("env", "rollback"),
     ("env", "delete"),
 )
 
@@ -72,7 +73,7 @@ def test_project_and_env_groups_list_subcommands() -> None:
     env = runner.invoke(app, ["env", "--help"])
     env_output = strip_ansi(env.output)
     assert env.exit_code == 0, env_output
-    for subcommand in ("stop", "start", "restart", "delete"):
+    for subcommand in ("stop", "start", "restart", "rollback", "delete"):
         assert subcommand in env_output
 
 

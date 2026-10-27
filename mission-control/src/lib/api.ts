@@ -400,6 +400,12 @@ export const api = {
     restart(name: string, stage: string): Promise<Environment> {
       return request<Environment>(`${environmentPath(name, stage)}/restart`, { method: 'POST' })
     },
+    rollbackEnvironment(name: string, stage: string, confirm?: string): Promise<Environment> {
+      return request<Environment>(`${environmentPath(name, stage)}/rollback`, {
+        method: 'POST',
+        ...(confirm === undefined ? {} : { body: { confirm } }),
+      })
+    },
     remove(name: string, stage: string, confirm: string): Promise<{ deleted: boolean }> {
       return request(environmentPath(name, stage), { method: 'DELETE', query: { confirm } })
     },

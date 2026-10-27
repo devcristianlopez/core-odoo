@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -25,6 +26,7 @@ class FakeProvider:
     def __init__(self) -> None:
         self.calls: list[tuple[str, EnvironmentSpec]] = []
         self.specs: list[EnvironmentSpec] = []
+        self.deploy_updates: list[bool] = []
         self.deploy_status = ProviderStatus(
             status="running",
             services=[{"name": "odoo", "state": "running", "health": "", "status": "Up"}],
@@ -37,7 +39,8 @@ class FakeProvider:
         if self.fail_with is not None:
             raise self.fail_with
 
-    def deploy(self, spec: EnvironmentSpec) -> ProviderStatus:
+    def deploy(self, spec: EnvironmentSpec, *, update: bool = False) -> ProviderStatus:
+        self.deploy_updates.append(update)
         self._record("deploy", spec)
         return self.deploy_status
 
@@ -154,10 +157,22 @@ def env_spec(tmp_path: Path) -> EnvironmentSpec:
     )
 
 
+HEALTHY_PS_PAYLOAD = json.dumps(
+    [{"Service": "odoo", "State": "running", "Health": "", "Status": "Up"}]
+)
+
+
 class RecordingRunner:
-    def __init__(self, *, ps_payload: str = "[]", failing_fragment: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        ps_payload: str = HEALTHY_PS_PAYLOAD,
+        db_probe_output: str = "1\n",
+        failing_fragment: str | None = None,
+    ) -> None:
         self.calls: list[list[str]] = []
         self.ps_payload = ps_payload
+        self.db_probe_output = db_probe_output
         self.failing_fragment = failing_fragment
 
     def __call__(
@@ -172,6 +187,10 @@ class RecordingRunner:
             return subprocess.CompletedProcess(args, 1, "", "boom")
         if "ps" in args:
             return subprocess.CompletedProcess(args, 0, self.ps_payload, "")
+        if "pg_isready" in args:
+            return subprocess.CompletedProcess(args, 0, "", "")
+        if "psql" in args:
+            return subprocess.CompletedProcess(args, 0, self.db_probe_output, "")
         if "pg_dump" in args:
             return subprocess.CompletedProcess(args, 0, "-- postgres dump\n", "")
         return subprocess.CompletedProcess(args, 0, "", "")

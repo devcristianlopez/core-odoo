@@ -179,6 +179,57 @@ def env_restart(
     _environment_action(ctx, name, stage, "restart", "msg.env_restarted")
 
 
+def perform_rollback(
+    client: OrchestratorClient,
+    project: str,
+    stage: str,
+    confirm: str | None = None,
+) -> dict[str, Any]:
+    """Shared CLI/MCP rollback policy: production needs the typed confirmation."""
+    if stage == "prod":
+        if confirm is None:
+            raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+        if confirm != project:
+            raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
+    return client.rollback_environment(project, stage, confirm)
+
+
+def env_rollback(
+    ctx: typer.Context,
+    name: str = argument("arg.name", ...),
+    stage: Stage = option("opt.stage", ..., "--stage"),
+    confirm: str | None = option("opt.confirm", None, "--confirm"),
+) -> None:
+    """Roll an environment back to its last successful iteration."""
+    if stage == Stage.prod and confirm is None:
+        if machine_output():
+            raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
+        confirm = typer.prompt(t("prompt.type_project_name", name=name))
+        if confirm != name:
+            info(t("msg.cancelled"))
+            return
+    environment = perform_rollback(_client(ctx), name, stage.value, confirm)
+    if machine_output():
+        emit(
+            {
+                "project": name,
+                "stage": stage.value,
+                "status": environment.get("status", "-"),
+                "last_good_iteration": environment.get("last_good_iteration"),
+            }
+        )
+        return
+    success(
+        t(
+            "msg.env_rolled_back",
+            name=name,
+            stage=stage.value,
+            iteration=environment.get("last_good_iteration", "-"),
+            status=environment.get("status", "-"),
+        )
+    )
+
+
 def env_delete(
     ctx: typer.Context,
     name: str = argument("arg.name", ...),

@@ -52,6 +52,11 @@ def test_init_writes_env_and_config(project_root: Path) -> None:
     for key in SECRET_KEYS:
         assert values[key], f"{key} must be generated"
 
+    # The deploy health gate is configured out of the box; without it the
+    # orchestrator falls back to its own defaults inside Docker.
+    assert values["CORE_DEPLOY_HEALTH_TIMEOUT"] == "300"
+    assert values["CORE_DEPLOY_HEALTH_INTERVAL"] == "5"
+
     text = config_file.read_text(encoding="utf-8")
     assert "version: 1" in text
     assert "domain_suffix: 10.0.0.2.nip.io" in text

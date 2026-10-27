@@ -46,6 +46,7 @@ from ..schemas import (
     ProjectMemberRead,
     ProjectMemberUpdate,
     ProjectRead,
+    RollbackRequest,
 )
 from ..services import (
     build_spec,
@@ -545,6 +546,13 @@ def deploy(
         )
     ).first()
 
+    # Whether module updates (-u) are safe is decided by the provider, which
+    # probes the actual database: retrying after a failed deploy must apply the
+    # pending module upgrades even though the environment is still in ``error``.
+    # A brand-new environment has no database yet, so the provider falls back
+    # to the normal install path.
+    update_modules = environment is not None
+
     now = utcnow()
     if environment is None:
         environment = Environment(
@@ -567,7 +575,11 @@ def deploy(
         session.add(environment)
     else:
         environment.branch = payload.branch
-        environment.modules = list(payload.modules or [])
+        # Omitting ``modules`` keeps the stored list: the first deploy discovers
+        # and stores the project addons, and a later deploy without --modules
+        # must not erase them (otherwise module updates are silently skipped).
+        if payload.modules is not None:
+            environment.modules = list(payload.modules)
         environment.status = "provisioning"
         environment.updated_at = now
     session.commit()
@@ -575,7 +587,7 @@ def deploy(
 
     spec = build_spec(settings, project, environment)
     try:
-        result = provider.deploy(spec)
+        result = provider.deploy(spec, update=update_modules)
     except ProviderError as exc:
         record_deploy(name, payload.stage, "failed")
         if payload.iteration:
@@ -614,6 +626,10 @@ def deploy(
             iteration.stage = payload.stage
             iteration.deployed_at = utcnow()
             session.add(iteration)
+        # Only iteration deploys move the rollback target; iteration-less
+        # deploys must keep the previous last-good values.
+        environment.last_good_iteration = payload.iteration
+        environment.last_good_at = utcnow()
     environment.status = result.status or "running"
     environment.services = result.services
     environment.url = spec.url
@@ -747,6 +763,93 @@ def restart_environment(
         settings=settings,
         operation=provider.restart,
     )
+
+
+@router.post(
+    "/projects/{name}/environments/{stage}/rollback",
+    response_model=EnvironmentRead,
+)
+def rollback_environment(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    principal: PrincipalDep,
+    provider: ProviderDep,
+    settings: SettingsDep,
+    payload: RollbackRequest | None = None,
+) -> EnvironmentRead:
+    confirm = payload.confirm if payload is not None else None
+    if stage == "prod" and principal.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="production deploys require the admin role",
+        )
+    project = _get_project(session, name)
+    if stage == "prod" and confirm != name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="confirm must exactly match the project name for production",
+        )
+    environment = _get_environment(session, project, stage)
+    version = environment.last_good_iteration
+    if not version:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="no successful iteration to roll back to",
+        )
+    iteration = session.exec(
+        select(Iteration).where(
+            Iteration.project_id == project.id,
+            Iteration.version == version,
+        )
+    ).first()
+    if iteration is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="iteration not found")
+    try:
+        restore_iteration_snapshot(settings, name, iteration.snapshot_path)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+    environment.status = "provisioning"
+    environment.updated_at = utcnow()
+    session.add(environment)
+    session.commit()
+    session.refresh(environment)
+
+    spec = build_spec(settings, project, environment)
+    try:
+        result = provider.deploy(spec, update=True)
+    except ProviderError as exc:
+        environment.status = "error"
+        environment.updated_at = utcnow()
+        session.add(environment)
+        record_deploy(name, stage, "failed")
+        _audit_failure(
+            session,
+            actor=principal.username,
+            action="environment.rollback",
+            target=f"{name}/{stage}",
+            exc=exc,
+        )
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
+
+    environment.status = result.status
+    environment.services = result.services
+    environment.url = spec.url
+    environment.last_good_at = utcnow()
+    environment.updated_at = utcnow()
+    session.add(environment)
+    record_deploy(name, stage, "success")
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.rollback",
+        target=f"{name}/{stage}",
+        details={"iteration": version},
+    )
+    session.commit()
+    session.refresh(environment)
+    return environment_read(name, environment)
 
 
 @router.delete("/projects/{name}/environments/{stage}", response_model=DeletedResponse)

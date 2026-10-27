@@ -64,13 +64,14 @@ shared `core-edge` network only for Traefik routing.
 ## Module lifecycle
 
 ```
-scaffold → addon on disk → install on first boot → iteration snapshot
+scaffold → addon on disk → install on first boot → module updates on redeploy
+        → iteration snapshot
         → prod deploy (approval + typed confirm + iteration + DB backup + source restore)
 ```
 
 Odoo modules are ordinary addons under `projects/<name>/odoo/addons/`, and a
-deploy is a plain container (re)start of the stage stack. Today the path from
-repo to environment is:
+deploy is a (re)start of the stage stack, preceded by an `-u` on redeploy. Today
+the path from repo to environment is:
 
 1. **Scaffold** — `core-odoo generate module` writes the manifest, model
    skeleton, `security/ir.access.csv`, views and a test into
@@ -79,24 +80,32 @@ repo to environment is:
 2. **Install on first boot** — `entrypoint.sh` waits for PostgreSQL and checks
    `ir_module_module`. An empty database is initialised with `-i` for the
    declared modules; on later boots `-i` is passed only for modules that are
-   missing (for example a newly mounted addon). An already installed module is
-   not touched, so code changes reach the database only when you upgrade it
-   yourself. Tests and lint are not run by a deploy — run them in the module
-   directory.
-3. **Iteration snapshot** — `iteration create` copies the project source
+   missing (for example a newly mounted addon). Tests and lint are not run by a
+   deploy — run them in the module directory.
+3. **Module updates on redeploy** — a redeploy of an existing environment
+   upgrades the modules before the stack starts: a one-shot
+   `odoo -u <modules> --stop-after-init` runs, then the health gate. It is
+   guarded by a database probe (the `db` service is started and `pg_isready`
+   polled first, then the database is checked for existence), so a retry after a
+   failed deploy still applies the pending upgrades. `migrations/<version>/`
+   scripts run as part of `-u` when the manifest version changed.
+4. **Iteration snapshot** — `iteration create` copies the project source
    (excluding `node_modules`, `dist`, caches and secrets) into an immutable,
    versioned snapshot. `iteration restore` puts that source tree back and
    `iteration backup` dumps the database for the version.
-4. **Production guardrails** — a prod deploy needs the `admin` role, a
+5. **Production guardrails** — a prod deploy needs the `admin` role, a
    `--confirm <project>` typed confirmation, an existing iteration and at least
    one database backup for it; the iteration source tree is restored before the
    stack starts. Operators request a deploy and an admin approves or rejects it
    (approvals are recorded in the audit log).
 
-**Not implemented yet — planned for Sprint 2:** applying Odoo module updates
-(upgrade of a changed `__manifest__.py` / `migrations/<version>/`) on redeploy
-instead of install-only, promotion with a prod clone and neutralization, a
-staging smoke gate, and automatic rollback when a deploy fails.
+**Implemented:** module updates on redeploy — the one-shot `-u` described above,
+guarded by the database probe and followed by the health gate.
+`core-odoo env rollback` redeploys the same way.
+
+**Still planned:** promotion with a prod clone and neutralization, a staging
+smoke gate, and automatic rollback when a deploy fails. Recovery is manual today
+with `core-odoo env rollback`.
 
 ## Security boundaries
 
@@ -120,10 +129,10 @@ covers availability, latency, errors, disk, backups, deploys and Odoo cron.
 ## Roadmap
 
 1. **Sprint 1 (done):** Docker provider, control plane, observability, smoke-test.
-2. **Sprint 2 (current):** quality gates/CI; deploys that apply Odoo module
-   updates; DB restore from an iteration dump; promote with prod clone +
-   neutralization; SSO with Odoo accounts.
-3. Reliability: backups/restore, rollback, auto-stop, quotas.
+2. **Sprint 2 (current):** quality gates/CI; DB restore from an iteration dump;
+   promote with prod clone + neutralization; staging smoke gate; automatic
+   rollback; SSO with Odoo accounts.
+3. Reliability: automatic rollback on failed deploys, auto-stop, quotas.
 4. Distribution: installer, GHCR images, releases, upgrade path.
 5. Proxmox provider with parity.
 

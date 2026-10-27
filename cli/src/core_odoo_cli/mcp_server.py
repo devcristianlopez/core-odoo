@@ -10,6 +10,7 @@ from mcp.server.fastmcp import FastMCP
 from .api import OrchestratorClient
 from .checker import check_project as run_check
 from .commands.catalog import read_catalog
+from .commands.projects import perform_rollback
 from .frontend_generator import generate_frontend as run_frontend
 from .generator import generate_module as run_module
 from .generator import generate_resource as run_resource
@@ -317,6 +318,23 @@ def build_server() -> FastMCP:
                 "ok": True,
                 "environment": OrchestratorClient(_settings()).deploy(
                     project, stage, branch, iteration, confirm
+                ),
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _fail(exc)
+
+    @server.tool()
+    def rollback_environment(
+        project: str,
+        stage: str = "dev",
+        confirm: str | None = None,
+    ) -> dict[str, Any]:
+        """Roll an environment back to its last successful iteration."""
+        try:
+            return {
+                "ok": True,
+                "environment": perform_rollback(
+                    OrchestratorClient(_settings()), project, stage, confirm
                 ),
             }
         except Exception as exc:  # noqa: BLE001

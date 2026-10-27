@@ -148,6 +148,27 @@ def test_environment_endpoints(settings: RuntimeSettings) -> None:
     assert calls[4]["path"] == "/projects/demo/environments/dev/backup"
 
 
+def test_rollback_omits_body_without_confirm(settings: RuntimeSettings) -> None:
+    FakeClient.responses = [
+        _ok({"last_good_iteration": "0.1.0"}),
+        _ok({"last_good_iteration": "0.1.0"}),
+    ]
+    client = api.OrchestratorClient(settings)
+
+    assert client.rollback_environment("demo", "dev") == {"last_good_iteration": "0.1.0"}
+    assert client.rollback_environment("demo", "prod", "demo") == {"last_good_iteration": "0.1.0"}
+
+    calls = [call for instance in FakeClient.instances for call in instance.calls]
+    assert calls[0] == {
+        "method": "POST",
+        "path": "/projects/demo/environments/dev/rollback",
+        "json": None,
+        "params": None,
+    }
+    assert calls[1]["path"] == "/projects/demo/environments/prod/rollback"
+    assert calls[1]["json"] == {"confirm": "demo"}
+
+
 def test_base_url_keeps_existing_api_prefix(settings: RuntimeSettings) -> None:
     prefixed = RuntimeSettings(
         repo_root=settings.repo_root,

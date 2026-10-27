@@ -70,6 +70,9 @@ CORE_HOST_PROJECTS_DIR=/srv/core-odoo/projects
 CORE_HOST_GATEWAY_DIR=/srv/core-odoo/gateway
 CORE_LOG_LEVEL=INFO
 CORE_DOCKER_SOCKET=/var/run/docker.sock
+# A deploy only succeeds when the gateway reports odoo=true within these limits.
+CORE_DEPLOY_HEALTH_TIMEOUT=300
+CORE_DEPLOY_HEALTH_INTERVAL=5
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<generated>
 PROMETHEUS_RETENTION=15d
@@ -115,6 +118,7 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
+| POST | `/projects/{name}/environments/{stage}/rollback` | `{confirm?}` | `Environment` |
 | DELETE | `/projects/{name}/environments/{stage}` | `?confirm=<name>/<stage>` | `{deleted: true}` |
 | GET | `/projects/{name}/environments/{stage}/logs` | `?tail=200` | `{logs: string}` |
 | POST | `/projects/{name}/environments/{stage}/backup` | – | `{backup: true, path, created_at}` |
@@ -123,6 +127,10 @@ calls, or a JWT obtained from `POST /auth/login` (UI).
 
 `Project`: `{name, template, repo_url, created_at, environments: [Environment]}`
 `Environment`: `{project, stage, status, url, compose_project, services, created_at, updated_at}`
+`Environment` also carries `last_good_iteration` and `last_good_at`: the last
+iteration that deployed successfully and when, i.e. the rollback target. They
+move only on a successful deploy that carries an `iteration`; a failed deploy
+(or an iteration-less one) never changes them.
 
 Stages allowed: `dev`, `staging`, `prod`.
 
@@ -139,6 +147,13 @@ Production deploys require `confirm` equal to the project name, a versioned
 iteration and at least one database backup for that iteration. The source is
 restored from the iteration snapshot before deploying. An operator can create a
 deployment request; an admin must approve it before the production deploy runs.
+
+`POST /projects/{name}/environments/{stage}/rollback` restores the source
+snapshot of `last_good_iteration` and redeploys it with module updates and the
+health check. It returns `409` when there is no last good iteration (or its
+snapshot is gone), `404` when the iteration record is missing, and `502` when
+the redeploy fails (the environment is then `error`). Production rollback
+requires `admin` and `confirm` equal to the project name.
 
 ## 6. Gateway (BFF) contract
 
@@ -206,6 +221,10 @@ Security rules:
 - Mail: SMTP -> `mailpit:1025` for `dev`/`staging`; disabled for `prod` by default.
 - `prod` uses `--workers=2`; `dev`/`staging` use `--workers=0`.
 - Addons mounted from `projects/<name>/odoo/addons`.
+- A redeploy of an existing environment runs
+  `odoo -u <project modules> --stop-after-init` before the stack starts
+  (explicit deploy list, else every addon with a `__manifest__.py`); only the
+  first boot installs (`-i`).
 - Filestore and DB data in named volumes.
 
 ## 8. Mission Control
@@ -250,6 +269,7 @@ core-odoo iteration restore <name> <version>
 core-odoo iteration diff <name> <version> [--against <version>]
 core-odoo iteration backup <name> <version> --stage <stage>
 core-odoo env stop|start|restart <name> --stage <stage>
+core-odoo env rollback <name> --stage <stage> [--confirm <name>]
 core-odoo env delete <name> --stage <stage> [--confirm <name>/<stage>]
 core-odoo logs <name> --stage <stage> [--tail 200]
 core-odoo backup <name> --stage <stage>
