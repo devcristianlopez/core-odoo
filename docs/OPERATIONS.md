@@ -37,6 +37,25 @@ operación dentro de ese proyecto:
 Un `operator` o `viewer` solamente ve los proyectos donde fue agregado. El admin
 agrega miembros y asigna el rol desde **Project Detail → Miembros del proyecto**.
 
+### Exposición del panel
+
+Mission Control es una herramienta interna para los desarrolladores: los
+usuarios finales de cada app son usuarios de Odoo dentro de su entorno
+(ver [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md)). Por eso el
+router de Traefik del panel solo acepta tráfico de redes privadas
+(`CORE_PANEL_ALLOWED_CIDRS`: loopback y rangos privados por defecto).
+
+Para habilitar otra red, agregá el rango en `.env` y recreá el panel:
+
+```bash
+# .env
+CORE_PANEL_ALLOWED_CIDRS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+docker compose up -d mission-control
+```
+
+Con el perfil `tunnel` (cloudflared) el allowlist no filtra: Traefik ve la IP
+del contenedor del túnel, no la del cliente.
+
 ### Proyectos y entornos
 
 ```bash
@@ -258,6 +277,25 @@ docker logs -f core-<proyecto>-<stage>-bootstrap
 core-odoo status
 docker compose -f docker-compose.yml -f docker-compose.observability.yml ps
 ```
+
+### Panel exposure
+
+Mission Control is an internal tool for developers; each app's end users are
+Odoo users inside their own environment (see
+[ADR 0001](adr/0001-panel-local-identidad-por-entorno.md)). Its Traefik router
+therefore only accepts traffic from private networks
+(`CORE_PANEL_ALLOWED_CIDRS`, loopback and RFC1918 ranges by default).
+
+To allow another network, add the range to `.env` and recreate the panel:
+
+```bash
+# .env
+CORE_PANEL_ALLOWED_CIDRS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+docker compose up -d mission-control
+```
+
+With the `tunnel` profile (cloudflared) the allowlist does not filter: Traefik
+sees the tunnel container IP, not the client IP.
 
 ### Projects and environments
 

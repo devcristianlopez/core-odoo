@@ -130,8 +130,9 @@ covers availability, latency, errors, disk, backups, deploys and Odoo cron.
 
 1. **Sprint 1 (done):** Docker provider, control plane, observability, smoke-test.
 2. **Sprint 2 (current):** quality gates/CI; DB restore from an iteration dump;
-   promote with prod clone + neutralization; staging smoke gate; automatic
-   rollback; SSO with Odoo accounts.
+   promote with prod clone + neutralization; staging smoke gate; panel
+   self-service (password, session expiry) with the panel locked to the dev
+   network. Identity model in [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
 3. Reliability: automatic rollback on failed deploys, auto-stop, quotas.
 4. Distribution: installer, GHCR images, releases, upgrade path.
 5. Proxmox provider with parity.

@@ -121,6 +121,10 @@ services:
       - traefik.http.routers.core-panel-tls.tls=true
       - traefik.http.routers.core-panel-tls.service=core-panel
       - traefik.http.services.core-panel.loadbalancer.server.port=80
+      # Mission Control is an internal tool: only the dev network reaches it.
+      - traefik.http.middlewares.core-panel-allowlist.ipallowlist.sourcerange=${CORE_PANEL_ALLOWED_CIDRS:-127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      - traefik.http.routers.core-panel.middlewares=core-panel-allowlist
+      - traefik.http.routers.core-panel-tls.middlewares=core-panel-allowlist
     networks:
       - core-edge
       - default

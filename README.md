@@ -11,7 +11,8 @@ observability — all on a single Docker host.
 
 > Estado: Sprint 2 en curso. Rollback de entorno, health gate y actualización de
 > módulos ya están; faltan DB restore, promote con neutralización, smoke gate,
-> auto-rollback y SSO. Docker provider first; Proxmox provider is next.
+> auto-rollback y autoservicio del panel. Docker provider first; Proxmox
+> provider is next.
 
 ## Quick start
 
@@ -82,6 +83,7 @@ Source: GitHub Actions); it is published at
 - [Interface contract](docs/CONTRACT.md)
 - [Installation](docs/INSTALL.md)
 - [Operations](docs/OPERATIONS.md)
+- [ADR 0001 — panel local e identidad por entorno](docs/adr/0001-panel-local-identidad-por-entorno.md)
 - [Odoo 20 module notes](templates/odoo-module/README.md)
 
 ## License
