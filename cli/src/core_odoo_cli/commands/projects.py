@@ -13,7 +13,7 @@ from ..api import OrchestratorClient
 from ..errors import CliError
 from ..i18n import t
 from ..options import argument, option
-from ..output import emit, info, logs_output, machine_output, success
+from ..output import emit, info, logs_output, machine_output, success, warn
 from ..settings import RuntimeSettings
 
 console = Console()
@@ -124,6 +124,16 @@ def deploy(
     if machine_output():
         emit(environment)
         return
+    if environment.get("auto_rolled_back"):
+        warn(
+            t(
+                "msg.deploy_auto_rolled_back",
+                name=name,
+                stage=stage.value,
+                iteration=environment.get("last_good_iteration", "-"),
+            )
+        )
+        return
     success(
         t(
             "msg.env_deployed",
@@ -201,13 +211,14 @@ def perform_promote(
     source_stage: str = "staging",
     confirm: str | None = None,
     neutralize: bool = True,
+    skip_smoke: bool = False,
 ) -> dict[str, Any]:
     """Shared CLI/MCP policy: a promotion always needs the typed confirmation."""
     if confirm is None:
         raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
     if confirm != project:
         raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
-    return client.promote_environment(project, source_stage, confirm, neutralize)
+    return client.promote_environment(project, source_stage, confirm, neutralize, skip_smoke)
 
 
 def promote(
@@ -216,6 +227,7 @@ def promote(
     source_stage: Stage = option("opt.source_stage", Stage.staging, "--source"),
     confirm: str | None = option("opt.confirm", None, "--confirm"),
     neutralize: bool = option("opt.neutralize", True, "--neutralize/--no-neutralize"),
+    skip_smoke: bool = option("opt.skip_smoke", False, "--skip-smoke"),
 ) -> None:
     """Clone a source environment into production and neutralize the data."""
     if confirm is None:
@@ -231,6 +243,7 @@ def promote(
         source_stage=source_stage.value,
         confirm=confirm,
         neutralize=neutralize,
+        skip_smoke=skip_smoke,
     )
     if machine_output():
         emit(

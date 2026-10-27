@@ -108,13 +108,24 @@ export default function ProjectDetailPage() {
       setDeployIteration('')
       setConfirmName('')
       invalidateAll()
-      pushToast({
-        title: t('project.deployed', {
-          project: name,
-          stage: stageLabel(input.stage),
-        }),
-        variant: 'success',
-      })
+      if (environment.auto_rolled_back) {
+        pushToast({
+          title: t('project.deployAutoRolledBack', {
+            project: name,
+            stage: stageLabel(input.stage),
+            iteration: environment.last_good_iteration ?? '-',
+          }),
+          variant: 'info',
+        })
+      } else {
+        pushToast({
+          title: t('project.deployed', {
+            project: name,
+            stage: stageLabel(input.stage),
+          }),
+          variant: 'success',
+        })
+      }
       navigate(
         `/projects/${encodeURIComponent(name)}/environments/${encodeURIComponent(environment.stage || input.stage)}`,
       )

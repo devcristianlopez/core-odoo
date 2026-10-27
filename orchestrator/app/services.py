@@ -60,7 +60,12 @@ def environment_url(settings: Settings, project: str, stage: str) -> str:
     return f"http://{project}-{stage}.core-odoo.{settings.core_domain_suffix}"
 
 
-def environment_read(project_name: str, environment: Environment) -> EnvironmentRead:
+def environment_read(
+    project_name: str,
+    environment: Environment,
+    *,
+    auto_rolled_back: bool = False,
+) -> EnvironmentRead:
     return EnvironmentRead(
         project=project_name,
         stage=environment.stage,
@@ -72,6 +77,7 @@ def environment_read(project_name: str, environment: Environment) -> Environment
         modules=list(environment.modules or []),
         last_good_iteration=environment.last_good_iteration,
         last_good_at=environment.last_good_at,
+        auto_rolled_back=auto_rolled_back,
         created_at=environment.created_at,
         updated_at=environment.updated_at,
     )

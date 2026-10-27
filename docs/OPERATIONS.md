@@ -150,8 +150,11 @@ Un admin clona staging (o dev) en producción sin empezar de cero:
 core-odoo promote <proyecto> --source staging --confirm <proyecto>
 ```
 
-El orquestador vuelca la base de origen, recrea la de producción con ese dump,
-la neutraliza y redespliega con `-u` y health gate. La neutralización desactiva
+Antes de tocar producción corre un smoke de solo lectura sobre el origen
+(servicios arriba y gateway con `odoo=true`); si falla, no se promueve
+(`--skip-smoke` lo omite a propósito). Después vuelca la base de origen, recrea
+la de producción con ese dump, la neutraliza y redespliega con `-u` y health
+gate. La neutralización desactiva
 `ir_cron` e `ir_mail_server`, desactiva todos los usuarios salvo `admin` y
 `core_gateway`, y apunta `web.base.url` a la URL de producción. El dump queda en
 `data/backups/<proyecto>-<origen>/`.
@@ -234,6 +237,13 @@ Un deploy solo se da por bueno cuando el gateway reporta `odoo=true` en su
 actualización, el entorno queda en `status=error`, la falla se audita y se
 conserva el `last_good_iteration` anterior. Cada deploy exitoso con
 `--iteration` registra `last_good_iteration` / `last_good_at`.
+
+Si el deploy falla y el entorno tenía una iteración exitosa, el orquestador
+**revierte solo**: restaura ese snapshot y redespliega con `-u` y health gate.
+La respuesta vuelve con `auto_rolled_back=true`, el deploy fallido queda auditado
+como `environment.deploy` y la recuperación como `environment.auto_rollback`.
+Se apaga con `CORE_AUTO_ROLLBACK=false`; si no hay nada a lo que volver, el
+entorno queda en `error` como antes.
 
 `status=error` no borra nada: el código y la base siguen ahí, pero el entorno no
 está sano. Un deploy nuevo sobre un entorno en `error` —o detenido— igual aplica
@@ -388,8 +398,11 @@ An admin clones staging (or dev) into production instead of starting from zero:
 core-odoo promote <project> --source staging --confirm <project>
 ```
 
-The orchestrator dumps the source database, recreates production from that dump,
-neutralizes it and redeploys with `-u` and the health gate. Neutralization
+Before touching production it runs a read-only smoke check on the source
+(services running and gateway `odoo=true`); if it fails nothing is promoted
+(`--skip-smoke` bypasses it on purpose). Then it dumps the source database,
+recreates production from that dump, neutralizes it and redeploys with `-u` and
+the health gate. Neutralization
 disables `ir_cron` and `ir_mail_server`, deactivates every user except `admin`
 and `core_gateway`, and points `web.base.url` at the production URL. The dump is
 kept under `data/backups/<project>-<source>/`.
@@ -446,6 +459,13 @@ within `CORE_DEPLOY_HEALTH_TIMEOUT` (300s), retried every
 is marked `status=error`, the failure is audited and the previous
 `last_good_iteration` is kept. Every successful deploy with `--iteration`
 records `last_good_iteration` / `last_good_at`.
+
+When a deploy fails and the environment had a successful iteration, the
+orchestrator **rolls back on its own**: it restores that snapshot and redeploys
+with `-u` and the health gate. The response carries `auto_rolled_back=true`, the
+failed deploy is audited as `environment.deploy` and the recovery as
+`environment.auto_rollback`. Disable it with `CORE_AUTO_ROLLBACK=false`; with
+nothing to roll back to, the environment stays `error`.
 
 `status=error` deletes nothing: the code and the database stay, but the
 environment is not healthy. A new deploy on an `error` — or stopped —

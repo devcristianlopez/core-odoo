@@ -194,10 +194,12 @@ class OrchestratorClient:
         source_stage: str = "staging",
         confirm: str | None = None,
         neutralize: bool = True,
+        skip_smoke: bool = False,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "source_stage": source_stage,
             "neutralize": neutralize,
+            "skip_smoke": skip_smoke,
         }
         if confirm is not None:
             body["confirm"] = confirm

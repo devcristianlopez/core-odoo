@@ -206,6 +206,7 @@ const es = {
     deploySubmit: 'Desplegar entorno',
     deploying: 'Desplegando…',
     deployFailed: 'No se pudo desplegar el entorno.',
+    deployAutoRolledBack: 'El deploy falló; {{project}} · {{stage}} volvió a la iteración {{iteration}}.',
     deployed: '{{project}} · {{stage}} desplegado.',
     deleteProject: 'Eliminar proyecto',
     deleteTitle: 'Eliminar proyecto',
@@ -266,7 +267,7 @@ const es = {
     promote: 'Promover a prod',
     promoteTitle: 'Promover a producción',
     promoteDescription:
-      'Clona la base de {{stage}} de {{project}} en producción y la redespliega.',
+      'Clona la base de {{stage}} de {{project}} en producción y la redespliega. El origen debe pasar un smoke de salud antes.',
     promoteWarning:
       'Producción se reemplaza: la base actual se descarta. Se desactivan correo y cron y se desactivan los usuarios de prueba antes del deploy.',
     promoting: 'Promoviendo…',

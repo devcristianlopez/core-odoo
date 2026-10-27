@@ -205,6 +205,7 @@ const en = {
     deploySubmit: 'Deploy environment',
     deploying: 'Deploying…',
     deployFailed: 'Could not deploy the environment.',
+    deployAutoRolledBack: 'Deploy failed; {{project}} · {{stage}} rolled back to {{iteration}}.',
     deployed: 'Deployed {{project}} · {{stage}}.',
     deleteProject: 'Delete project',
     deleteTitle: 'Delete project',
@@ -265,7 +266,7 @@ const en = {
     promote: 'Promote to prod',
     promoteTitle: 'Promote to production',
     promoteDescription:
-      'Clone the {{stage}} database of {{project}} into production and redeploy it.',
+      'Clone the {{stage}} database of {{project}} into production and redeploy it. The source must pass a health smoke check first.',
     promoteWarning:
       'Production is replaced: the current database is discarded. Mail servers and cron are disabled and test users deactivated before the deploy.',
     promoting: 'Promoting…',

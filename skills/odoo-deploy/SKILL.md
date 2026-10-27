@@ -17,9 +17,10 @@ core-odoo promote <project> --source staging --confirm <project>   # clone stagi
 ```
 
 A redeploy applies module updates (`-u`) and only succeeds when the gateway
-reports `odoo=true` within `CORE_DEPLOY_HEALTH_TIMEOUT`; otherwise the
-environment stays in `status=error` and keeps its previous
-`last_good_iteration`. `core-odoo env rollback` restores that snapshot and
+reports `odoo=true` within `CORE_DEPLOY_HEALTH_TIMEOUT`. A failed deploy rolls
+back to `last_good_iteration` automatically (`CORE_AUTO_ROLLBACK`); the response
+comes back with `auto_rolled_back=true`. With nothing to roll back to, the
+environment stays in `status=error`. `core-odoo env rollback` restores that snapshot and
 redeploys with the same health gate (production needs `--confirm <project>`).
 
 If the deploy fails after restoring an iteration, inspect the iteration and the

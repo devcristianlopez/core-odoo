@@ -29,7 +29,7 @@ from ..models import (
     User,
     utcnow,
 )
-from ..providers.base import EnvironmentSpec, ProviderError, ProviderStatus
+from ..providers.base import EnvironmentProvider, EnvironmentSpec, ProviderError, ProviderStatus
 from ..providers.docker import backup_filename
 from ..scaffold import ensure_project_layout
 from ..schemas import (
@@ -49,6 +49,7 @@ from ..schemas import (
     PromoteRequest,
     RollbackRequest,
 )
+from ..security import Principal
 from ..services import (
     build_spec,
     compose_project_name,
@@ -108,6 +109,69 @@ def _audit_failure(
         details={"error": exc.message, "output": exc.details},
     )
     session.commit()
+
+
+def _attempt_auto_rollback(
+    session: SessionDep,
+    *,
+    project: Project,
+    environment: Environment,
+    settings: SettingsDep,
+    provider: EnvironmentProvider,
+    principal: Principal,
+) -> ProviderStatus | None:
+    """Redeploy the last good iteration after a failed deploy, when allowed.
+
+    Returns the provider status on success, ``None`` when auto-rollback is
+    disabled, there is nothing to roll back to, or the recovery itself fails.
+    The caller decides the HTTP response; a failed recovery never recurses.
+    """
+    if not settings.core_auto_rollback:
+        return None
+    version = environment.last_good_iteration
+    if not version:
+        return None
+    iteration = session.exec(
+        select(Iteration).where(
+            Iteration.project_id == project.id,
+            Iteration.version == version,
+        )
+    ).first()
+    if iteration is None:
+        record_audit(
+            session,
+            actor=principal.username,
+            action="environment.auto_rollback",
+            target=f"{project.name}/{environment.stage}",
+            status="skipped",
+            details={"iteration": version, "reason": "iteration not found"},
+        )
+        session.commit()
+        return None
+    try:
+        restore_iteration_snapshot(settings, project.name, iteration.snapshot_path)
+        spec = build_spec(settings, project, environment)
+        result = provider.deploy(spec, update=True)
+    except (FileNotFoundError, ProviderError) as exc:
+        record_audit(
+            session,
+            actor=principal.username,
+            action="environment.auto_rollback",
+            target=f"{project.name}/{environment.stage}",
+            status="failed",
+            details={"iteration": version, "error": str(exc)},
+        )
+        session.commit()
+        return None
+    record_audit(
+        session,
+        actor=principal.username,
+        action="environment.auto_rollback",
+        target=f"{project.name}/{environment.stage}",
+        details={"iteration": version, "status": result.status},
+    )
+    session.commit()
+    return result
 
 
 # --------------------------------------------------------------------- projects
@@ -612,6 +676,23 @@ def deploy(
             target=f"{name}/{payload.stage}",
             exc=exc,
         )
+        recovered = _attempt_auto_rollback(
+            session,
+            project=project,
+            environment=environment,
+            settings=settings,
+            provider=provider,
+            principal=principal,
+        )
+        if recovered is not None:
+            environment.status = recovered.status
+            environment.services = recovered.services
+            environment.url = spec.url
+            environment.updated_at = utcnow()
+            session.add(environment)
+            session.commit()
+            session.refresh(environment)
+            return environment_read(name, environment, auto_rolled_back=True)
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
 
     record_deploy(name, payload.stage, "success")
@@ -891,6 +972,32 @@ def promote_environment(
             detail=f"source environment {payload.source_stage} not found",
         )
 
+    source_spec = build_spec(settings, project, source)
+    if not payload.skip_smoke:
+        try:
+            healthy, detail = provider.smoke(source_spec)
+        except ProviderError as exc:
+            code = (
+                status.HTTP_409_CONFLICT
+                if "has not been deployed" in exc.message
+                else status.HTTP_502_BAD_GATEWAY
+            )
+            raise HTTPException(status_code=code, detail=exc.message) from exc
+        if not healthy:
+            record_audit(
+                session,
+                actor=principal.username,
+                action="environment.promote",
+                target=f"{name}/prod",
+                status="failed",
+                details={"gate": "smoke", "source": source.stage, "output": detail},
+            )
+            session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"smoke gate failed on {source.stage}: {detail}",
+            )
+
     now = utcnow()
     target = session.exec(
         select(Environment).where(
@@ -923,7 +1030,6 @@ def promote_environment(
     session.commit()
     session.refresh(target)
 
-    source_spec = build_spec(settings, project, source)
     target_spec = build_spec(settings, project, target)
     dump = (
         settings.backups_dir

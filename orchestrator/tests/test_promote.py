@@ -20,8 +20,13 @@ def _promote(
     confirm: str | None = "smoke-test",
     source: str = "staging",
     neutralize: bool = True,
+    skip_smoke: bool = False,
 ):
-    body: dict[str, object] = {"source_stage": source, "neutralize": neutralize}
+    body: dict[str, object] = {
+        "source_stage": source,
+        "neutralize": neutralize,
+        "skip_smoke": skip_smoke,
+    }
     if confirm is not None:
         body["confirm"] = confirm
     return harness.client.post(
@@ -103,6 +108,7 @@ def test_promote_clones_and_neutralizes_staging(
     actions = [call[0] for call in harness.provider.calls]
     assert actions == [
         "deploy",
+        "smoke",
         "prepare",
         "backup",
         "restore_database",
@@ -142,6 +148,7 @@ def test_promote_failure_marks_prod_error(
     assert _deploy(harness, auth_headers).status_code == 200
 
     harness.provider.fail_with = ProviderError("promotion failed")
+    harness.provider.fail_on = "restore_database"
     response = _promote(harness, auth_headers)
 
     assert response.status_code == 502
@@ -155,3 +162,40 @@ def test_promote_failure_marks_prod_error(
     audit = harness.client.get("/api/v1/audit", headers=auth_headers).json()
     event = next(item for item in audit if item["action"] == "environment.promote")
     assert event["status"] == "failed"
+
+
+def test_promote_smoke_gate_blocks_an_unhealthy_source(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert _deploy(harness, auth_headers).status_code == 200
+    harness.provider.smoke_ok = False
+
+    response = _promote(harness, auth_headers)
+
+    assert response.status_code == 409
+    assert response.json()["detail"].startswith("smoke gate failed on staging")
+    assert harness.provider.restored_dumps == []
+    environments = harness.client.get(
+        "/api/v1/projects/smoke-test/environments", headers=auth_headers
+    ).json()
+    assert all(env["stage"] != "prod" for env in environments)
+
+    audit = harness.client.get("/api/v1/audit", headers=auth_headers).json()
+    event = next(item for item in audit if item["action"] == "environment.promote")
+    assert event["status"] == "failed"
+    assert event["details"]["gate"] == "smoke"
+
+
+def test_promote_can_skip_the_smoke_gate(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert _deploy(harness, auth_headers).status_code == 200
+    harness.provider.smoke_ok = False
+
+    response = _promote(harness, auth_headers, skip_smoke=True)
+
+    assert response.status_code == 200, response.text
+    actions = [call[0] for call in harness.provider.calls]
+    assert "smoke" not in actions

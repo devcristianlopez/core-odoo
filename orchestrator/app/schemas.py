@@ -73,6 +73,7 @@ class EnvironmentRead(BaseModel):
     modules: list[str] = Field(default_factory=list)
     last_good_iteration: str | None = None
     last_good_at: datetime | None = None
+    auto_rolled_back: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -150,6 +151,7 @@ class PromoteRequest(BaseModel):
     source_stage: Stage = "staging"
     confirm: str | None = Field(default=None, max_length=64)
     neutralize: bool = True
+    skip_smoke: bool = False
 
 
 class RestoreDatabaseRequest(BaseModel):

@@ -73,6 +73,10 @@ class Settings(BaseSettings):
     core_deploy_health_timeout: int = Field(default=300, ge=10)
     core_deploy_health_interval: float = Field(default=5.0, ge=0.5)
 
+    # Redeploy the last good iteration when a deploy fails. Disable to keep the
+    # failed environment in ``error`` and recover by hand.
+    core_auto_rollback: bool = Field(default=True)
+
     @field_validator(
         "core_data_dir",
         "core_projects_dir",

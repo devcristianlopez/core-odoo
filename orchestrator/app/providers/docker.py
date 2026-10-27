@@ -264,6 +264,11 @@ class DockerProvider:
             input=sql,
         )
 
+    def smoke(self, spec: EnvironmentSpec) -> tuple[bool, str]:
+        """Read-only gate: services running and the gateway reports odoo=true."""
+        self._require_rendered(spec)
+        return self._probe_health(spec)
+
     def docker_info(self) -> DockerInfo:
         try:
             result = self._runner(

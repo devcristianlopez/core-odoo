@@ -73,6 +73,7 @@ CORE_DOCKER_SOCKET=/var/run/docker.sock
 # A deploy only succeeds when the gateway reports odoo=true within these limits.
 CORE_DEPLOY_HEALTH_TIMEOUT=300
 CORE_DEPLOY_HEALTH_INTERVAL=5
+CORE_AUTO_ROLLBACK=true
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<generated>
 PROMETHEUS_RETENTION=15d
@@ -121,7 +122,7 @@ password: the current one must match and the new one must differ and be at least
 | GET | `/projects/{name}/iterations/{version}/backups` | – | `[IterationBackup]` |
 | POST | `/projects/{name}/iterations/{version}/backup` | `?stage=dev` | `IterationBackup` |
 | POST | `/projects/{name}/iterations/{version}/restore-db` | `{stage?, confirm?}` | `Environment` |
-| POST | `/projects/{name}/promote` | `{source_stage?, confirm?, neutralize?}` | `Environment` (admin) |
+| POST | `/projects/{name}/promote` | `{source_stage?, confirm?, neutralize?, skip_smoke?}` | `Environment` (admin) |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -171,8 +172,17 @@ environment is then `error`). Production requires `admin` and `confirm` equal to
 the project name. `last_good_iteration` is left untouched: a data restore is not
 a deploy.
 
+A deploy that fails after the environment had a successful iteration redeploys
+that iteration automatically (`CORE_AUTO_ROLLBACK`, default `true`) and returns
+the recovered environment with `auto_rolled_back: true`. The failed deploy is
+still audited as `environment.deploy` (failed) and the recovery as
+`environment.auto_rollback`. With the flag off, or when there is nothing to roll
+back to, the call returns `502` and the environment stays `error`.
+
 `POST /projects/{name}/promote` clones a `dev`/`staging` environment into
-production: it dumps the source database, recreates the production database
+production: before touching production it runs a read-only smoke check on the
+source (services running and gateway `odoo=true`; `skip_smoke` bypasses it),
+then dumps the source database, recreates the production database
 from that dump, neutralizes it and redeploys with module updates and the health
 gate. Promotion always requires `admin` and `confirm` equal to the project name,
 and creates the `prod` environment when it does not exist yet. Neutralization

@@ -173,5 +173,7 @@
   "cmd.promote": "Clona la base del entorno de origen en producción y la neutraliza.",
   "msg.promoted": "{project}/prod promovido desde {source} ({status}).",
   "opt.source_stage": "Entorno de origen de la promoción.",
-  "opt.neutralize": "Neutralizar la base clonada (correo, cron y usuarios de prueba)."
+  "opt.neutralize": "Neutralizar la base clonada (correo, cron y usuarios de prueba).",
+  "msg.deploy_auto_rolled_back": "El deploy fallo; {name}/{stage} volvio a la iteracion {iteration}.",
+  "opt.skip_smoke": "No ejecutar el smoke gate del entorno de origen."
 }

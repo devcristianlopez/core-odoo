@@ -29,16 +29,25 @@ class FakeProvider:
         self.deploy_updates: list[bool] = []
         self.restored_dumps: list[Path] = []
         self.neutralized: list[str] = []
+        self.smoke_ok = True
         self.deploy_status = ProviderStatus(
             status="running",
             services=[{"name": "odoo", "state": "running", "health": "", "status": "Up"}],
         )
         self.fail_with: Exception | None = None
+        self.fail_on: str | None = None
+        self.fail_times: int | None = None
 
     def _record(self, action: str, spec: EnvironmentSpec) -> None:
         self.calls.append((action, spec))
         self.specs.append(spec)
-        if self.fail_with is not None:
+        if (
+            self.fail_with is not None
+            and (self.fail_on is None or self.fail_on == action)
+            and (self.fail_times is None or self.fail_times > 0)
+        ):
+            if self.fail_times is not None:
+                self.fail_times -= 1
             raise self.fail_with
 
     def prepare(self, spec: EnvironmentSpec) -> None:
@@ -84,6 +93,10 @@ class FakeProvider:
     def neutralize_database(self, spec: EnvironmentSpec, base_url: str) -> None:
         self.neutralized.append(base_url)
         self._record("neutralize_database", spec)
+
+    def smoke(self, spec: EnvironmentSpec) -> tuple[bool, str]:
+        self._record("smoke", spec)
+        return (self.smoke_ok, "gateway ok" if self.smoke_ok else "gateway odoo=false")
 
     def docker_info(self) -> DockerInfo:
         return DockerInfo(available=True, version="test")

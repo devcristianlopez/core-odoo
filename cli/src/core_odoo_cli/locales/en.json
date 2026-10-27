@@ -173,5 +173,7 @@
   "cmd.promote": "Clone a source environment database into production and neutralize it.",
   "msg.promoted": "{project}/prod promoted from {source} ({status}).",
   "opt.source_stage": "Environment the promotion clones from.",
-  "opt.neutralize": "Neutralize the cloned database (mail, cron and test users)."
+  "opt.neutralize": "Neutralize the cloned database (mail, cron and test users).",
+  "msg.deploy_auto_rolled_back": "Deploy failed; {name}/{stage} rolled back to iteration {iteration}.",
+  "opt.skip_smoke": "Do not run the source environment smoke gate."
 }
