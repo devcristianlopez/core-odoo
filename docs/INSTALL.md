@@ -22,10 +22,10 @@ core-odoo status
 ```
 
 `install.sh` genera `.env` con secretos aleatorios, crea `data/`, levanta el plano
-de control y la observabilidad. Si preferís hacerlo por separado:
+de control y la observabilidad. Si prefieres hacerlo por separado:
 
 > En esta guía se asume que el CLI `core-odoo` está instalado y en el `PATH`.
-> Desde el repo, sin instalarlo, usá `uv run --project cli core-odoo <comando>`.
+> Desde el repo, sin instalarlo, usa `uv run --project cli core-odoo <comando>`.
 
 ```bash
 core-odoo init --lang es --non-interactive
@@ -87,7 +87,7 @@ core-odoo down
 docker compose -f docker-compose.yml -f docker-compose.observability.yml down -v
 ```
 
-Esto elimina contenedores, redes y volúmenes del plano de control. Revisá antes
+Esto elimina contenedores, redes y volúmenes del plano de control. Revisa antes
 los backups en `data/backups/`.
 
 ---

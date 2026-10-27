@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title data-en="Core Odoo — Turn Odoo into your software factory">Core Odoo — Convertí Odoo en tu fábrica de software</title>
+  <title data-en="Core Odoo — Turn Odoo into your software factory">Core Odoo — Convierte Odoo en tu fábrica de software</title>
   <meta name="description" content="Core Odoo es una software factory auto-hospedada sobre Odoo 20: ciclo dev → staging → prod, BFF declarativo, frontends generados, agentes y observabilidad." data-en-content="Core Odoo is a self-hosted software factory on Odoo 20: dev → staging → prod, a declarative BFF, generated frontends, agents and observability.">
 
   <!--
@@ -156,7 +156,7 @@
           </p>
 
           <h1 id="hero-title" class="hero-title t">
-            <span data-lang="es" lang="es">Convertí Odoo en tu <em>fábrica de software</em></span>
+            <span data-lang="es" lang="es">Convierte Odoo en tu <em>fábrica de software</em></span>
             <span data-lang="en" lang="en">Turn Odoo into your <em>software factory</em></span>
           </h1>
 
@@ -259,7 +259,7 @@
               <span data-lang="en" lang="en">Odoo as a backbone, not an ERP</span>
             </h3>
             <p class="t">
-              <span data-lang="es" lang="es">Reutilizá <code>res.partner</code>, <code>sale.order</code>, <code>project.task</code>, <code>res.users</code>, ACL, cron, mail y reportes. No se reconstruye auth ni CRUD: los módulos son addons Odoo 20 normales en <code>projects/&lt;nombre&gt;/odoo/addons/</code>.</span>
+              <span data-lang="es" lang="es">Reutiliza <code>res.partner</code>, <code>sale.order</code>, <code>project.task</code>, <code>res.users</code>, ACL, cron, mail y reportes. No se reconstruye auth ni CRUD: los módulos son addons Odoo 20 normales en <code>projects/&lt;nombre&gt;/odoo/addons/</code>.</span>
               <span data-lang="en" lang="en">Reuse <code>res.partner</code>, <code>sale.order</code>, <code>project.task</code>, <code>res.users</code>, ACL, cron, mail and reports. Auth and CRUD are not rebuilt: modules are ordinary Odoo 20 addons under <code>projects/&lt;name&gt;/odoo/addons/</code>.</span>
             </p>
             <ul class="tag-list" aria-label="Modelos y seguridad de Odoo" data-en-aria-label="Odoo models and security">
@@ -277,7 +277,7 @@
               <span data-lang="en" lang="en">Declarative BFF</span>
             </h3>
             <p class="t">
-              <span data-lang="es" lang="es">Declarás modelos, campos y operaciones en <code>backend.yaml</code>. El gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1; Odoo queda del lado servidor y nunca llega al navegador.</span>
+              <span data-lang="es" lang="es">Declaras modelos, campos y operaciones en <code>backend.yaml</code>. El gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1; Odoo queda del lado servidor y nunca llega al navegador.</span>
               <span data-lang="en" lang="en">Declare models, fields and operations in <code>backend.yaml</code>. The gateway exposes <code>/api/{resource}</code> with JWT and OpenAPI 3.1; Odoo stays server-side and never reaches the browser.</span>
             </p>
             <ul class="tag-list" aria-label="Contrato del gateway" data-en-aria-label="Gateway contract">
@@ -490,7 +490,7 @@
             <p class="card-kicker t"><span data-lang="es" lang="es">Contrato</span><span data-lang="en" lang="en">Contract</span></p>
             <h3 class="t"><span data-lang="es" lang="es">BFF declarativo + SDK</span><span data-lang="en" lang="en">Declarative BFF + SDK</span></h3>
             <p class="t">
-              <span data-lang="es" lang="es">Declarás recursos en <code>backend.yaml</code>; el gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1. <code>generate sdk</code> produce un cliente TypeScript tipado.</span>
+              <span data-lang="es" lang="es">Declaras recursos en <code>backend.yaml</code>; el gateway expone <code>/api/{resource}</code> con JWT y OpenAPI 3.1. <code>generate sdk</code> produce un cliente TypeScript tipado.</span>
               <span data-lang="en" lang="en">Declare resources in <code>backend.yaml</code>; the gateway exposes <code>/api/{resource}</code> with JWT and OpenAPI 3.1. <code>generate sdk</code> produces a typed TypeScript client.</span>
             </p>
             <ul class="tag-list" aria-label="Funciones del BFF" data-en-aria-label="BFF features"><li><code>backend.yaml</code></li><li>OpenAPI 3.1</li><li>TypeScript</li></ul>
@@ -731,7 +731,7 @@
           <article class="panel">
             <h3 class="t"><span data-lang="es" lang="es">Iteraciones</span><span data-lang="en" lang="en">Iterations</span></h3>
             <p class="t">
-              <span data-lang="es" lang="es">Un release es un snapshot inmutable del código fuente. Podés restaurarlo, compararlo con el anterior y asociarle un dump de PostgreSQL.</span>
+              <span data-lang="es" lang="es">Un release es un snapshot inmutable del código fuente. Puedes restaurarlo, compararlo con el anterior y asociarle un dump de PostgreSQL.</span>
               <span data-lang="en" lang="en">A release is an immutable source snapshot. You can restore it, compare it with the previous one and attach a PostgreSQL dump to it.</span>
             </p>
             <p class="panel-note t">
@@ -743,7 +743,7 @@
           <article class="panel">
             <h3 class="t"><span data-lang="es" lang="es">Política de producción</span><span data-lang="en" lang="en">Production policy</span></h3>
             <ul class="guard-list">
-              <li class="t"><span data-lang="es" lang="es">Confirmación tipada: escribí el nombre del proyecto.</span><span data-lang="en" lang="en">Typed confirmation: type the project name.</span></li>
+              <li class="t"><span data-lang="es" lang="es">Confirmación tipada: escribe el nombre del proyecto.</span><span data-lang="en" lang="en">Typed confirmation: type the project name.</span></li>
               <li class="t"><span data-lang="es" lang="es">Iteración versionada y al menos un backup de esa iteración.</span><span data-lang="en" lang="en">A versioned iteration and at least one backup for that iteration.</span></li>
               <li class="t"><span data-lang="es" lang="es">El código se restaura desde el snapshot antes de desplegar.</span><span data-lang="en" lang="en">The source is restored from the snapshot before deploying.</span></li>
               <li class="t"><span data-lang="es" lang="es">Un operator crea la solicitud; un admin la aprueba y ejecuta.</span><span data-lang="en" lang="en">An operator creates the request; an admin approves and runs it.</span></li>
@@ -845,7 +845,7 @@
             <li>
               <span class="start-index" aria-hidden="true">01</span>
               <div class="start-body">
-                <h3 class="t"><span data-lang="es" lang="es">Cloná el repositorio</span><span data-lang="en" lang="en">Clone the repository</span></h3>
+                <h3 class="t"><span data-lang="es" lang="es">Clona el repositorio</span><span data-lang="en" lang="en">Clone the repository</span></h3>
                 <div class="cmd-row">
                   <code id="cmd-clone" tabindex="0">git clone https://github.com/devcristianlopez/core-odoo.git</code>
                   <button class="copy copy-compact" type="button" data-copy-target="cmd-clone" data-copy-kind="command" aria-label="Copiar comando">
@@ -859,7 +859,7 @@
             <li>
               <span class="start-index" aria-hidden="true">02</span>
               <div class="start-body">
-                <h3 class="t"><span data-lang="es" lang="es">Generá secretos y levantá el stack</span><span data-lang="en" lang="en">Generate secrets and bring up the stack</span></h3>
+                <h3 class="t"><span data-lang="es" lang="es">Genera secretos y levanta el stack</span><span data-lang="en" lang="en">Generate secrets and bring up the stack</span></h3>
                 <div class="cmd-row">
                   <code id="cmd-install" tabindex="0">cd core-odoo &amp;&amp; ./install.sh</code>
                   <button class="copy copy-compact" type="button" data-copy-target="cmd-install" data-copy-kind="command" aria-label="Copiar comando">
@@ -873,7 +873,7 @@
             <li>
               <span class="start-index" aria-hidden="true">03</span>
               <div class="start-body">
-                <h3 class="t"><span data-lang="es" lang="es">Creá el proyecto</span><span data-lang="en" lang="en">Create the project</span></h3>
+                <h3 class="t"><span data-lang="es" lang="es">Crea el proyecto</span><span data-lang="en" lang="en">Create the project</span></h3>
                 <div class="cmd-row">
                   <code id="cmd-create" tabindex="0">uv run --project cli core-odoo project create mi-app</code>
                   <button class="copy copy-compact" type="button" data-copy-target="cmd-create" data-copy-kind="command" aria-label="Copiar comando">
@@ -887,7 +887,7 @@
             <li>
               <span class="start-index" aria-hidden="true">04</span>
               <div class="start-body">
-                <h3 class="t"><span data-lang="es" lang="es">Desplegá a dev</span><span data-lang="en" lang="en">Deploy to dev</span></h3>
+                <h3 class="t"><span data-lang="es" lang="es">Despliega a dev</span><span data-lang="en" lang="en">Deploy to dev</span></h3>
                 <div class="cmd-row">
                   <code id="cmd-deploy" tabindex="0">uv run --project cli core-odoo deploy mi-app --stage dev</code>
                   <button class="copy copy-compact" type="button" data-copy-target="cmd-deploy" data-copy-kind="command" aria-label="Copiar comando">
@@ -918,7 +918,7 @@
             </div>
 
             <p class="note t">
-              <span data-lang="es" lang="es">El CLI corre desde el repo con <code>uv</code>; podés crear un alias de <code>uv run --project cli core-odoo</code>.</span>
+              <span data-lang="es" lang="es">El CLI corre desde el repo con <code>uv</code>; puedes crear un alias de <code>uv run --project cli core-odoo</code>.</span>
               <span data-lang="en" lang="en">The CLI runs from the repo with <code>uv</code>; you can alias <code>uv run --project cli core-odoo</code>.</span>
             </p>
           </aside>
@@ -991,7 +991,7 @@
         </div>
 
         <p class="roadmap-note reveal t">
-          <span data-lang="es" lang="es">El repositorio es la fuente de verdad. Esta página resume el estado, pero no lo define: mirá el README, <code>docs/</code> y el historial de commits para el detalle real.</span>
+          <span data-lang="es" lang="es">El repositorio es la fuente de verdad. Esta página resume el estado, pero no lo define: mira el README, <code>docs/</code> y el historial de commits para el detalle real.</span>
           <span data-lang="en" lang="en">The repository is the source of truth. This page summarizes the state but does not define it: check the README, <code>docs/</code> and the commit history for the real detail.</span>
         </p>
       </div>
@@ -1037,7 +1037,7 @@
           <li><a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL-3.0</a></li>
         </ul>
         <p class="footer-note t">
-          <span data-lang="es" lang="es">Sin correo de contacto: usá las issues del repositorio.</span>
+          <span data-lang="es" lang="es">Sin correo de contacto: usa las issues del repositorio.</span>
           <span data-lang="en" lang="en">No contact email: use the repository issues.</span>
         </p>
       </div>

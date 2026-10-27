@@ -108,6 +108,15 @@ to link the deployment to the version in the timeline.
   gateway can reach `/web/login` and `/json/2`.
 - JSON-2 `create` takes `vals_list`.
 
+## Copy and language
+
+Spanish copy is **neutral Spanish with tuteo**: second person is `tú`
+(`puedes`, `tienes`, `escribes`, `usa`, `crea`), never Rioplatense voseo
+(`tenés`, `podés`, `mirá`, `usá`, `escribí`, `creá`) and never Argentinian
+slang (`acá`, `che`, `laburo`, `plata`). Use `aquí`, not `acá`. This applies to
+the landing page in `site/`, Mission Control strings, CLI locales, docs,
+templates and generated projects. English copy is US English.
+
 ## Permissions
 
 The panel has `admin`, `operator` and `viewer` users. The API token and MCP
