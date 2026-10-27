@@ -9,7 +9,9 @@ Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
-> Estado: Sprint 1 validado end-to-end. Docker provider first; Proxmox provider is next.
+> Estado: Sprint 2 en curso. Rollback de entorno, health gate y actualización de
+> módulos ya están; faltan DB restore, promote con neutralización, smoke gate,
+> auto-rollback y SSO. Docker provider first; Proxmox provider is next.
 
 ## Quick start
 

@@ -12,7 +12,14 @@ core-odoo iteration create <project> --version 0.1.0 --title "First release"
 core-odoo check <project> --catalog --frontend
 core-odoo deploy <project> --stage dev --iteration 0.1.0
 core-odoo logs <project> --stage dev --tail 200
+core-odoo env rollback <project> --stage dev   # back to the last good iteration
 ```
+
+A redeploy applies module updates (`-u`) and only succeeds when the gateway
+reports `odoo=true` within `CORE_DEPLOY_HEALTH_TIMEOUT`; otherwise the
+environment stays in `status=error` and keeps its previous
+`last_good_iteration`. `core-odoo env rollback` restores that snapshot and
+redeploys with the same health gate (production needs `--confirm <project>`).
 
 If the deploy fails after restoring an iteration, inspect the iteration and the
 environment logs before retrying.
@@ -37,3 +44,4 @@ Then check:
 | gateway `odoo:false` | Odoo on loopback | `http_interface = 0.0.0.0` |
 | bind mount missing | container path | set `CORE_HOST_*` |
 | Traefik 404 for a new env | router not discovered | restart Traefik |
+| deploy ends in `error` | `-u` failed or health gate timed out | read the logs, then `core-odoo env rollback` |
