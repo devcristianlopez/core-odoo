@@ -5,9 +5,21 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from sqlalchemy import inspect
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
+
+# Additive migrations for columns introduced after the first release. New
+# installs get these columns from SQLModel; existing SQLite databases need an
+# ALTER TABLE. Both statements must stay backwards compatible: they only add
+# nullable columns or columns with a default.
+ADDITIVE_COLUMNS: dict[str, dict[str, str]] = {
+    "project_members": {"role": "VARCHAR(16) NOT NULL DEFAULT 'developer'"},
+    "environments": {
+        "last_good_iteration": "VARCHAR(32)",
+        "last_good_at": "DATETIME",
+    },
+}
 
 
 def make_engine(database_url: str) -> Engine:
@@ -20,17 +32,24 @@ def make_engine(database_url: str) -> Engine:
     return create_engine(database_url, **engine_kwargs)
 
 
+def _add_missing_columns(connection: Connection) -> None:
+    """ALTER existing tables that predate a column declared in the models."""
+    inspector = inspect(connection)
+    tables = set(inspector.get_table_names())
+    for table, columns in ADDITIVE_COLUMNS.items():
+        if table not in tables:
+            continue
+        existing = {column["name"] for column in inspector.get_columns(table)}
+        for name, ddl in columns.items():
+            if name in existing:
+                continue
+            connection.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+
+
 def init_db(engine: Engine) -> None:
     SQLModel.metadata.create_all(engine)
-    # Lightweight additive migration for the membership role. New installs get
-    # the column from SQLModel; existing SQLite databases need the ALTER.
     with engine.begin() as connection:
-        columns = {column["name"] for column in inspect(connection).get_columns("project_members")}
-        if "role" not in columns:
-            connection.exec_driver_sql(
-                "ALTER TABLE project_members ADD COLUMN role "
-                "VARCHAR(16) NOT NULL DEFAULT 'developer'"
-            )
+        _add_missing_columns(connection)
 
 
 def session_from_factory(session_factory) -> Iterator[Session]:  # type: ignore[no-untyped-def]
