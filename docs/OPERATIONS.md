@@ -167,9 +167,11 @@ core-odoo promote <proyecto> --source staging --confirm <proyecto>
 
 Antes de tocar producción corre un smoke de solo lectura sobre el origen
 (servicios arriba y gateway con `odoo=true`); si falla, no se promueve
-(`--skip-smoke` lo omite a propósito). Después vuelca la base de origen, recrea
-la de producción con ese dump, la neutraliza y redespliega con `-u` y health
-gate. La neutralización desactiva
+(`--skip-smoke` lo omite a propósito). Restaura el snapshot de la iteración
+(`--iteration`; por defecto la más nueva, y sin ninguna no se promueve), vuelca
+la base de origen, **copia el filestore** (adjuntos con el nombre de la base de
+producción), recrea la base, neutraliza y redespliega con `-u` y health gate. El
+entorno queda con `last_good_iteration` en la versión promovida. La neutralización desactiva
 `ir_cron` e `ir_mail_server`, desactiva todos los usuarios salvo `admin` y
 `core_gateway`, y apunta `web.base.url` a la URL de producción. El dump queda en
 `data/backups/<proyecto>-<origen>/`.
@@ -214,6 +216,22 @@ Se usa el backup más reciente de esa iteración para el entorno elegido. El
 orquestador termina las conexiones, recrea la base, carga el dump y redespliega
 con `-u` y el health gate; si algo falla, el entorno queda en `error`. No cambia
 `last_good_iteration`: restaurar datos no es un deploy.
+
+### Backups programados
+
+El orquestador hace un dump de cada entorno desplegado y una copia consistente
+del plano de control (`data/backups/control-plane/`):
+
+```bash
+CORE_BACKUP_INTERVAL_HOURS=24
+CORE_BACKUP_RETENTION_DAYS=7
+CORE_BACKUP_ENABLED=true
+```
+
+Quedan como `scheduled-<fecha>.sql` en `data/backups/<proyecto>-<stage>/` y
+alimentan la métrica `core_backup_last_success_timestamp_seconds` (alerta
+`BackupMissing`). La retención borra solo los archivos programados, nunca los
+dumps ligados a una iteración.
 
 ### Métricas y logs
 
@@ -430,9 +448,12 @@ core-odoo promote <project> --source staging --confirm <project>
 
 Before touching production it runs a read-only smoke check on the source
 (services running and gateway `odoo=true`); if it fails nothing is promoted
-(`--skip-smoke` bypasses it on purpose). Then it dumps the source database,
-recreates production from that dump, neutralizes it and redeploys with `-u` and
-the health gate. Neutralization
+(`--skip-smoke` bypasses it on purpose). It restores the iteration snapshot
+(`--iteration`, newest by default; without one nothing is promoted), dumps the
+source database, **copies the filestore** (attachments renamed to the production
+database), recreates the database, neutralizes it and redeploys with `-u` and
+the health gate. Production ends with `last_good_iteration` set to the promoted
+version. Neutralization
 disables `ir_cron` and `ir_mail_server`, deactivates every user except `admin`
 and `core_gateway`, and points `web.base.url` at the production URL. The dump is
 kept under `data/backups/<project>-<source>/`.
@@ -461,6 +482,21 @@ The newest backup of that iteration for the chosen environment is used. The
 orchestrator terminates connections, recreates the database, loads the dump and
 redeploys with `-u` and the health gate; a failure leaves the environment in
 `error`. `last_good_iteration` is untouched: a data restore is not a deploy.
+
+### Scheduled backups
+
+The orchestrator dumps every deployed environment and takes a consistent copy
+of the control plane (`data/backups/control-plane/`):
+
+```bash
+CORE_BACKUP_INTERVAL_HOURS=24
+CORE_BACKUP_RETENTION_DAYS=7
+CORE_BACKUP_ENABLED=true
+```
+
+They land as `scheduled-<date>.sql` under `data/backups/<project>-<stage>/` and
+feed `core_backup_last_success_timestamp_seconds` (the `BackupMissing` alert).
+Retention only removes scheduled files, never iteration dumps.
 
 ### Updates, healthcheck and rollback
 

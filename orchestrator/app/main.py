@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session, select
 
 from . import __version__
+from .backups import backup_loop
 from .config import Settings, get_settings
 from .db import init_db, make_engine
 from .metrics import render as render_metrics
@@ -39,6 +42,22 @@ logger = logging.getLogger("core_odoo.orchestrator")
 API_PREFIX = "/api/v1"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = None
+    if app.state.settings.core_backup_enabled:
+        task = asyncio.create_task(
+            backup_loop(app.state.settings, app.state.session_factory, app.state.provider)
+        )
+    try:
+        yield
+    finally:
+        if task is not None:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -53,6 +72,7 @@ def create_app(
     session_factory = sessionmaker(bind=engine, class_=Session, expire_on_commit=False)
 
     app = FastAPI(
+        lifespan=lifespan,
         title="Core Odoo Orchestrator",
         version=__version__,
         description="Control-plane API for Core Odoo environments.",

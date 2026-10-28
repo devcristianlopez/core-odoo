@@ -83,6 +83,12 @@ class Settings(BaseSettings):
         default="127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     )
 
+    # Scheduled backups: one dump per deployed environment plus the control
+    # plane database, pruned after the retention window.
+    core_backup_enabled: bool = Field(default=True)
+    core_backup_interval_hours: float = Field(default=24.0, ge=0.25)
+    core_backup_retention_days: int = Field(default=7, ge=1)
+
     @field_validator(
         "core_data_dir",
         "core_projects_dir",

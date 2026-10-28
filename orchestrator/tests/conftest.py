@@ -30,6 +30,7 @@ class FakeProvider:
         self.restored_dumps: list[Path] = []
         self.neutralized: list[str] = []
         self.smoke_ok = True
+        self.copied_filestores: list[tuple[str, str]] = []
         self.deploy_status = ProviderStatus(
             status="running",
             services=[{"name": "odoo", "state": "running", "health": "", "status": "Up"}],
@@ -98,6 +99,10 @@ class FakeProvider:
         self._record("smoke", spec)
         return (self.smoke_ok, "gateway ok" if self.smoke_ok else "gateway odoo=false")
 
+    def copy_filestore(self, source: EnvironmentSpec, target: EnvironmentSpec) -> None:
+        self.copied_filestores.append((source.compose_project, target.compose_project))
+        self._record("copy_filestore", target)
+
     def docker_info(self) -> DockerInfo:
         return DockerInfo(available=True, version="test")
 
@@ -124,6 +129,7 @@ def settings(tmp_path: Path) -> Settings:
         core_projects_dir=tmp_path / "projects",
         core_templates_dir=tmp_path / "templates",
         core_domain_suffix="test.local",
+        core_backup_enabled=False,
         core_gateway_dir=tmp_path / "gateway",
     )
 
