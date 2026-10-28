@@ -25,14 +25,16 @@
       copied: "Copiado",
       failed: "Error",
       commands: "Copiar comandos",
-      command: "Copiar comando"
+      command: "Copiar comando",
+      text: "Copiar dirección"
     },
     en: {
       copy: "Copy",
       copied: "Copied",
       failed: "Failed",
       commands: "Copy commands",
-      command: "Copy command"
+      command: "Copy command",
+      text: "Copy address"
     }
   };
 
@@ -110,8 +112,9 @@
   }
 
   function resetCopyButton(button) {
-    var kind = button.getAttribute("data-copy-kind") === "commands"
-      ? "commands"
+    var kindAttribute = button.getAttribute("data-copy-kind");
+    var kind = kindAttribute === "commands" || kindAttribute === "text"
+      ? kindAttribute
       : "command";
     var text = button.querySelector(".copy-text");
 
