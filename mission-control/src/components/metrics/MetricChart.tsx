@@ -170,6 +170,7 @@ export function MetricChart({
                     minTickGap={32}
                   />
                   <YAxis
+                    domain={[0, (dataMax: number) => Math.max(dataMax * 1.15, 1)]}
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
