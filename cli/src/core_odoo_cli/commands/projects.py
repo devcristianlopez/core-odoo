@@ -118,9 +118,13 @@ def deploy(
     branch: str | None = option("opt.branch", None, "--branch"),
     iteration: str | None = option("opt.iteration", None, "--iteration"),
     confirm: str | None = option("opt.confirm", None, "--confirm"),
+    modules: str | None = option("opt.modules", None, "--modules"),
 ) -> None:
     """Deploy a project to an environment."""
-    environment = _client(ctx).deploy(name, stage.value, branch, iteration, confirm)
+    module_list = [item.strip() for item in (modules or "").split(",") if item.strip()]
+    environment = _client(ctx).deploy(
+        name, stage.value, branch, iteration, confirm, module_list or None
+    )
     if machine_output():
         emit(environment)
         return
