@@ -203,7 +203,9 @@ class OrchestratorClient:
         }
         if confirm is not None:
             body["confirm"] = confirm
-        return self._request("POST", f"/projects/{name}/promote", json=body)
+        return self._request(
+            "POST", f"/projects/{name}/promote", json=body, timeout=DEPLOY_TIMEOUT
+        )
 
     def restore_iteration_database(
         self,
@@ -219,6 +221,7 @@ class OrchestratorClient:
             "POST",
             f"/projects/{name}/iterations/{version}/restore-db",
             json=body,
+            timeout=DEPLOY_TIMEOUT,
         )
 
     def iteration_backups(self, name: str, version: str) -> list[dict[str, Any]]:
