@@ -2,7 +2,7 @@
 
 **Self-hosted, distributable software factory built on Odoo 20.**
 
-[![CI](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache--2.0%20%2F%20LGPL--3.0-blue.svg)](LICENSE)
+[![CI](https://github.com/devcristianlopez/kizuku/actions/workflows/ci.yml/badge.svg)](https://github.com/devcristianlopez/kizuku/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache--2.0%20%2F%20LGPL--3.0-blue.svg)](LICENSE)
 
 Kizuku turns Odoo into a reusable backend backbone and gives you an
 Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
@@ -22,7 +22,7 @@ apps. Keep each project's history in its own repository when it needs one.
 ## Quick start
 
 ```bash
-git clone <repo> core-odoo && cd core-odoo
+git clone <repo> kizuku && cd kizuku
 ./install.sh            # platform + CLI (when uv is available)
 core-odoo status
 # panel: http://core-odoo.<your-ip>.nip.io
@@ -106,7 +106,7 @@ and the full `make e2e` loop are covered in [Operations](docs/OPERATIONS.md).
 step. Preview it with `python3 -m http.server 8099 --directory site`.
 `.github/workflows/pages.yml` publishes it to GitHub Pages (Settings → Pages →
 Source: GitHub Actions); it is published at
-<https://devcristianlopez.github.io/core-odoo/>.
+<https://devcristianlopez.github.io/kizuku/>.
 
 ## Documentation
 

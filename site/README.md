@@ -138,7 +138,7 @@ push a `main` que toque `site/**` o el propio workflow (y también a mano con
 El repositorio debe tener Pages configurado con Settings → Pages → Build and
 deployment → Source: **GitHub Actions**; con el origen en una rama el job de
 build falla. El sitio está publicado en
-<https://devcristianlopez.github.io/core-odoo/>.
+<https://devcristianlopez.github.io/kizuku/>.
 
 Los links a documentación apuntan al repositorio en GitHub porque `docs/` no
 forma parte del artefacto del sitio.

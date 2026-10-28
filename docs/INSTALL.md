@@ -18,8 +18,8 @@
 ### Instalación rápida
 
 ```bash
-git clone <repo> core-odoo
-cd core-odoo
+git clone <repo> kizuku
+cd kizuku
 ./install.sh --lang es
 core-odoo status
 ```
@@ -125,8 +125,8 @@ los backups en `data/backups/`.
 ### Quick install
 
 ```bash
-git clone <repo> core-odoo
-cd core-odoo
+git clone <repo> kizuku
+cd kizuku
 ./install.sh --lang en
 core-odoo status
 ```
