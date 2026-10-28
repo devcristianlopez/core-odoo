@@ -358,101 +358,112 @@
 
         <figure class="diagram-shell reveal" aria-labelledby="diagram-caption">
           <div class="diagram">
-            <svg viewBox="0 0 920 380" role="img" aria-label="Core Odoo system diagram" data-en-aria-label="Core Odoo system diagram">
+            <svg viewBox="0 0 900 440" role="img" aria-label="Core Odoo system diagram" data-en-aria-label="Core Odoo system diagram">
               <title>Core Odoo</title>
 
+              <!-- clients -->
               <g class="diagram-node">
-                <rect x="10" y="20" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="95" y="42" text-anchor="middle">
+                <rect x="25" y="20" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="110" y="44" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Navegador</tspan>
                   <tspan data-lang="en" lang="en">Browser</tspan>
                 </text>
-                <text class="diagram-sub t" x="95" y="59" text-anchor="middle">
-                  <tspan data-lang="es" lang="es">apps · panel</tspan>
-                  <tspan data-lang="en" lang="en">apps · panel</tspan>
+                <text class="diagram-sub t" x="110" y="61" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">apps de clientes</tspan>
+                  <tspan data-lang="en" lang="en">customer apps</tspan>
+                </text>
+              </g>
+              <g class="diagram-node">
+                <rect x="25" y="105" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="110" y="129" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Panel del equipo</tspan>
+                  <tspan data-lang="en" lang="en">Team panel</tspan>
+                </text>
+                <text class="diagram-sub t" x="110" y="146" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">navegador</tspan>
+                  <tspan data-lang="en" lang="en">browser</tspan>
                 </text>
               </g>
 
+              <!-- edge -->
               <g class="diagram-node">
-                <rect x="250" y="105" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="335" y="127" text-anchor="middle">Traefik 3.6</text>
-                <text class="diagram-sub t" x="335" y="144" text-anchor="middle">
+                <rect x="365" y="20" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="455" y="44" text-anchor="middle">Traefik 3.6</text>
+                <text class="diagram-sub t" x="455" y="61" text-anchor="middle">
                   <tspan data-lang="es" lang="es">HTTPS · rutas · allowlist</tspan>
                   <tspan data-lang="en" lang="en">HTTPS · routes · allowlist</tspan>
                 </text>
               </g>
 
+              <!-- application lane -->
               <g class="diagram-node">
-                <rect x="490" y="20" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="575" y="44" text-anchor="middle">Frontend</text>
-                <text class="diagram-sub t" x="575" y="61" text-anchor="middle">nginx · React 18</text>
+                <rect x="365" y="105" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="455" y="129" text-anchor="middle">Frontend</text>
+                <text class="diagram-sub t" x="455" y="146" text-anchor="middle">nginx · React 18</text>
               </g>
-
               <g class="diagram-node">
-                <rect x="490" y="105" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="575" y="129" text-anchor="middle">Gateway BFF</text>
-                <text class="diagram-sub t" x="575" y="146" text-anchor="middle">FastAPI · JWT</text>
+                <rect x="365" y="190" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="455" y="214" text-anchor="middle">Gateway BFF</text>
+                <text class="diagram-sub t" x="455" y="231" text-anchor="middle">FastAPI · JWT</text>
               </g>
-
               <g class="diagram-node">
-                <rect x="490" y="190" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="575" y="214" text-anchor="middle">Odoo 20</text>
-                <text class="diagram-sub t" x="575" y="231" text-anchor="middle">ORM · módulos</text>
+                <rect x="365" y="275" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="455" y="299" text-anchor="middle">Odoo 20</text>
+                <text class="diagram-sub t" x="455" y="316" text-anchor="middle">ORM · módulos</text>
               </g>
-
               <g class="diagram-node">
-                <rect x="490" y="275" width="170" height="54" rx="12"/>
-                <text class="diagram-label t" x="575" y="299" text-anchor="middle">PostgreSQL 16</text>
-                <text class="diagram-sub t" x="575" y="316" text-anchor="middle">
+                <rect x="365" y="360" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="455" y="384" text-anchor="middle">PostgreSQL 16</text>
+                <text class="diagram-sub t" x="455" y="401" text-anchor="middle">
                   <tspan data-lang="es" lang="es">una base por entorno</tspan>
                   <tspan data-lang="en" lang="en">one database per stage</tspan>
                 </text>
               </g>
 
+              <!-- operations lane -->
               <g class="diagram-node">
-                <rect x="730" y="20" width="180" height="54" rx="12"/>
-                <text class="diagram-label t" x="820" y="44" text-anchor="middle">Mission Control</text>
-                <text class="diagram-sub t" x="820" y="61" text-anchor="middle">
+                <rect x="700" y="20" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="790" y="44" text-anchor="middle">Mission Control</text>
+                <text class="diagram-sub t" x="790" y="61" text-anchor="middle">
                   <tspan data-lang="es" lang="es">panel del equipo</tspan>
                   <tspan data-lang="en" lang="en">team panel</tspan>
                 </text>
               </g>
-
               <g class="diagram-node">
-                <rect x="730" y="105" width="180" height="54" rx="12"/>
-                <text class="diagram-label t" x="820" y="129" text-anchor="middle">Orchestrator</text>
-                <text class="diagram-sub t" x="820" y="146" text-anchor="middle">FastAPI · Docker</text>
+                <rect x="700" y="105" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="790" y="129" text-anchor="middle">Orchestrator</text>
+                <text class="diagram-sub t" x="790" y="146" text-anchor="middle">FastAPI · Docker</text>
               </g>
-
               <g class="diagram-node">
-                <rect x="730" y="190" width="180" height="54" rx="12"/>
-                <text class="diagram-label t" x="820" y="214" text-anchor="middle">
+                <rect x="700" y="190" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="790" y="214" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Odoo backend</tspan>
                   <tspan data-lang="en" lang="en">Odoo backend</tspan>
                 </text>
-                <text class="diagram-sub t" x="820" y="231" text-anchor="middle">
+                <text class="diagram-sub t" x="790" y="231" text-anchor="middle">
                   <tspan data-lang="es" lang="es">crons · correo · informes</tspan>
                   <tspan data-lang="en" lang="en">crons · mail · reports</tspan>
                 </text>
               </g>
-
               <g class="diagram-node">
-                <rect x="730" y="275" width="180" height="54" rx="12"/>
-                <text class="diagram-label t" x="820" y="299" text-anchor="middle">
+                <rect x="700" y="275" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="790" y="299" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Observabilidad</tspan>
                   <tspan data-lang="en" lang="en">Observability</tspan>
                 </text>
-                <text class="diagram-sub t" x="820" y="316" text-anchor="middle">Prometheus · Loki · Grafana</text>
+                <text class="diagram-sub t" x="790" y="316" text-anchor="middle">Prometheus · Loki · Grafana</text>
               </g>
 
-              <path class="diagram-flow" d="M 180 47 C 230 47 335 80 335 105"/>
-              <path class="diagram-flow" d="M 420 132 C 460 132 490 95 490 47"/>
-              <path class="diagram-flow" d="M 420 132 C 560 132 730 95 730 47"/>
-              <path class="diagram-flow" d="M 575 74 L 575 105"/>
-              <path class="diagram-flow" d="M 575 159 L 575 190"/>
-              <path class="diagram-flow" d="M 575 244 L 575 275"/>
-              <path class="diagram-flow" d="M 820 74 L 820 105"/>
-              <path class="diagram-flow dashed" d="M 420 150 C 560 185 730 170 730 190"/>
+              <!-- flows: straight or routed through the gutters -->
+              <path class="diagram-flow" d="M 195 47 L 365 47"/>
+              <path class="diagram-flow" d="M 195 132 C 265 132 320 60 365 60"/>
+              <path class="diagram-flow" d="M 545 47 L 700 47"/>
+              <path class="diagram-flow" d="M 455 74 L 455 105"/>
+              <path class="diagram-flow" d="M 455 159 L 455 190"/>
+              <path class="diagram-flow" d="M 455 244 L 455 275"/>
+              <path class="diagram-flow" d="M 455 329 L 455 360"/>
+              <path class="diagram-flow" d="M 790 74 L 790 105"/>
+              <path class="diagram-flow dashed" d="M 545 62 L 617 62 L 617 217 L 700 217"/>
             </svg>
           </div>
           <figcaption id="diagram-caption" class="diagram-caption t">
