@@ -298,7 +298,7 @@ Security rules:
 
 ## 8. Mission Control
 
-- React 18 + TypeScript + Vite + Tailwind + shadcn-style components + Recharts.
+- React 19 + TypeScript + Vite + Tailwind + shadcn-style components + Recharts.
 - Talks **only** to the orchestrator (`/api/v1`), never directly to Docker,
   Prometheus or Loki (the orchestrator proxies those).
 - Auth: login form -> `POST /auth/login` -> JWT stored in memory/localStorage.

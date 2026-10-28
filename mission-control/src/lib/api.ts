@@ -135,7 +135,7 @@ interface ErrorPayload {
 }
 
 async function parseErrorPayload(response: Response): Promise<ErrorPayload> {
-  let text = ''
+  let text: string
   try {
     text = await response.text()
   } catch {

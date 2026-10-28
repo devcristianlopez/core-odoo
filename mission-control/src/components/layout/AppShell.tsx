@@ -109,7 +109,10 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
   const closeRef = useRef<HTMLButtonElement>(null)
   const titleId = useId()
   const closeRefState = useRef(onClose)
-  closeRefState.current = onClose
+
+  useEffect(() => {
+    closeRefState.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) return

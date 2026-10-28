@@ -43,7 +43,7 @@ Observability (parallel plane):
 | BFF | FastAPI, SQLModel, Pydantic | Declarative `backend.yaml` → gateway |
 | Control plane | FastAPI, SQLModel, SQLite | Projects, environments, iterations, audit |
 | CLI / agents | Typer, Rich, httpx, MCP | Same operations as the API |
-| Frontend | React 18, TypeScript 5, Vite 6, Tailwind 3, TanStack Query 5, Recharts, i18next | Panel and generated apps |
+| Frontend | React 19, TypeScript 6, Vite 8, Tailwind 4, TanStack Query 5, Recharts 3, i18next 26 | Panel and generated apps |
 | Edge | Traefik 3.7, nginx | HTTPS, routing, allowlists |
 | Runtime | Docker Compose, uv | One Compose project per stage |
 | Observability | Prometheus 3.15, Loki 3.7, Alloy, Grafana 13.3, Alertmanager 0.34, Uptime Kuma | Metrics, logs, alerts, dashboards |

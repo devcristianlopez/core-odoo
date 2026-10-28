@@ -12,7 +12,7 @@
 - Acceso al socket `/var/run/docker.sock` para el orquestador.
 - `curl`, `openssl` y `python3`.
 - `uv` (recomendado): instala el CLI `core-odoo` y ejecuta el servidor MCP.
-- Node 22 y npm solo para desarrollar el panel (`make test`, `make lint`); la
+- Node 24 y npm solo para desarrollar el panel (`make test`, `make lint`); la
   imagen del panel compila con Node dentro de Docker.
 
 ### Instalación rápida
@@ -119,7 +119,7 @@ los backups en `data/backups/`.
 - Access to `/var/run/docker.sock` for the orchestrator.
 - `curl`, `openssl` and `python3`.
 - `uv` (recommended): installs the `core-odoo` CLI and runs the MCP server.
-- Node 22 and npm only to develop the panel (`make test`, `make lint`); the
+- Node 24 and npm only to develop the panel (`make test`, `make lint`); the
   panel image builds with Node inside Docker.
 
 ### Quick install

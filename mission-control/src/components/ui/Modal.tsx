@@ -36,7 +36,10 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
   const titleId = useId()
   const descriptionId = useId()
 

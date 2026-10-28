@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // Mission Control talks only to the orchestrator. In development the proxy
 // forwards `/api/v1/*` to the local control plane (see docs/CONTRACT.md §5).
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
     host: true,

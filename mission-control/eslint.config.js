@@ -19,6 +19,9 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // The React Compiler lint set flags the existing "sync state with
+      // external data" effects; adopting it is a separate refactor.
+      'react-hooks/set-state-in-effect': 'off',
       'react-refresh/only-export-components': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -32,7 +35,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['vite.config.ts', 'vitest.config.ts', 'tailwind.config.ts', 'postcss.config.js', 'eslint.config.js'],
+    files: ['vite.config.ts', 'vitest.config.ts', 'tailwind.config.js', 'eslint.config.js'],
     languageOptions: {
       globals: { ...globals.node },
     },

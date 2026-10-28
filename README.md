@@ -57,7 +57,7 @@ Versions shipped with the repository:
 | Layer | Technologies |
 |---|---|
 | Backend | Odoo 20, PostgreSQL 16, Python 3.12, FastAPI, SQLModel, Pydantic |
-| Frontend | React 18, TypeScript 5, Vite 6, Tailwind 3, TanStack Query 5, Recharts, i18next |
+| Frontend | React 19, TypeScript 6, Vite 8, Tailwind 4, TanStack Query 5, Recharts 3, i18next 26 |
 | CLI / tooling | Typer, Rich, uv, httpx |
 | Infrastructure | Docker Compose, Traefik 3.7, nginx, Mailpit |
 | Observability | Prometheus 3.15, Loki 3.7, Alloy, Grafana 13.3, Alertmanager 0.34, Uptime Kuma |
