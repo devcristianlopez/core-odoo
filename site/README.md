@@ -98,8 +98,14 @@ el script no lanza errores. No escribe en consola.
   la información no depende solo del hover. Las conexiones se dibujan con
   `stroke-dasharray` animado y el orden de lectura va de izquierda a derecha:
   personas y agentes → una petición → operación.
+- El recuadro punteado del carril central agrupa el entorno desplegado (frontend,
+  gateway, Odoo y PostgreSQL) para que la flecha de deploy del orquestador tenga
+  un destino claro; Odoo aparece dos veces porque son dos puertas al mismo
+  contenedor: la API JSON-2 del gateway y la UI web de operadores.
 - Los conectores se trazan rectos o por los pasillos entre columnas: ningún
   trazo cruza un nodo.
+- Los cinco pasos de “Del prompt al entorno” son una lista ordenada real (`ol`),
+  así que el lector de pantalla anuncia la secuencia.
 - Los pares de idioma llevan `lang`; el inactivo se marca `aria-hidden` al
   cargar el script.
 - Contraste objetivo: WCAG AA en texto normal y grande, en ambos temas.

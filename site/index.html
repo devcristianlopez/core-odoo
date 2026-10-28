@@ -359,7 +359,7 @@
         <figure class="sysmap-shell reveal" aria-labelledby="sysmap-caption">
           <div class="sysmap">
             <svg viewBox="0 0 960 480" role="img" aria-label="Diagrama del sistema" data-en-aria-label="System diagram">
-                            <title>Core Odoo</title>
+              <title>Core Odoo</title>
 
               <defs>
                 <marker id="sysmap-arrow-flow" class="sysmap-arrow" viewBox="0 0 8 8" refX="7.2" refY="4"
@@ -376,13 +376,16 @@
                 </marker>
               </defs>
 
+              <!-- the deployed environment: frontend + gateway + Odoo + database -->
+              <rect class="sysmap-env" x="350" y="110" width="240" height="340" rx="20"/>
+
               <text class="sysmap-lane t" x="115" y="24" text-anchor="middle">
                 <tspan data-lang="es" lang="es">personas y agentes</tspan>
                 <tspan data-lang="en" lang="en">people &amp; agents</tspan>
               </text>
               <text class="sysmap-lane t" x="470" y="24" text-anchor="middle">
-                <tspan data-lang="es" lang="es">una petición</tspan>
-                <tspan data-lang="en" lang="en">one request</tspan>
+                <tspan data-lang="es" lang="es">una petición · un entorno</tspan>
+                <tspan data-lang="en" lang="en">one request · one environment</tspan>
               </text>
               <text class="sysmap-lane t" x="820" y="24" text-anchor="middle">
                 <tspan data-lang="es" lang="es">operación</tspan>
@@ -410,7 +413,7 @@
                   <tspan data-lang="en" lang="en">browser</tspan>
                 </text>
               </g>
-              <g class="sysmap-node" tabindex="0" data-tip-es="Crea módulos, API y frontend y despliega a través del orquestador (CLI o MCP)." data-tip-en="Builds modules, API and frontend, then deploys through the orchestrator (CLI or MCP).">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Desde un prompt en OpenCode crea el proyecto, lee el catálogo de Odoo, genera módulo, BFF, frontend y SDK, y despliega." data-tip-en="From an OpenCode prompt it creates the project, reads the Odoo catalogue, generates the module, BFF, frontend and SDK, then deploys.">
                 <rect x="20" y="214" width="190" height="54" rx="12"/>
                 <text class="sysmap-label t" x="115" y="238" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Agente de IA</tspan>
@@ -445,16 +448,13 @@
                 </text>
                 <text class="sysmap-sub t" x="470" y="255" text-anchor="middle">FastAPI · JWT</text>
               </g>
-              <g class="sysmap-node" tabindex="0" data-tip-es="Modelos, permisos, cron, correo y reportes; una base por entorno." data-tip-en="Models, permissions, cron, mail and reports; one database per stage.">
+              <g class="sysmap-node" tabindex="0" data-tip-es="El mismo Odoo del entorno, por la puerta del gateway: JSON-2 con API key, siempre desde el servidor." data-tip-en="The same Odoo of the environment, through the gateway door: JSON-2 with an API key, always server-side.">
                 <rect x="370" y="299" width="200" height="54" rx="12"/>
                 <text class="sysmap-label t" x="470" y="323" text-anchor="middle">
-                  <tspan data-lang="es" lang="es">Odoo 20</tspan>
-                  <tspan data-lang="en" lang="en">Odoo 20</tspan>
+                  <tspan data-lang="es" lang="es">Odoo 20 · API</tspan>
+                  <tspan data-lang="en" lang="en">Odoo 20 · API</tspan>
                 </text>
-                <text class="sysmap-sub t" x="470" y="340" text-anchor="middle">
-                  <tspan data-lang="es" lang="es">ORM · módulos</tspan>
-                  <tspan data-lang="en" lang="en">ORM · modules</tspan>
-                </text>
+                <text class="sysmap-sub t" x="470" y="340" text-anchor="middle">JSON-2 · ORM</text>
               </g>
               <g class="sysmap-node" tabindex="0" data-tip-es="Datos de cada entorno, aislados en su propio volumen." data-tip-en="Data for each stage, isolated in its own volume.">
                 <rect x="370" y="384" width="200" height="54" rx="12"/>
@@ -467,35 +467,35 @@
                   <tspan data-lang="en" lang="en">one database per stage</tspan>
                 </text>
               </g>
-              <g class="sysmap-node" tabindex="0" data-tip-es="Proyectos, entornos, métricas, logs, credenciales y promociones." data-tip-en="Projects, environments, metrics, logs, credentials and promotions.">
+              <g class="sysmap-node" tabindex="0" data-tip-es="El mismo Odoo, por su UI web: cron, correo, informes y contabilidad. Solo desde la red interna." data-tip-en="The same Odoo, through its web UI: cron, mail, reports and accounting. Internal network only.">
                 <rect x="720" y="44" width="200" height="54" rx="12"/>
                 <text class="sysmap-label t" x="820" y="68" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Odoo backend · operadores</tspan>
+                  <tspan data-lang="en" lang="en">Odoo backend · operators</tspan>
+                </text>
+                <text class="sysmap-sub t" x="820" y="85" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">web · cron · correo</tspan>
+                  <tspan data-lang="en" lang="en">web · cron · mail</tspan>
+                </text>
+              </g>
+              <g class="sysmap-node" tabindex="0" data-tip-es="No habla con Odoo: lee el estado del orquestador (proyectos, entornos, deploys, métricas) y lanza las acciones." data-tip-en="It never talks to Odoo: it reads state from the orchestrator (projects, environments, deploys, metrics) and triggers actions.">
+                <rect x="720" y="129" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="153" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Mission Control</tspan>
                   <tspan data-lang="en" lang="en">Mission Control</tspan>
                 </text>
-                <text class="sysmap-sub t" x="820" y="85" text-anchor="middle">
+                <text class="sysmap-sub t" x="820" y="170" text-anchor="middle">
                   <tspan data-lang="es" lang="es">panel del equipo</tspan>
                   <tspan data-lang="en" lang="en">team panel</tspan>
                 </text>
               </g>
-              <g class="sysmap-node" tabindex="0" data-tip-es="Crea entornos, despliega, hace backups y promueve; maneja Docker." data-tip-en="Creates environments, deploys, backs up and promotes; drives Docker.">
-                <rect x="720" y="129" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="153" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="El único que habla con Docker: crea y actualiza entornos, construye el frontend, migra, espera health y guarda backups." data-tip-en="The only one that talks to Docker: creates and updates environments, builds the frontend, migrates, waits for health and stores backups.">
+                <rect x="720" y="214" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="238" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Orchestrator</tspan>
                   <tspan data-lang="en" lang="en">Orchestrator</tspan>
                 </text>
-                <text class="sysmap-sub t" x="820" y="170" text-anchor="middle">FastAPI · Docker</text>
-              </g>
-              <g class="sysmap-node" tabindex="0" data-tip-es="Acceso de operadores a Odoo para cron, correo y contabilidad, solo en la red interna." data-tip-en="Operator access to Odoo for cron, mail and accounting, internal network only.">
-                <rect x="720" y="214" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="238" text-anchor="middle">
-                  <tspan data-lang="es" lang="es">Odoo backend</tspan>
-                  <tspan data-lang="en" lang="en">Odoo backend</tspan>
-                </text>
-                <text class="sysmap-sub t" x="820" y="255" text-anchor="middle">
-                  <tspan data-lang="es" lang="es">crons · correo · informes</tspan>
-                  <tspan data-lang="en" lang="en">crons · mail · reports</tspan>
-                </text>
+                <text class="sysmap-sub t" x="820" y="255" text-anchor="middle">FastAPI · Docker</text>
               </g>
               <g class="sysmap-node" tabindex="0" data-tip-es="Prometheus, Loki y Grafana: métricas, logs y alertas de todo el stack." data-tip-en="Prometheus, Loki and Grafana: metrics, logs and alerts for the whole stack.">
                 <rect x="720" y="299" width="200" height="54" rx="12"/>
@@ -512,14 +512,19 @@
               <!-- flows: straight or routed through the empty gutters -->
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 210 71 L 370 71"/>
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 210 156 C 280 156 320 84 370 84"/>
-              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 570 71 L 720 71"/>
+              <path class="sysmap-flow dashed" marker-end="url(#sysmap-arrow-operator)" d="M 570 71 L 720 71"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 570 84 L 645 84 L 645 156 L 720 156"/>
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 98 L 470 129"/>
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 183 L 470 214"/>
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 268 L 470 299"/>
               <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 353 L 470 384"/>
-              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 820 98 L 820 129"/>
-              <path class="sysmap-flow dashed" marker-end="url(#sysmap-arrow-operator)" d="M 570 84 L 645 84 L 645 241 L 720 241"/>
-              <path class="sysmap-flow agent" marker-end="url(#sysmap-arrow-agent)" d="M 210 241 L 235 241 L 235 458 L 938 458 L 938 156 L 920 156"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 820 183 L 820 214"/>
+              <path class="sysmap-flow agent" marker-end="url(#sysmap-arrow-agent)" d="M 210 241 L 235 241 L 235 462 L 938 462 L 938 241 L 920 241"/>
+              <path class="sysmap-flow agent" marker-end="url(#sysmap-arrow-agent)" d="M 720 241 L 590 241"/>
+              <text class="sysmap-note t" x="655" y="232" text-anchor="middle">
+                <tspan data-lang="es" lang="es">despliega</tspan>
+                <tspan data-lang="en" lang="en">deploys</tspan>
+              </text>
             </svg>
             <div class="sysmap-tip" id="sysmap-tip" role="tooltip">
               <span class="sysmap-tip-title"></span>
@@ -531,6 +536,44 @@
             <span data-lang="en" lang="en"><span class="legend-dot cyan"></span>application traffic <span class="legend-dot violet"></span>operator access <span class="legend-dot green"></span>agent path</span>
           </figcaption>
         </figure>
+
+        <div class="flow-strip reveal">
+          <h3 class="flow-title t">
+            <span data-lang="es" lang="es">Del prompt al entorno</span>
+            <span data-lang="en" lang="en">From prompt to environment</span>
+          </h3>
+          <p class="flow-lede t">
+            <span data-lang="es" lang="es">Esto es lo que pasa cuando le pides una app al agente, de la idea al panel.</span>
+            <span data-lang="en" lang="en">This is what happens when you ask the agent for an app, from idea to panel.</span>
+          </p>
+          <ol class="flow-steps">
+            <li>
+              <span class="flow-index" aria-hidden="true">01</span>
+              <h4 class="t"><span data-lang="es" lang="es">Prompt</span><span data-lang="en" lang="en">Prompt</span></h4>
+              <p class="t"><span data-lang="es" lang="es">Describes la app en OpenCode: entidades, pantallas y reglas.</span><span data-lang="en" lang="en">Describe the app in OpenCode: entities, screens and rules.</span></p>
+            </li>
+            <li>
+              <span class="flow-index" aria-hidden="true">02</span>
+              <h4 class="t"><span data-lang="es" lang="es">Catálogo</span><span data-lang="en" lang="en">Catalogue</span></h4>
+              <p class="t"><span data-lang="es" lang="es">El agente lee del Odoo que ya corre los modelos, campos y permisos.</span><span data-lang="en" lang="en">The agent reads models, fields and permissions from the running Odoo.</span></p>
+            </li>
+            <li>
+              <span class="flow-index" aria-hidden="true">03</span>
+              <h4 class="t"><span data-lang="es" lang="es">Genera</span><span data-lang="en" lang="en">Generates</span></h4>
+              <p class="t"><span data-lang="es" lang="es">Escribe el módulo de Odoo, el recurso BFF, el frontend React y el SDK tipado.</span><span data-lang="en" lang="en">It writes the Odoo module, the BFF resource, the React frontend and the typed SDK.</span></p>
+            </li>
+            <li>
+              <span class="flow-index" aria-hidden="true">04</span>
+              <h4 class="t"><span data-lang="es" lang="es">Despliega</span><span data-lang="en" lang="en">Deploys</span></h4>
+              <p class="t"><span data-lang="es" lang="es">El orquestador construye y levanta el entorno: migra, espera health y guarda la iteración.</span><span data-lang="en" lang="en">The orchestrator builds and starts the environment: migrates, waits for health and stores the iteration.</span></p>
+            </li>
+            <li>
+              <span class="flow-index" aria-hidden="true">05</span>
+              <h4 class="t"><span data-lang="es" lang="es">Panel</span><span data-lang="en" lang="en">Panel</span></h4>
+              <p class="t"><span data-lang="es" lang="es">Mission Control muestra el entorno, el estado, las métricas y los logs.</span><span data-lang="en" lang="en">Mission Control shows the environment, its status, metrics and logs.</span></p>
+            </li>
+          </ol>
+        </div>
 
         <div class="tech-grid reveal">
           <article class="tech-group">

@@ -2697,6 +2697,21 @@ html:not(.js) .copy {
   text-transform: uppercase;
 }
 
+.sysmap-env {
+  fill: rgba(139, 152, 165, 0.04);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+}
+
+.sysmap-note {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .sysmap-node {
   cursor: help;
   outline: none;
@@ -2820,6 +2835,59 @@ html[data-lang="en"] svg text.t > [data-lang="es"] {
   to {
     stroke-dashoffset: -14;
   }
+}
+
+.flow-strip {
+  margin: 2.25rem 0 0;
+}
+
+.flow-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+}
+
+.flow-lede {
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.flow-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 0.7rem;
+  margin: 0 0 2.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-steps li {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.flow-index {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+}
+
+.flow-steps h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.flow-steps p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .sysmap-caption {
