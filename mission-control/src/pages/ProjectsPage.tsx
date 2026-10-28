@@ -2,11 +2,11 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, FolderKanban, Plus, Search, Trash2 } from 'lucide-react'
+import { Database, ExternalLink, FolderKanban, Plus, Search, Trash2 } from 'lucide-react'
 import { api, type CreateProjectInput } from '../lib/api'
 import { queryKeys } from '../lib/query'
 import { formatDate } from '../lib/format'
-import { groupEnvironmentsByStage, safeHttpUrl } from '../lib/services'
+import { groupEnvironmentsByStage, odooTarget, safeHttpUrl } from '../lib/services'
 import { describeError } from '../lib/errors'
 import { useToast } from '../lib/toast-context'
 import { useAuth } from '../lib/auth-context'
@@ -217,6 +217,7 @@ export default function ProjectsPage() {
                 const environmentCount = Array.isArray(project.environments)
                   ? project.environments.length
                   : 0
+                const odoo = odooTarget(project.environments)
                 return (
                   <li key={project.name}>
                     <Card className="flex h-full flex-col">
@@ -280,16 +281,30 @@ export default function ProjectsPage() {
                           </a>
                         ) : null}
                       </CardContent>
-                      <CardFooter className="flex items-center justify-between">
+                      <CardFooter className="flex items-center justify-between gap-2">
                         <Link
                           to={`/projects/${encodeURIComponent(project.name)}`}
                           className="rounded font-medium text-accent-300 hover:text-accent-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
                         >
                           {t('projects.openProject')}
                         </Link>
-                        <span>
-                          {t('projects.environmentCount', { count: environmentCount })}
-                        </span>
+                        {odoo ? (
+                          <a
+                            href={odoo.url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-edge bg-surface-raised px-2.5 text-xs font-medium text-slate-200 transition-colors hover:border-edge-strong hover:bg-surface-overlay hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+                            aria-label={t('projects.openOdoo', {
+                              stage: t(`stages.${odoo.stage}`),
+                            })}
+                            title={t('projects.openOdoo', {
+                              stage: t(`stages.${odoo.stage}`),
+                            })}
+                          >
+                            <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                            Odoo
+                          </a>
+                        ) : null}
                       </CardFooter>
                     </Card>
                   </li>

@@ -5,6 +5,7 @@ import {
   flattenEnvironments,
   groupEnvironmentsByStage,
   normalizeServices,
+  odooTarget,
   safeHttpUrl,
 } from './services'
 import type { Environment, Project } from './types'
@@ -93,5 +94,43 @@ describe('safeHttpUrl', () => {
     expect(safeHttpUrl('javascript:alert(1)')).toBeNull()
     expect(safeHttpUrl('')).toBeNull()
     expect(safeHttpUrl(null)).toBeNull()
+  })
+})
+
+describe('odooTarget', () => {
+  it('prefers dev, then staging, then prod', () => {
+    const all = [
+      { ...environment('app', 'prod'), odoo_url: 'http://app-prod-odoo.example' },
+      { ...environment('app', 'staging'), odoo_url: 'http://app-staging-odoo.example' },
+      { ...environment('app', 'dev'), odoo_url: 'http://app-dev-odoo.example' },
+    ]
+    expect(odooTarget(all)).toEqual({ url: 'http://app-dev-odoo.example/', stage: 'dev' })
+
+    expect(odooTarget(all.slice(0, 2))).toEqual({
+      url: 'http://app-staging-odoo.example/',
+      stage: 'staging',
+    })
+    expect(odooTarget(all.slice(0, 1))).toEqual({
+      url: 'http://app-prod-odoo.example/',
+      stage: 'prod',
+    })
+  })
+
+  it('skips environments without a backend URL', () => {
+    const environments = [
+      environment('app', 'dev'),
+      { ...environment('app', 'staging'), odoo_url: '  ' },
+      { ...environment('app', 'prod'), odoo_url: 'http://app-prod-odoo.example' },
+    ]
+    expect(odooTarget(environments)).toEqual({
+      url: 'http://app-prod-odoo.example/',
+      stage: 'prod',
+    })
+  })
+
+  it('returns null for missing, empty or unsafe values', () => {
+    expect(odooTarget(undefined)).toBeNull()
+    expect(odooTarget([])).toBeNull()
+    expect(odooTarget([{ ...environment('app', 'dev'), odoo_url: 'javascript:alert(1)' }])).toBeNull()
   })
 })

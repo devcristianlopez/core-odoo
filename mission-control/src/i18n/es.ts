@@ -165,6 +165,7 @@ const es = {
     environmentCount_one: '{{count}} entorno',
     environmentCount_other: '{{count}} entornos',
     openProject: 'Abrir proyecto',
+    openOdoo: 'Abrir el backend de Odoo ({{stage}})',
     createdOn: 'Creado el {{date}}',
     noTemplate: 'Sin plantilla',
     deleteTitle: 'Eliminar proyecto',

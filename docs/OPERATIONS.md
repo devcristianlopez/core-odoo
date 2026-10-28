@@ -119,6 +119,10 @@ se carga el servidor real en esa pantalla.
 `web.base.url` queda fijado a esa URL en cada deploy (`web.base.url.freeze`),
 para que los enlaces de correos y reportes no apunten a `odoo:8069`.
 
+En Mission Control, cada tarjeta de proyecto trae un botón **Odoo** que abre el
+backend del entorno `dev`; si el proyecto no tiene dev, usa staging y después
+producción.
+
 ### Proyectos y entornos
 
 ```bash
@@ -486,6 +490,10 @@ server is configured in that screen.
 
 `web.base.url` is pinned to that URL on every deploy (`web.base.url.freeze`), so
 links in emails and reports never point at `odoo:8069`.
+
+In Mission Control, every project card has an **Odoo** button that opens the
+backend of the `dev` environment; when there is no dev it falls back to staging
+and then production.
 
 ### Projects and environments
 

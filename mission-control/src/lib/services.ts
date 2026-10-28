@@ -80,6 +80,22 @@ export function findEnvironment(
   return environments.find((environment) => environment.stage === stage) ?? null
 }
 
+/**
+ * First Odoo backend reachable from the project card. Dev wins over staging
+ * and prod so the button opens the environment people actually work in.
+ */
+export function odooTarget(
+  environments: Environment[] | undefined,
+): { url: string; stage: Stage } | null {
+  if (!Array.isArray(environments)) return null
+  for (const stage of STAGES) {
+    const environment = environments.find((item) => item.stage === stage)
+    const url = safeHttpUrl(environment?.odoo_url)
+    if (url) return { url, stage }
+  }
+  return null
+}
+
 export function countRunningEnvironments(environments: Environment[]): number {
   return environments.reduce(
     (total, environment) => (isRunningStatus(environment.status) ? total + 1 : total),
