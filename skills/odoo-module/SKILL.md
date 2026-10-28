@@ -1,7 +1,7 @@
 ---
 name: odoo-module
 description: >-
-  Create or extend an Odoo 20 addon inside a Core Odoo project: read the live
+  Create or extend an Odoo 20 addon inside a Kizuku project: read the live
   catalogue, generate the module, then write models, fields, ACL, views and
   tests with Odoo 20 syntax and deploy to dev. Use for any change under
   projects/<project>/odoo/addons/<module>.

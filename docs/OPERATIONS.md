@@ -1,6 +1,6 @@
 # Operación · Operations
 
-> Core Odoo — operación. Bilingüe: español primero, English below.
+> Kizuku — operación. Bilingüe: español primero, English below.
 
 ## Español
 

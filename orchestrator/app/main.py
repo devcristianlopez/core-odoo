@@ -73,9 +73,9 @@ def create_app(
 
     app = FastAPI(
         lifespan=lifespan,
-        title="Core Odoo Orchestrator",
+        title="Kizuku Orchestrator",
         version=__version__,
-        description="Control-plane API for Core Odoo environments.",
+        description="Control-plane API for Kizuku environments.",
     )
     app.state.settings = settings
     app.state.engine = engine

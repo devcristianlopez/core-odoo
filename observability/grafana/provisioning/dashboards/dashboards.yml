@@ -3,7 +3,7 @@ apiVersion: 1
 providers:
   - name: core-odoo
     orgId: 1
-    folder: Core Odoo
+    folder: Kizuku
     folderUid: core-odoo
     type: file
     disableDeletion: false

@@ -1,10 +1,10 @@
-# Core Odoo
+# Kizuku
 
 **Self-hosted, distributable software factory built on Odoo 20.**
 
 [![CI](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml/badge.svg)](https://github.com/devcristianlopez/core-odoo/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache--2.0%20%2F%20LGPL--3.0-blue.svg)](LICENSE)
 
-Core Odoo turns Odoo into a reusable backend backbone and gives you an
+Kizuku turns Odoo into a reusable backend backbone and gives you an
 Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.

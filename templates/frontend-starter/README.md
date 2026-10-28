@@ -1,6 +1,6 @@
 # Frontend starter
 
-Minimal Vite + React + TypeScript application for a Core Odoo environment.
+Minimal Vite + React + TypeScript application for a Kizuku environment.
 
 - License: Apache-2.0
 - Node 22 build stage → `nginx:1.30.6-alpine` runtime

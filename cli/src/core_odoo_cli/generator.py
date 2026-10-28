@@ -232,8 +232,8 @@ def render_manifest(module: str, title: str) -> str:
     "version": "20.0.1.0.0",
     "category": "Uncategorized",
     "license": "LGPL-3",
-    "author": "Core Odoo",
-    "website": "https://core-odoo.local",
+    "author": "Kizuku",
+    "website": "https://kizuku.local",
     "depends": ["base"],
     "data": [
         "security/ir.access.csv",

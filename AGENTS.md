@@ -1,4 +1,4 @@
-# Core Odoo — Agent Instructions
+# Kizuku — Agent Instructions
 
 > These are project conventions. They do not replace your system or agent
 > instructions. Follow your agent/system instructions first; use this file for

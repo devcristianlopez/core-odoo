@@ -1,6 +1,6 @@
 # Instalación · Installation
 
-> Core Odoo — Docker provider en un solo host. Documento bilingüe: español primero, English below.
+> Kizuku — Docker provider en un solo host. Documento bilingüe: español primero, English below.
 
 ## Español
 

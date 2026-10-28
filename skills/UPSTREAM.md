@@ -18,7 +18,7 @@ library, so agents get Odoo's house rules instead of a paraphrase.
 
 The upstream set also ships `odoo-git`, which documents Odoo core's
 `[TAG] scope: summary` commit format and the branch and pull-request rules of
-the `odoo/odoo` repository. Core Odoo uses conventional commits
+the `odoo/odoo` repository. Kizuku uses conventional commits
 (`feat(panel): ...`), so loading that skill here would produce the wrong
 history. It is neither copied nor linked.
 
@@ -55,6 +55,6 @@ done
 ```
 
 Update the ref above when you sync. Do not edit the vendored files in place:
-changes are lost on the next sync. Core Odoo specifics belong in
+changes are lost on the next sync. Kizuku specifics belong in
 `odoo-module`, `odoo-frontend` and `odoo-deploy`, which link to the guideline
 sections instead of copying them.

@@ -36,7 +36,7 @@ The platform rules (golden path, boundaries, copy and language) live in
 `odoo-guidelines`, `odoo-review`, `odoo-security` and `odoo-web-guidelines` are
 copied verbatim from Odoo 20 and keep Odoo's LGPL-3.0 license
 (`ODOO-LICENSE.txt`); the rest of the repository stays Apache-2.0. Keep them
-untouched; `UPSTREAM.md` records the ref and the sync command. Core Odoo
+untouched; `UPSTREAM.md` records the ref and the sync command. Kizuku
 specifics live in `odoo-module`, `odoo-frontend` and `odoo-deploy`.
 
 ## Adding a skill

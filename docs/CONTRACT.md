@@ -1,4 +1,4 @@
-# Core Odoo — Interface Contract
+# Kizuku — Interface Contract
 
 This document is the single source of truth for all components. Do not change
 an interface without updating this file and notifying the orchestrator.

@@ -1,4 +1,4 @@
-# Core Odoo
+# Kizuku
 
 The canonical agent instructions are in `AGENTS.md` and `docs/agent/`.
 

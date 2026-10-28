@@ -1,7 +1,7 @@
 const en = {
   app: {
     name: 'Mission Control',
-    tagline: 'Core Odoo control plane',
+    tagline: 'Kizuku control plane',
     description: 'Projects, environments, metrics and logs in one place.',
   },
   common: {
@@ -97,11 +97,11 @@ const en = {
     signedOut: 'You have been signed out.',
     signedInAs: 'Signed in as {{username}}',
     userFallback: 'Signed-in user',
-    footer: 'Credentials are managed by the Core Odoo control plane.',
+    footer: 'Credentials are managed by the Kizuku control plane.',
   },
   dashboard: {
     title: 'Dashboard',
-    subtitle: 'Live overview of the Core Odoo control plane.',
+    subtitle: 'Live overview of the Kizuku control plane.',
     projects: 'Projects',
     projectsHint: 'Registered projects',
     environments: 'Running environments',
@@ -136,7 +136,7 @@ const en = {
   },
   projects: {
     title: 'Projects',
-    subtitle: 'Applications managed by this Core Odoo installation.',
+    subtitle: 'Applications managed by this Kizuku installation.',
     newProject: 'New project',
     createTitle: 'Create project',
     createDescription: 'Register a project and scaffold its Odoo structure.',
@@ -528,7 +528,7 @@ const en = {
     darkTheme: 'Dark',
     darkThemeHint: 'Dark is the only theme in Sprint 1.',
     aboutTitle: 'About',
-    aboutDescription: 'Self-hosted Odoo.sh-style control panel for Core Odoo.',
+    aboutDescription: 'Self-hosted Odoo.sh-style control panel for Kizuku.',
   },
   errors: {
     generic: 'Something went wrong.',

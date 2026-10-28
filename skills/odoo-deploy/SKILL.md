@@ -1,7 +1,7 @@
 ---
 name: odoo-deploy
 description: >-
-  Deploy, promote, roll back and debug a Core Odoo environment: iterations,
+  Deploy, promote, roll back and debug a Kizuku environment: iterations,
   health gate, compose logs, Odoo admin credentials and common failures. Use
   after changing a module, backend.yaml or frontend, or when a deploy or
   health check fails.

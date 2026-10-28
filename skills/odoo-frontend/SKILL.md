@@ -1,7 +1,7 @@
 ---
 name: odoo-frontend
 description: >-
-  Build or modify a Core Odoo frontend against the declarative BFF: resources
+  Build or modify a Kizuku frontend against the declarative BFF: resources
   in backend.yaml, the generated TypeScript SDK, login and JWT, list and form
   screens, error states and i18n. Use for files under
   projects/<project>/frontend/.

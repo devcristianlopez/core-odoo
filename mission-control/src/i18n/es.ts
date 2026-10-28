@@ -1,7 +1,7 @@
 const es = {
   app: {
     name: 'Mission Control',
-    tagline: 'Plano de control de Core Odoo',
+    tagline: 'Plano de control de Kizuku',
     description: 'Proyectos, entornos, métricas y logs en un solo lugar.',
   },
   common: {
@@ -97,11 +97,11 @@ const es = {
     signedOut: 'Has cerrado sesión.',
     signedInAs: 'Sesión de {{username}}',
     userFallback: 'Usuario autenticado',
-    footer: 'Las credenciales se gestionan en el plano de control de Core Odoo.',
+    footer: 'Las credenciales se gestionan en el plano de control de Kizuku.',
   },
   dashboard: {
     title: 'Panel',
-    subtitle: 'Vista en vivo del plano de control de Core Odoo.',
+    subtitle: 'Vista en vivo del plano de control de Kizuku.',
     projects: 'Proyectos',
     projectsHint: 'Proyectos registrados',
     environments: 'Entornos en marcha',
@@ -136,7 +136,7 @@ const es = {
   },
   projects: {
     title: 'Proyectos',
-    subtitle: 'Aplicaciones gestionadas por esta instalación de Core Odoo.',
+    subtitle: 'Aplicaciones gestionadas por esta instalación de Kizuku.',
     newProject: 'Nuevo proyecto',
     createTitle: 'Crear proyecto',
     createDescription: 'Registra un proyecto y genera su estructura Odoo.',
@@ -533,7 +533,7 @@ const es = {
     darkThemeHint: 'El tema oscuro es el único disponible en el Sprint 1.',
     aboutTitle: 'Acerca de',
     aboutDescription:
-      'Panel de control autoalojado al estilo Odoo.sh para Core Odoo.',
+      'Panel de control autoalojado al estilo Odoo.sh para Kizuku.',
   },
   errors: {
     generic: 'Algo salió mal.',

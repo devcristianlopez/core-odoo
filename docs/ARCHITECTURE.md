@@ -1,6 +1,6 @@
 # Architecture
 
-Core Odoo is a **self-hosted software factory** on top of Odoo 20. It provides an
+Kizuku is a **self-hosted software factory** on top of Odoo 20. It provides an
 Odoo.sh-style lifecycle (dev → staging → prod) on a single Docker host and, in a
 later phase, on Proxmox via the same provider interface.
 

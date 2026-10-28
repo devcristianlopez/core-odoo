@@ -1,6 +1,6 @@
 # site/
 
-Landing pública de Core Odoo. Es HTML, CSS y JavaScript sin build: no hay
+Landing pública de Kizuku. Es HTML, CSS y JavaScript sin build: no hay
 framework, bundler, npm, fuentes remotas, imágenes remotas ni pedidos externos.
 El sitio se puede publicar tal cual en GitHub Pages.
 

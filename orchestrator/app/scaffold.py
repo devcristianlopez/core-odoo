@@ -103,7 +103,7 @@ _FALLBACK_INDEX = """<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Core Odoo</title>
+    <title>Kizuku</title>
     <style>
       body { font-family: system-ui, sans-serif; margin: 0; display: grid;
              place-items: center; min-height: 100vh; background: #0f172a; color: #e2e8f0; }
@@ -113,7 +113,7 @@ _FALLBACK_INDEX = """<!doctype html>
   </head>
   <body>
     <main>
-      <h1>Core Odoo environment</h1>
+      <h1>Kizuku environment</h1>
       <p>This is the placeholder frontend. Replace <code>projects/&lt;name&gt;/frontend</code>.</p>
     </main>
   </body>

@@ -13,7 +13,7 @@ The agent layer has four separate pieces:
 
 ## Skills and agents
 
-The three Core Odoo skills are the workflow layer; the four upstream skills are
+The three Kizuku skills are the workflow layer; the four upstream skills are
 Odoo's house rules, copied verbatim (see `skills/UPSTREAM.md` for the ref, the
 license and the sync command).
 

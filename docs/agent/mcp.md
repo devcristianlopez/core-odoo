@@ -1,6 +1,6 @@
 # MCP server
 
-Core Odoo exposes its agent tools over the Model Context Protocol:
+Kizuku exposes its agent tools over the Model Context Protocol:
 
 ```bash
 core-odoo mcp serve

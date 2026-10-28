@@ -491,7 +491,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Core Odoo — Environment",
+  "title": "Kizuku — Environment",
   "uid": "core-environment",
   "version": 1,
   "weekStart": ""

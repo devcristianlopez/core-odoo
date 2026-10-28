@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Mission Control — visual control panel for Core Odoo",
+  "description": "Mission Control — visual control panel for Kizuku",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json && vite build",

@@ -36,7 +36,7 @@ def build_server() -> MCPServer:
     server = MCPServer(
         "core-odoo",
         instructions=(
-            "Core Odoo is an Odoo 20 software factory. Inspect the catalogue "
+            "Kizuku is an Odoo 20 software factory. Inspect the catalogue "
             "before modelling, use generators instead of writing auth/CRUD "
             "boilerplate, check before deploying, and never expose Odoo to the "
             "browser."

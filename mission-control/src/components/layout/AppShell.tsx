@@ -211,7 +211,7 @@ export function AppShell() {
         </div>
         <SidebarNav />
         <div className="border-t border-edge-muted px-4 py-3 text-[11px] text-slate-500">
-          <p className="font-medium text-slate-400">Core Odoo</p>
+          <p className="font-medium text-slate-400">Kizuku</p>
           <p>{t('app.description')}</p>
         </div>
       </aside>

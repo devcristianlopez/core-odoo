@@ -1,7 +1,7 @@
 # Observability
 
 Prometheus, Loki, Alloy, Grafana, Alertmanager, Uptime Kuma, node-exporter and
-A small Docker stats exporter for the Core Odoo control plane (cAdvisor cannot
+A small Docker stats exporter for the Kizuku control plane (cAdvisor cannot
 read Docker's containerd image store).
 
 Everything here is an **override** file: it is always started together with the
@@ -108,7 +108,7 @@ observability/
 
 Provisioned dashboards live in `observability/grafana/dashboards/` and are
 mounted read-only; add or edit JSON files there and Grafana reloads every 30 s.
-Dashboard UIs are provisioned into the `Core Odoo` folder.
+Dashboard UIs are provisioned into the `Kizuku` folder.
 
 ## Alerts
 
