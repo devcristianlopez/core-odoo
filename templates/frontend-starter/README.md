@@ -3,7 +3,7 @@
 Minimal Vite + React + TypeScript application for a Core Odoo environment.
 
 - License: Apache-2.0
-- Node 22 build stage → `nginx:alpine` runtime
+- Node 22 build stage → `nginx:1.30.6-alpine` runtime
 - `/api/*` is proxied by nginx to `http://gateway:8000` (BFF contract §6)
 - SPA fallback (`try_files … /index.html`)
 - `GET /healthz` for container health checks

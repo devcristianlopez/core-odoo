@@ -19,7 +19,7 @@ x-logging: &default-logging
 services:
   traefik:
     logging: *default-logging
-    image: traefik:v3.6
+    image: traefik:v3.7.16
     restart: unless-stopped
     environment:
       DOCKER_API_VERSION: "1.44"
@@ -148,7 +148,7 @@ services:
   #   docker compose --profile tunnel up -d
   cloudflared:
     logging: *default-logging
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.10.5
     restart: unless-stopped
     profiles:
       - tunnel

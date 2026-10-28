@@ -105,7 +105,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.32.0
     container_name: {{ compose_project }}-mailpit
     restart: unless-stopped
     expose:
