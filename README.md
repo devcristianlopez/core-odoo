@@ -60,7 +60,7 @@ Versions shipped with the repository:
 | Frontend | React 18, TypeScript 5, Vite 6, Tailwind 3, TanStack Query 5, Recharts, i18next |
 | CLI / tooling | Typer, Rich, uv, httpx |
 | Infrastructure | Docker Compose, Traefik 3.7, nginx, Mailpit |
-| Observability | Prometheus 2.55, Loki 3.7, Alloy, Grafana 13.3, Alertmanager 0.34, Uptime Kuma |
+| Observability | Prometheus 3.15, Loki 3.7, Alloy, Grafana 13.3, Alertmanager 0.34, Uptime Kuma |
 | Quality | pytest, Ruff, Vitest, ESLint, GitHub Actions |
 | Data | SQLite (control plane), `pg_dump` backups |
 

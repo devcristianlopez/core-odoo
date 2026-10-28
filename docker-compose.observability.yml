@@ -18,7 +18,7 @@ x-logging: &default-logging
 services:
   prometheus:
     logging: *default-logging
-    image: prom/prometheus:v2.55.1
+    image: prom/prometheus:v3.15.1
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
