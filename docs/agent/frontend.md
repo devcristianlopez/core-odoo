@@ -14,6 +14,12 @@ This copies `templates/agent-frontend`, writes:
 
 The template uses nginx with `/api/` and `/auth/` proxies to the gateway.
 
+The generic UI is a starting point, not a finished product: `many2one`,
+`selection` and date/datetime fields render as plain inputs. Apps that need
+selects, pickers or custom flows edit `App.tsx` (keep the generated
+`api.generated.ts` and regenerate it with `generate sdk` when `backend.yaml`
+changes).
+
 Use `--force` only when you intentionally want to replace an existing frontend:
 it removes `projects/<project>/frontend` first.
 

@@ -22,14 +22,18 @@ Tools:
 | `generate_sdk` | Typed TypeScript client |
 | `generate_frontend` | Login + generic CRUD frontend |
 | `check_project` | Contract/module/ACL/frontend validation |
-| `deploy_project` | Deploy through the orchestrator (`confirm` required for prod) |
+| `deploy_project` | Deploy through the orchestrator (`modules` to install Odoo apps, `confirm` required for prod) |
 | `rollback_environment` | Roll back to the last successful iteration (`confirm` required for prod) |
 | `restore_iteration_db` | Load an iteration dump into an environment (`confirm` required for prod) |
-| `promote_environment` | Clone a source environment into production and neutralize it |
+| `promote_environment` | Clone a source environment into production (`iteration`, `neutralize`, `skip_smoke`) |
 | `list_deploy_requests` | List production requests |
 | `request_deploy` | Request production approval |
 | `approve_deploy` / `reject_deploy` | Admin decision |
 | `environment_logs` | Tail environment logs |
+
+The CLI also exposes `core-odoo env credentials <project> --stage <stage>` for the
+generated Odoo admin password; there is no MCP tool for it (it is a human
+operation).
 
 ## OpenCode
 

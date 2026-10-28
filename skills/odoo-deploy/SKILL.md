@@ -13,8 +13,14 @@ core-odoo check <project> --catalog --frontend
 core-odoo deploy <project> --stage dev --iteration 0.1.0
 core-odoo logs <project> --stage dev --tail 200
 core-odoo env rollback <project> --stage dev   # back to the last good iteration
-core-odoo promote <project> --source staging --confirm <project>   # clone staging into prod
+core-odoo promote <project> --source staging --iteration 0.1.0 --confirm <project>
+core-odoo env credentials <project> --stage prod   # Odoo admin password + URL
 ```
+
+Promotion restores the iteration snapshot, clones the staging database and
+filestore, neutralizes cron/mail/users and wipes invoices, orders and stock; it
+requires an iteration (newest by default) and sets `last_good_iteration`. The
+Odoo backend lives at `<project>-<stage>-odoo.core-odoo.<suffix>` (allowlisted).
 
 A redeploy applies module updates (`-u`) and only succeeds when the gateway
 reports `odoo=true` within `CORE_DEPLOY_HEALTH_TIMEOUT`. A failed deploy rolls

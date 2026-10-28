@@ -11,8 +11,14 @@ Check in this order:
 1. `bootstrap` completed (`API key provisioned`).
 2. Odoo is healthy and reaches PostgreSQL.
 3. Gateway `/health` reports `odoo: true`.
-4. The Traefik router exists for the environment host.
+4. The Traefik router exists for the environment host. Traefik only publishes
+   routers for **healthy** containers, so a 404 right after a deploy usually
+   means the frontend healthcheck has not passed yet; `core-odoo deploy` waits
+   for it, a manual `docker compose up` does not.
 5. The frontend `/auth/login` and `/api/...` paths respond.
+6. The Odoo backend answers on `<project>-<stage>-odoo…` from an allowed
+   network, and `core-odoo env credentials <project> --stage <stage>` gives its
+   admin password.
 
 Odoo 20-specific failures:
 

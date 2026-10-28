@@ -1,6 +1,6 @@
 # Instalación · Installation
 
-> Core Odoo Sprint 1 — Docker provider. Documento bilingüe: español primero, English below.
+> Core Odoo — Docker provider en un solo host. Documento bilingüe: español primero, English below.
 
 ## Español
 
@@ -38,8 +38,13 @@ El dominio por defecto usa `nip.io` con la IP del host:
 
 - Panel: `http://core-odoo.<IP>.nip.io`
 - API: `http://api.core-odoo.<IP>.nip.io`
+- App de un entorno: `http://<proyecto>-<stage>.core-odoo.<IP>.nip.io`
+- Backend Odoo del entorno: `http://<proyecto>-<stage>-odoo.core-odoo.<IP>.nip.io`
 - Grafana: `http://grafana.core-odoo.<IP>.nip.io`
 - Uptime Kuma: `http://uptime.core-odoo.<IP>.nip.io`
+
+Los hostnames de entorno y del backend Odoo también responden por **https** con
+certificado autofirmado (`CORE_TLS_MODE=acme` los pasa a Let's Encrypt).
 
 El usuario y la contraseña del panel/API están en `.env`
 (`CORE_ADMIN_USER`, `CORE_ADMIN_PASSWORD`, `CORE_API_TOKEN`).
@@ -60,6 +65,13 @@ El usuario y la contraseña del panel/API están en `.env`
 Las variables `CORE_HOST_*` son obligatorias cuando el orquestador corre en
 Docker: el daemon resuelve los bind mounts en el host, no dentro del contenedor.
 `core-odoo init` y `install.sh` las completan automáticamente.
+
+| Grupo | Variables |
+|---|---|
+| Backups | `CORE_BACKUP_ENABLED`, `CORE_BACKUP_INTERVAL_HOURS`, `CORE_BACKUP_RETENTION_DAYS`, `CORE_BACKUP_OFFSITE_DIR` |
+| TLS | `CORE_TLS_MODE` (`selfsigned` o `acme`), `CORE_ACME_EMAIL` |
+| Acceso | `CORE_PANEL_ALLOWED_CIDRS`, `CORE_ODOO_UI_ALLOWED_CIDRS` |
+| Deploy | `CORE_DEPLOY_HEALTH_TIMEOUT`, `CORE_DEPLOY_HEALTH_INTERVAL`, `CORE_AUTO_ROLLBACK` |
 
 ### Validación
 
@@ -126,8 +138,13 @@ core-odoo up
 
 - Panel: `http://core-odoo.<IP>.nip.io`
 - API: `http://api.core-odoo.<IP>.nip.io`
+- Environment app: `http://<project>-<stage>.core-odoo.<IP>.nip.io`
+- Environment Odoo backend: `http://<project>-<stage>-odoo.core-odoo.<IP>.nip.io`
 - Grafana: `http://grafana.core-odoo.<IP>.nip.io`
 - Uptime Kuma: `http://uptime.core-odoo.<IP>.nip.io`
+
+Environment and Odoo backend hosts also answer over **https** with a self-signed
+certificate (`CORE_TLS_MODE=acme` switches them to Let's Encrypt).
 
 Credentials are in `.env` (`CORE_ADMIN_USER`, `CORE_ADMIN_PASSWORD`,
 `CORE_API_TOKEN`).
@@ -137,6 +154,13 @@ Credentials are in `.env` (`CORE_ADMIN_USER`, `CORE_ADMIN_PASSWORD`,
 `CORE_HOST_DATA_DIR`, `CORE_HOST_PROJECTS_DIR` and `CORE_HOST_GATEWAY_DIR` must
 be absolute host paths when the orchestrator runs in Docker. The Docker daemon
 resolves bind mounts on the host. `core-odoo init` and `install.sh` fill them.
+
+| Group | Variables |
+|---|---|
+| Backups | `CORE_BACKUP_ENABLED`, `CORE_BACKUP_INTERVAL_HOURS`, `CORE_BACKUP_RETENTION_DAYS`, `CORE_BACKUP_OFFSITE_DIR` |
+| TLS | `CORE_TLS_MODE` (`selfsigned` or `acme`), `CORE_ACME_EMAIL` |
+| Access | `CORE_PANEL_ALLOWED_CIDRS`, `CORE_ODOO_UI_ALLOWED_CIDRS` |
+| Deploy | `CORE_DEPLOY_HEALTH_TIMEOUT`, `CORE_DEPLOY_HEALTH_INTERVAL`, `CORE_AUTO_ROLLBACK` |
 
 ### Validation
 

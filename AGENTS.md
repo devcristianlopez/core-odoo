@@ -35,20 +35,23 @@ generator, so the project name and the module name never collide. Deploy after
 that first module exists, otherwise Odoo boots with `base` and `web` only.
 
 ```bash
-# 1. What already exists?
-core-odoo --json catalog models crm-demo --stage dev --model res.partner
+# 0. Create the project (empty: addons + frontend, no module yet)
+core-odoo project create <project>
+
+# 1. What already exists? (needs a deployed environment)
+core-odoo --json catalog models <project> --stage dev --model res.partner
 
 # 2. Generate an Odoo 20 module (model, ACL, views, tests)
-core-odoo generate module crm-demo crm_demo \
-  --title "CRM Demo" \
-  --model lead \
-  --fields "name:char;contact_name:char;email:char;stage:selection=new:New|contacted:Contacted|won:Won;expected_revenue:float;notes:text"
+core-odoo generate module <project> <module> \
+  --title "<Module title>" \
+  --model <model> \
+  --fields "name:char;email:char;stage:selection=new:New|won:Won;notes:text"
 
 # 3. Add the BFF resource (gateway + OpenAPI)
-core-odoo generate resource crm-demo leads \
-  --model crm_demo.lead \
-  --fields name,contact_name,email,stage,expected_revenue,notes \
-  --search-fields name,contact_name,email
+core-odoo generate resource <project> <resource> \
+  --model <module>.<model> \
+  --fields name,email,stage,notes \
+  --search-fields name,email
 
 # 4. For a new project, generate a complete login + CRUD frontend
 #    (this also writes the typed SDK). Skip it for an existing custom app.
@@ -61,9 +64,17 @@ core-odoo generate sdk <project> --stage dev --output frontend/src/api.generated
 core-odoo check <project> --catalog --frontend
 
 # 6. Deploy and inspect
-core-odoo deploy crm-demo --stage dev
-# A redeploy applies module updates (-u); `core-odoo env rollback` recovers a failed deploy.
-core-odoo logs crm-demo --stage dev
+core-odoo deploy <project> --stage dev
+# A redeploy applies module updates (-u); a failed deploy rolls back to
+# last_good_iteration, and `core-odoo env rollback` recovers by hand.
+core-odoo logs <project> --stage dev
+
+# 7. Promote (needs an iteration; restores its snapshot, copies the filestore,
+#    wipes the cloned documents and sets last_good_iteration)
+core-odoo promote <project> --iteration 0.1.0 --confirm <project>
+
+# 8. The Odoo backend (crons, mail, accounting) and its generated admin password
+core-odoo env credentials <project> --stage dev
 ```
 
 Field grammar:
@@ -91,6 +102,8 @@ core-odoo iteration backup <project> 0.1.0 --stage dev
 core-odoo deploy <project> --stage dev --iteration 0.1.0
 # Production requires --confirm <project>, an iteration and an iteration backup
 core-odoo deploy <project> --stage prod --iteration 0.1.0 --confirm <project>
+# Preferred: clone staging (iteration optional, newest by default)
+core-odoo promote <project> --source staging --iteration 0.1.0 --confirm <project>
 ```
 
 A snapshot copies the project source (without `node_modules`, `dist`, caches or

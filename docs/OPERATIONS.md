@@ -1,6 +1,6 @@
 # Operación · Operations
 
-> Core Odoo Sprint 1. Bilingüe: español primero, English below.
+> Core Odoo — operación. Bilingüe: español primero, English below.
 
 ## Español
 
@@ -233,7 +233,7 @@ deploy con los guardrails de producción.
 ### Backups
 
 ```bash
-core-odoo backup <nombre> dev
+core-odoo backup <nombre> --stage dev
 ```
 
 Los archivos quedan en `data/backups/<proyecto>-<stage>/`. El orquestador expone
@@ -542,7 +542,7 @@ The previous production database is discarded.
 
 ### Backups and observability
 
-`core-odoo backup <name> <stage>` writes to
+`core-odoo backup <name> --stage <stage>` writes to
 `data/backups/<project>-<stage>/`. Prometheus/Loki/Alertmanager are internal;
 Grafana and Uptime Kuma are routed through Traefik. Custom metrics:
 `core_odoo_up`, `core_odoo_environments_total`, `core_deploy_total`,

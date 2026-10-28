@@ -55,7 +55,7 @@ Each stage is an isolated Docker Compose project:
 | Stage | Purpose | Data | Limits |
 |---|---|---|---|
 | dev | day-to-day development and module tests | fresh DB | 2 GB / 2 CPU |
-| staging | isolated environment to validate before release (prod clone + neutralization is planned) | own DB | 3 GB / 2 CPU |
+| staging | isolated environment to validate before release; `promote` clones it into prod | own DB | 3 GB / 2 CPU |
 | prod | live | persistent | 4 GB / 4 CPU |
 
 Naming: `core-<project>-<stage>`. Isolated networks and volumes; attached to the
@@ -115,8 +115,11 @@ automatic rollback to `last_good_iteration` when a deploy fails
 ## Security boundaries
 
 1. Only ports 80/443 are published (Traefik).
-2. Odoo and PostgreSQL are never routed publicly.
-3. Per-environment secrets are generated at deploy time.
+2. Apps reach Odoo only through the gateway. The Odoo backend UI is routed on
+   `<project>-<stage>-odoo…` but restricted to the operator network with an IP
+   allowlist (`CORE_ODOO_UI_ALLOWED_CIDRS`); PostgreSQL is never routed.
+3. Per-environment secrets are generated at deploy time, including the Odoo
+   `admin` password (readable through the credentials endpoint and the panel).
 4. The orchestrator uses a scoped Docker socket access; the API is token/JWT
    protected.
 5. Cloudflare Tunnel is optional and exposes only the panel during testing.
@@ -138,9 +141,12 @@ covers availability, latency, errors, disk, backups, deploys and Odoo cron.
    neutralization behind a staging smoke gate; panel self-service; automatic
    rollback on failed deploys. Identity model in
    [ADR 0001](adr/0001-panel-local-identidad-por-entorno.md).
-3. Reliability: auto-stop, quotas and retention.
-4. Distribution: installer, GHCR images, releases, upgrade path.
-5. Proxmox provider with parity.
+3. **Operational hardening (done):** scheduled backups with offsite mirror,
+   TLS (self-signed, ACME opt-in), per-environment credentials, deep promotion
+   neutralization and log rotation.
+4. Reliability: auto-stop and quotas.
+5. Distribution: GHCR images, releases, upgrade path.
+6. Proxmox provider with parity.
 
 ## Odoo 20 specifics (validated)
 

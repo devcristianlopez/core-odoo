@@ -12,8 +12,8 @@ The agent layer has four separate pieces:
 ## Catalogue
 
 ```bash
-core-odoo --json catalog models crm-demo --stage dev
-core-odoo --json catalog models crm-demo --stage dev --model res.partner
+core-odoo --json catalog models <project> --stage dev
+core-odoo --json catalog models <project> --stage dev --model res.partner
 ```
 
 The JSON for a specific model contains:
@@ -57,7 +57,8 @@ the rest of the YAML.
 - `generate sdk` from `backend.yaml` + Odoo catalogue,
 - `generate frontend` for a login + generic CRUD app,
 - `check` for contract, manifest, ACL, XML, Python and optional frontend build,
-- an MCP server exposing catalogue/generate/check/deploy/logs as tools,
+- an MCP server exposing catalogue/generate/check/deploy/logs, rollback, database
+  restore and promotion as tools,
 - multi-agent compatibility files and skill links.
 
 ## Next increments

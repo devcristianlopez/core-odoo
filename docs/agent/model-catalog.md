@@ -7,13 +7,13 @@ returns `ir.model`, `ir.model.fields` and `ir.access` data. It is read-only.
 
 ```bash
 # Summary of installed models
-core-odoo --json catalog models crm-demo --stage dev
+core-odoo --json catalog models <project> --stage dev
 
 # Machine-readable summary
-core-odoo --json catalog models crm-demo --stage dev
+core-odoo --json catalog models <project> --stage dev
 
 # One model with fields and ACL
-core-odoo --json catalog models crm-demo --stage dev --model res.partner
+core-odoo --json catalog models <project> --stage dev --model res.partner
 ```
 
 ## Why not read the source?

@@ -21,6 +21,9 @@ __MODULE__/
 
 ## Scaffold
 
+Projects default to the empty template (no addon); use this one when you want the
+skeleton installed with the project:
+
 ```bash
 core-odoo project create my-project --template odoo-module
 # placeholders are replaced with the project/module name

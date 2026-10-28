@@ -9,15 +9,15 @@ Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
-> Estado: Sprint 2 cerrado (rollback, health gate, DB restore, promote con
-> neutralización y smoke gate, autoservicio del panel y auto-rollback). Sigue
-> Reliability: auto-stop, quotas y retención. Docker provider first; Proxmox
-> provider is next.
+> Estado: operativo en un host Docker. Entornos, auto-rollback, backups
+> programados (con copia offsite opcional), promociones con neutralización,
+> TLS, credenciales por entorno y observabilidad ya están. Siguen auto-stop,
+> quotas y distribución (GHCR, releases); después, el provider Proxmox.
 
 Projects start empty: creating one only lays out its addons and frontend, and
-the first module comes from the generator. They live in `projects/` on the host and are
-**local-only** (gitignored): the repository ships the templates, not the apps.
-Keep each project's history in its own repository when it needs one.
+the first module comes from the generator. They live in `projects/` on the host
+and are **local-only** (gitignored): the repository ships the templates, not the
+apps. Keep each project's history in its own repository when it needs one.
 
 ## Quick start
 
@@ -38,7 +38,11 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Environment pipeline** — one isolated Compose project per stage.
 - **Versioned iterations** — immutable source snapshots, database backup/restore and deploy history.
 - **Module lifecycle** — scaffold, install, snapshot, approved prod deploy.
-- **Observability** — Prometheus, Loki, Grafana, Alertmanager, Uptime Kuma.
+- **Promotion with neutralization** — clone staging into prod, wipe its documents and keep `last_good_iteration`.
+- **Scheduled backups** — one dump per environment plus the control plane, 7-day retention, optional offsite mirror.
+- **TLS and operator access** — self-signed HTTPS (or ACME with a public domain) and the Odoo backend on the operator network only.
+- **Per-environment credentials** — generated Odoo admin password, readable from the panel or `core-odoo env credentials`.
+- **Observability** — Prometheus, Loki (14-day retention), Grafana, Alertmanager, Uptime Kuma.
 - **Mission Control** — visual panel for projects, environments, metrics and logs.
 - **Bilingual** — Spanish and English (UI, CLI, docs).
 - **Multi-user panel** — global roles plus per-project owner/developer/viewer membership.
@@ -60,6 +64,8 @@ core-odoo generate frontend <project> --stage dev
 core-odoo check <project> --catalog --frontend
 core-odoo mcp serve   # MCP tools for OpenCode/Claude/Cursor
 core-odoo iteration create <project> --version 0.1.0 --title "First release"
+core-odoo promote <project> --iteration 0.1.0 --confirm <project>
+core-odoo env credentials <project> --stage dev
 ```
 
 ### Development

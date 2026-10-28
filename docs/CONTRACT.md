@@ -1,4 +1,4 @@
-# Core Odoo — Interface Contract (Sprint 1)
+# Core Odoo — Interface Contract
 
 This document is the single source of truth for all components. Do not change
 an interface without updating this file and notifying the orchestrator.
@@ -45,7 +45,13 @@ Given host IP `<IP>` (e.g. `192.168.1.50`):
 - Alertmanager: `alerts.core-odoo.<IP>.nip.io` (basic auth)
 - Uptime Kuma: `uptime.core-odoo.<IP>.nip.io`
 - Environment app: `<project>-<stage>.core-odoo.<IP>.nip.io`
-- Odoo backend (internal only, never routed publicly): `odoo` service name
+- Environment Odoo backend: `<project>-<stage>-odoo.core-odoo.<IP>.nip.io`
+  (operator network only, guarded by `CORE_ODOO_UI_ALLOWED_CIDRS`)
+
+The environment app and the Odoo backend also answer on `websecure` with
+Traefik's self-signed certificate; `CORE_TLS_MODE=acme` switches those routers
+to the `le` resolver. Inside the environment, Odoo is still only reachable as
+the `odoo` service on the internal network.
 
 Cloudflared quick tunnel exposes only `http://traefik:80` for the panel during
 testing. The URL is ephemeral by design.
@@ -74,6 +80,16 @@ CORE_DOCKER_SOCKET=/var/run/docker.sock
 CORE_DEPLOY_HEALTH_TIMEOUT=300
 CORE_DEPLOY_HEALTH_INTERVAL=5
 CORE_AUTO_ROLLBACK=true
+# Operator access and TLS for environment hosts.
+CORE_PANEL_ALLOWED_CIDRS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+CORE_ODOO_UI_ALLOWED_CIDRS=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+CORE_TLS_MODE=selfsigned
+CORE_ACME_EMAIL=
+# Scheduled backups.
+CORE_BACKUP_ENABLED=true
+CORE_BACKUP_INTERVAL_HOURS=24
+CORE_BACKUP_RETENTION_DAYS=7
+CORE_BACKUP_OFFSITE_DIR=
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=<generated>
 PROMETHEUS_RETENTION=15d
@@ -248,22 +264,30 @@ Security rules:
   and normalises the returned id.
 - The gateway never forwards Odoo's raw error tracebacks; it returns a stable
   error envelope `{error: {code, message, details?}}`.
-- Odoo is never exposed to the browser.
+- Apps never talk to Odoo directly: the browser only reaches the gateway. The
+  Odoo backend UI is routed separately to the operator network behind an IP
+  allowlist (see §3).
 
 ## 7. Odoo environment
 
 - Image: `odoo:20`
 - DB: `postgres:16-alpine`
 - `proxy_mode = True`
-- Odoo listens on `0.0.0.0:8069` inside the environment network only. The
-  generated `odoo.conf` sets `http_interface = 0.0.0.0` (Odoo 20 defaults to
-  loopback in this image), so the gateway can reach `/web/login` and `/json/2`.
+- Odoo listens on `0.0.0.0:8069`. The generated `odoo.conf` sets
+  `http_interface = 0.0.0.0` (Odoo 20 defaults to loopback in this image), so the
+  gateway can reach `/web/login` and `/json/2`. The container also joins
+  `core-edge` so Traefik can publish the backend UI, restricted to
+  `CORE_ODOO_UI_ALLOWED_CIDRS`.
 - First boot installs `base`, `web` and the project modules. `web` provides the
   login page and session endpoints used by the gateway.
 - Odoo 20 permissions use `security/ir.access.csv` (`ir.access` model,
   `operation=crud`), not the Odoo 19 `ir.model.access.csv` format.
-- Master password and DB password are generated per environment.
+- Master password, DB password and the `admin` user password are generated per
+  environment: `GET /projects/{name}/environments/{stage}/credentials` returns the
+  admin one to callers with write access.
 - Mail: SMTP -> `mailpit:1025` for `dev`/`staging`; disabled for `prod` by default.
+- The backend UI is published at `<project>-<stage>-odoo.core-odoo.<suffix>`
+  behind `CORE_ODOO_UI_ALLOWED_CIDRS`; `web.base.url` is pinned to it on deploy.
 - `prod` uses `--workers=2`; `dev`/`staging` use `--workers=0`.
 - Addons mounted from `projects/<name>/odoo/addons`.
 - A redeploy of an existing environment runs
@@ -307,15 +331,18 @@ core-odoo up | down | restart | status
 core-odoo project create <name> [--template <template>]
 core-odoo project list
 core-odoo project delete <name> [--confirm <name>] [--purge]
-core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--iteration <version>] [--confirm <name>]
+core-odoo deploy <name> --stage dev|staging|prod [--branch <branch>] [--modules <a,b>] [--iteration <version>] [--confirm <name>]
 core-odoo iteration list <name>
 core-odoo iteration create <name> --version <version> --title <title>
 core-odoo iteration restore <name> <version>
 core-odoo iteration diff <name> <version> [--against <version>]
 core-odoo iteration backup <name> <version> --stage <stage>
+core-odoo iteration restore-db <name> <version> --stage <stage> [--confirm <name>]
+core-odoo promote <name> --source staging [--iteration <version>] [--confirm <name>] [--neutralize/--no-neutralize] [--skip-smoke]
 core-odoo env stop|start|restart <name> --stage <stage>
 core-odoo env rollback <name> --stage <stage> [--confirm <name>]
 core-odoo env delete <name> --stage <stage> [--confirm <name>/<stage>]
+core-odoo env credentials <name> --stage <stage>
 core-odoo logs <name> --stage <stage> [--tail 200]
 core-odoo backup <name> --stage <stage>
 core-odoo upgrade
@@ -358,7 +385,7 @@ core-odoo/
 └── LICENSE
 ```
 
-## 12. Definition of done (Sprint 1)
+## 12. Definition of done
 
 1. `core-odoo init && core-odoo up` works on a clean Docker host.
 2. `core-odoo project create smoke-test && core-odoo deploy smoke-test --stage dev`
@@ -366,4 +393,9 @@ core-odoo/
 3. Mission Control lists the project/environment with metrics and logs.
 4. A simulated failure triggers an alert.
 5. `core-odoo project delete smoke-test` leaves no containers, networks or volumes.
-6. Docs exist in ES and EN.
+6. A failed deploy returns to `last_good_iteration` automatically.
+7. `core-odoo promote` clones staging into prod, wipes its documents and leaves
+   `last_good_iteration` set.
+8. Scheduled backups and the control-plane copy run, prune and mirror offsite.
+9. The environment answers over https and the generated admin password logs in.
+10. Docs exist in ES and EN.
