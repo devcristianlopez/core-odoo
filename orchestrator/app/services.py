@@ -49,6 +49,7 @@ def build_spec(settings: Settings, project: Project, environment: Environment) -
         master_password=environment.master_password,
         odoo_api_key=environment.odoo_api_key,
         gateway_jwt_secret=environment.gateway_jwt_secret,
+        admin_password=environment.admin_password or "",
         domain_suffix=settings.core_domain_suffix,
         template=project.template,
         branch=environment.branch,
@@ -58,6 +59,18 @@ def build_spec(settings: Settings, project: Project, environment: Environment) -
 
 def environment_url(settings: Settings, project: str, stage: str) -> str:
     return f"http://{project}-{stage}.core-odoo.{settings.core_domain_suffix}"
+
+
+def odoo_url_for(project_name: str, environment: Environment) -> str | None:
+    """Backend URL of an environment, derived from its frontend URL."""
+    url = environment.url
+    if "://" not in url:
+        return None
+    scheme, host = url.split("://", 1)
+    prefix = f"{project_name}-{environment.stage}."
+    if not host.startswith(prefix):
+        return None
+    return f"{scheme}://{project_name}-{environment.stage}-odoo.{host[len(prefix):]}"
 
 
 def environment_read(
@@ -78,6 +91,7 @@ def environment_read(
         last_good_iteration=environment.last_good_iteration,
         last_good_at=environment.last_good_at,
         auto_rolled_back=auto_rolled_back,
+        odoo_url=odoo_url_for(project_name, environment),
         created_at=environment.created_at,
         updated_at=environment.updated_at,
     )

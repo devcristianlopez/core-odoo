@@ -35,6 +35,7 @@ class EnvironmentSpec:
     template: str = "empty"
     branch: str | None = None
     modules: list[str] = field(default_factory=list)
+    admin_password: str = ""
 
     @property
     def url(self) -> str:
@@ -99,6 +100,8 @@ class EnvironmentProvider(Protocol):
     def neutralize_database(self, spec: EnvironmentSpec, base_url: str) -> None: ...
 
     def copy_filestore(self, source: EnvironmentSpec, target: EnvironmentSpec) -> None: ...
+
+    def neutralize_business_data(self, spec: EnvironmentSpec) -> None: ...
 
     def smoke(self, spec: EnvironmentSpec) -> tuple[bool, str]: ...
 

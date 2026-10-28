@@ -62,6 +62,13 @@ class UserRead(BaseModel):
     created_at: datetime
 
 
+class EnvironmentCredentials(BaseModel):
+    admin_user: str = "admin"
+    admin_password: str | None = None
+    odoo_url: str | None = None
+    database: str
+
+
 class EnvironmentRead(BaseModel):
     project: str
     stage: str
@@ -74,6 +81,7 @@ class EnvironmentRead(BaseModel):
     last_good_iteration: str | None = None
     last_good_at: datetime | None = None
     auto_rolled_back: bool = False
+    odoo_url: str | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -236,6 +236,7 @@ const es = {
   },
   environment: {
     backToProject: 'Volver a {{project}}',
+    openOdoo: 'Abrir el backend de Odoo',
     notFoundTitle: 'Entorno no encontrado',
     notFoundDescription: 'Puede que se haya eliminado o que aún no esté desplegado.',
     loadError: 'No se pudo cargar el entorno.',

@@ -127,6 +127,7 @@ def test_promote_clones_and_neutralizes_staging(
         "restore_database",
         "copy_filestore",
         "neutralize_database",
+        "neutralize_business_data",
         "deploy",
     ]
     dump = harness.provider.restored_dumps[-1]

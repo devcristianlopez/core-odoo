@@ -235,6 +235,7 @@ const en = {
   },
   environment: {
     backToProject: 'Back to {{project}}',
+    openOdoo: 'Open the Odoo backend',
     notFoundTitle: 'Environment not found',
     notFoundDescription: 'It may have been deleted or not deployed yet.',
     loadError: 'Could not load the environment.',

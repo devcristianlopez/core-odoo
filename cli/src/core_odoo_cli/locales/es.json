@@ -175,5 +175,10 @@
   "opt.source_stage": "Entorno de origen de la promoción.",
   "opt.neutralize": "Neutralizar la base clonada (correo, cron y usuarios de prueba).",
   "msg.deploy_auto_rolled_back": "El deploy fallo; {name}/{stage} volvio a la iteracion {iteration}.",
-  "opt.skip_smoke": "No ejecutar el smoke gate del entorno de origen."
+  "opt.skip_smoke": "No ejecutar el smoke gate del entorno de origen.",
+  "cmd.env.credentials": "Muestra las credenciales del backend Odoo de un entorno.",
+  "msg.credentials_odoo": "Odoo",
+  "msg.credentials_user": "Usuario",
+  "msg.credentials_password": "Contraseña",
+  "msg.credentials_database": "Base de datos"
 }

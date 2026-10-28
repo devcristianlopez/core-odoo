@@ -67,6 +67,19 @@ cuándo es válida y, al expirar, el panel vuelve al login. No hay recuperación
 por correo: si alguien pierde la contraseña, un `admin` la resetea con
 `PATCH /users/{username}`.
 
+### TLS y credenciales del backend
+
+Cada entorno responde por HTTP y HTTPS (`https://<proyecto>-<stage>-odoo…` y
+`https://<proyecto>-<stage>…`) con el certificado autofirmado de Traefik: el
+tráfico va cifrado, pero el navegador avisa. Para certificados reales hace falta
+un `certresolver` ACME con un dominio público.
+
+La contraseña de `admin` de Odoo se genera por entorno; se consulta con:
+
+```bash
+core-odoo env credentials <proyecto> --stage <stage>
+```
+
 ### Backend de Odoo (cron, correo, reportes)
 
 Cada entorno expone su propio backend en
@@ -396,6 +409,19 @@ The session is a JWT with an expiry (`CORE_JWT_TTL`); Settings shows how long it
 is valid and the panel returns to the login page when it expires. There is no
 email recovery: an `admin` resets a lost password with
 `PATCH /users/{username}`.
+
+### TLS and backend credentials
+
+Every environment answers over HTTP and HTTPS
+(`https://<project>-<stage>-odoo…` and `https://<project>-<stage>…`) with
+Traefik's self-signed certificate: traffic is encrypted but browsers warn. Real
+certificates need an ACME `certresolver` with a public domain.
+
+The Odoo `admin` password is generated per environment; read it with:
+
+```bash
+core-odoo env credentials <project> --stage <stage>
+```
 
 ### Odoo backend (cron, mail, reports)
 

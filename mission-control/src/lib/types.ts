@@ -27,6 +27,7 @@ export interface Environment {
   last_good_iteration?: string | null
   last_good_at?: string | null
   auto_rolled_back?: boolean
+  odoo_url?: string | null
   created_at?: string | null
   updated_at?: string | null
 }

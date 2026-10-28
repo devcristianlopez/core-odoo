@@ -231,6 +231,9 @@ class OrchestratorClient:
         payload = self._request("GET", f"/projects/{name}/iterations/{version}/backups")
         return payload if isinstance(payload, list) else []
 
+    def environment_credentials(self, name: str, stage: str) -> dict[str, Any]:
+        return self._request("GET", f"/projects/{name}/environments/{stage}/credentials")
+
     # -------------------------------------------------------------- environments
 
     def deploy(

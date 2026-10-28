@@ -129,6 +129,7 @@ password: the current one must match and the new one must differ and be at least
 | POST | `/projects/{name}/environments/{stage}/rollback` | `{confirm?}` | `Environment` |
 | DELETE | `/projects/{name}/environments/{stage}` | `?confirm=<name>/<stage>` | `{deleted: true}` |
 | GET | `/projects/{name}/environments/{stage}/logs` | `?tail=200` | `{logs: string}` |
+| GET | `/projects/{name}/environments/{stage}/credentials` | – | `{admin_user, admin_password, odoo_url, database}` (write access) |
 | POST | `/projects/{name}/environments/{stage}/backup` | – | `{backup: true, path, created_at}` |
 | GET | `/metrics/query` | `?query=<promql>` | Prometheus JSON passthrough |
 | GET | `/audit` | `?limit=100` | `[AuditEvent]` |
@@ -189,8 +190,10 @@ from that dump, neutralizes it and redeploys with module updates and the health
 gate. Promotion always requires `admin` and `confirm` equal to the project name,
 and creates the `prod` environment when it does not exist yet. Neutralization
 (`neutralize`, default `true`) disables `ir_cron` and `ir_mail_server`, deactivates
-every user except `admin` and `core_gateway`, and points `web.base.url` at the
-production URL. The dump is kept under `data/backups/<project>-<source>/`. It
+every user except `admin` and `core_gateway`, points `web.base.url` at the
+production URL, and truncates the transactional tables cloned from the source
+(invoices, orders, stock moves, quants and their sequences). Master data
+(company, chart of accounts, products, services, contacts) is kept. The dump is kept under `data/backups/<project>-<source>/`. It
 returns `404` when the source environment is missing, `409` when the source has
 never been deployed and `502` when the clone, the neutralization or the deploy
 fails (production is then `error`). A successful promotion sets

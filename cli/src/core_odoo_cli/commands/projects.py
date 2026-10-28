@@ -275,6 +275,22 @@ def promote(
     )
 
 
+def env_credentials(
+    ctx: typer.Context,
+    name: str = argument("arg.name"),
+    stage: Stage = option("opt.stage", Stage.dev, "--stage"),
+) -> None:
+    """Show the Odoo backend credentials of an environment."""
+    payload = _client(ctx).environment_credentials(name, stage.value)
+    if machine_output():
+        emit(payload)
+        return
+    console.print(f"{t('msg.credentials_odoo')}: {payload.get('odoo_url') or '-'}")
+    console.print(f"{t('msg.credentials_user')}: {payload.get('admin_user', 'admin')}")
+    console.print(f"{t('msg.credentials_password')}: {payload.get('admin_password') or '-'}")
+    console.print(f"{t('msg.credentials_database')}: {payload.get('database') or '-'}")
+
+
 def env_rollback(
     ctx: typer.Context,
     name: str = argument("arg.name", ...),

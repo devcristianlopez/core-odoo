@@ -18,6 +18,7 @@ ADDITIVE_COLUMNS: dict[str, dict[str, str]] = {
     "environments": {
         "last_good_iteration": "VARCHAR(32)",
         "last_good_at": "DATETIME",
+        "admin_password": "VARCHAR(128)",
     },
 }
 

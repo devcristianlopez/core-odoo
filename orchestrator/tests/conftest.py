@@ -103,6 +103,9 @@ class FakeProvider:
         self.copied_filestores.append((source.compose_project, target.compose_project))
         self._record("copy_filestore", target)
 
+    def neutralize_business_data(self, spec: EnvironmentSpec) -> None:
+        self._record("neutralize_business_data", spec)
+
     def docker_info(self) -> DockerInfo:
         return DockerInfo(available=True, version="test")
 

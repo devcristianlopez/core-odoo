@@ -20,6 +20,14 @@ else:
             ]
         }
     )
+# The environment's admin password is generated per deployment; Odoo ships
+# admin/admin otherwise.
+admin_password = os.environ.get("ODOO_ADMIN_PASSWORD")
+if admin_password:
+    admin = env["res.users"].browse(2)
+    if admin.exists():
+        admin.write({"password": admin_password})
+
 # Email and report links must point at the environment's public URL; the
 # gateway logs in through http://odoo:8069 and would otherwise overwrite it.
 public_url = os.environ.get("CORE_PUBLIC_URL")

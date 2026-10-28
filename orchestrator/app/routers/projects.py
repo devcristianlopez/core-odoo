@@ -38,6 +38,7 @@ from ..schemas import (
     DeploymentRequestCreate,
     DeploymentRequestRead,
     DeployRequest,
+    EnvironmentCredentials,
     EnvironmentRead,
     LogsResponse,
     ProjectAccessRead,
@@ -57,6 +58,7 @@ from ..services import (
     environment_read,
     environment_url,
     new_secret,
+    odoo_url_for,
     project_read,
     record_audit,
     restore_iteration_snapshot,
@@ -651,6 +653,7 @@ def deploy(
             master_password=new_secret(24),
             odoo_api_key=new_secret(32),
             gateway_jwt_secret=new_secret(32),
+            admin_password=new_secret(16),
             created_at=now,
             updated_at=now,
         )
@@ -664,6 +667,8 @@ def deploy(
             environment.modules = list(payload.modules)
         environment.status = "provisioning"
         environment.updated_at = now
+        if not environment.admin_password:
+            environment.admin_password = new_secret(16)
     session.commit()
     session.refresh(environment)
 
@@ -951,6 +956,36 @@ def rollback_environment(
     return environment_read(name, environment)
 
 
+@router.get(
+    "/projects/{name}/environments/{stage}/credentials",
+    response_model=EnvironmentCredentials,
+)
+def environment_credentials(
+    name: str,
+    stage: str,
+    session: SessionDep,
+    settings: SettingsDep,
+) -> EnvironmentCredentials:
+    """Admin credentials of an environment's Odoo backend."""
+    project = _get_project(session, name)
+    environment = session.exec(
+        select(Environment).where(
+            Environment.project_id == project.id,
+            Environment.stage == stage,
+        )
+    ).first()
+    if environment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"environment {stage} not found",
+        )
+    return EnvironmentCredentials(
+        admin_password=environment.admin_password,
+        odoo_url=odoo_url_for(name, environment),
+        database=environment.db_name,
+    )
+
+
 @router.post("/projects/{name}/promote", response_model=EnvironmentRead)
 def promote_environment(
     name: str,
@@ -1066,6 +1101,7 @@ def promote_environment(
             master_password=new_secret(24),
             odoo_api_key=new_secret(32),
             gateway_jwt_secret=new_secret(32),
+            admin_password=new_secret(16),
             created_at=now,
             updated_at=now,
         )
@@ -1073,6 +1109,8 @@ def promote_environment(
     else:
         target.status = "provisioning"
         target.updated_at = now
+        if not target.admin_password:
+            target.admin_password = new_secret(16)
     session.commit()
     session.refresh(target)
 
@@ -1090,6 +1128,7 @@ def promote_environment(
         provider.copy_filestore(source_spec, target_spec)
         if payload.neutralize:
             provider.neutralize_database(target_spec, target_spec.url)
+            provider.neutralize_business_data(target_spec)
         result = provider.deploy(target_spec, update=target_existed)
     except ProviderError as exc:
         target.status = "error"

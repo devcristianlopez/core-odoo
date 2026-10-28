@@ -72,6 +72,7 @@ class Environment(SQLModel, table=True):
     db_password: str = Field(max_length=128)
     master_password: str = Field(max_length=128)
     odoo_api_key: str = Field(max_length=128)
+    admin_password: str | None = Field(default=None, max_length=128)
     gateway_jwt_secret: str = Field(max_length=128)
 
     created_at: datetime = Field(default_factory=utcnow)

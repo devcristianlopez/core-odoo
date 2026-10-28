@@ -68,6 +68,33 @@ UPDATE ir_config_parameter SET value = '{base_url}'
 """
 
 
+# Transactional data cloned from staging must not reach production. The table
+# list is truncated only when the module that owns it is installed; CASCADE
+# removes the lines, and the document sequences restart from one.
+NEUTRALIZE_DATA_SQL = """\
+DO $$
+DECLARE t text;
+BEGIN
+  -- Ordered deletes, never TRUNCATE ... CASCADE: res_company keeps a foreign
+  -- key to account_move, so a cascade would wipe the company, its users and
+  -- every contact with it.
+  FOREACH t IN ARRAY ARRAY[
+    'stock_move_line', 'stock_valuation_layer', 'stock_move', 'stock_quant',
+    'account_move_line', 'account_partial_reconcile', 'account_full_reconcile',
+    'account_payment', 'account_bank_statement_line', 'account_bank_statement',
+    'account_move', 'sale_order_line', 'sale_order', 'purchase_order_line',
+    'purchase_order'
+  ] LOOP
+    IF to_regclass(t) IS NOT NULL THEN
+      EXECUTE format('DELETE FROM %I', t);
+    END IF;
+  END LOOP;
+END $$;
+DELETE FROM ir_sequence WHERE code LIKE 'account.move%%'
+   OR code IN ('sale.order', 'purchase.order', 'stock.picking', 'stock.move');
+"""
+
+
 def run_command(
     args: Sequence[str],
     *,
@@ -304,6 +331,26 @@ class DockerProvider:
                 "could not copy the Odoo filestore", details=detail[-2000:] or None
             )
 
+    def neutralize_business_data(self, spec: EnvironmentSpec) -> None:
+        """Drop documents cloned from the source: invoices, orders and stock."""
+        self._require_rendered(spec)
+        self._ensure_database_ready(spec)
+        self._run(
+            spec,
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "odoo",
+            "-d",
+            spec.db_name,
+            "-v",
+            "ON_ERROR_STOP=1",
+            timeout=COMPOSE_TIMEOUT_SECONDS,
+            input=NEUTRALIZE_DATA_SQL,
+        )
+
     def smoke(self, spec: EnvironmentSpec) -> tuple[bool, str]:
         """Read-only gate: services running and the gateway reports odoo=true."""
         self._require_rendered(spec)
@@ -367,6 +414,7 @@ class DockerProvider:
             "odoo_host": odoo_host,
             "odoo_ui_cidrs": self._settings.core_odoo_ui_allowed_cidrs,
             "public_url": f"http://{odoo_host}",
+            "admin_password": spec.admin_password,
             "cpu_limit": cpu_limit,
             "memory_limit": memory_limit,
             "smtp_enabled": spec.stage != "prod",

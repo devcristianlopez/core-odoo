@@ -305,6 +305,22 @@ def test_prepare_renders_compose_without_starting(
     assert all("up" not in call for call in runner.calls)
 
 
+def test_neutralize_business_data_truncates_documents(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    runner = RecordingRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    env_spec.compose_file.write_text("name: x\n", encoding="utf-8")
+
+    provider.neutralize_business_data(env_spec)
+
+    sql = runner.inputs[-1] or ""
+    assert "DELETE FROM %I" in sql
+    assert "TRUNCATE TABLE" not in sql
+    assert "account_move" in sql and "sale_order" in sql and "stock_quant" in sql
+    assert "DELETE FROM ir_sequence" in sql
+
+
 def test_neutralize_database_disables_mail_cron_and_test_users(
     provider_settings: Settings, env_spec: EnvironmentSpec
 ) -> None:

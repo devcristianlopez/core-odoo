@@ -175,5 +175,10 @@
   "opt.source_stage": "Environment the promotion clones from.",
   "opt.neutralize": "Neutralize the cloned database (mail, cron and test users).",
   "msg.deploy_auto_rolled_back": "Deploy failed; {name}/{stage} rolled back to iteration {iteration}.",
-  "opt.skip_smoke": "Do not run the source environment smoke gate."
+  "opt.skip_smoke": "Do not run the source environment smoke gate.",
+  "cmd.env.credentials": "Show the Odoo backend credentials of an environment.",
+  "msg.credentials_odoo": "Odoo",
+  "msg.credentials_user": "User",
+  "msg.credentials_password": "Password",
+  "msg.credentials_database": "Database"
 }

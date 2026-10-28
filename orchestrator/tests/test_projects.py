@@ -168,3 +168,26 @@ def test_deleting_a_project_removes_its_iterations(
         headers=auth_headers,
     )
     assert again.status_code == 201, again.text
+
+
+def test_environment_credentials_are_generated(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    deployed = harness.client.post(
+        "/api/v1/projects/smoke-test/deploy",
+        json={"stage": "dev"},
+        headers=auth_headers,
+    )
+    assert deployed.status_code == 200, deployed.text
+
+    response = harness.client.get(
+        "/api/v1/projects/smoke-test/environments/dev/credentials", headers=auth_headers
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["admin_user"] == "admin"
+    assert body["admin_password"]
+    assert body["odoo_url"] == "http://smoke-test-dev-odoo.core-odoo.test.local"
+    assert body["database"]
