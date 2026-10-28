@@ -29,6 +29,11 @@ already there. Do not rebuild them.
 
 ## Golden path
 
+A new project starts **empty**: `core-odoo project create <project>` only lays
+out `odoo/addons` and `frontend/`. The first module always comes from the
+generator, so the project name and the module name never collide. Deploy after
+that first module exists, otherwise Odoo boots with `base` and `web` only.
+
 ```bash
 # 1. What already exists?
 core-odoo --json catalog models crm-demo --stage dev --model res.partner

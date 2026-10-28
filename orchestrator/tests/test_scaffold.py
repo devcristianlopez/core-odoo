@@ -63,6 +63,16 @@ def test_module_template_is_installed_under_addons(repo_templates_settings: Sett
         assert all(token not in text for token in PLACEHOLDERS), path
 
 
+def test_empty_template_creates_layout_without_modules(
+    repo_templates_settings: Settings,
+) -> None:
+    project_dir = ensure_project_layout(repo_templates_settings, "helpdesk", "empty")
+
+    assert (project_dir / "odoo" / "addons").is_dir()
+    assert not any((project_dir / "odoo" / "addons").iterdir())
+    assert (project_dir / "frontend" / "Dockerfile").is_file()
+
+
 def test_project_template_without_manifest_copies_to_root(tmp_path: Path) -> None:
     templates_dir = tmp_path / "templates"
     (templates_dir / "plain").mkdir(parents=True)

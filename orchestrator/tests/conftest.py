@@ -145,7 +145,7 @@ def auth_headers() -> dict[str, str]:
 def create_project(
     harness: AppHarness, auth_headers: dict[str, str]
 ) -> Callable[[str], dict[str, Any]]:
-    def _create(name: str = "smoke-test", template: str = "odoo-module") -> dict[str, Any]:
+    def _create(name: str = "smoke-test", template: str = "empty") -> dict[str, Any]:
         response = harness.client.post(
             "/api/v1/projects",
             json={"name": name, "template": template},

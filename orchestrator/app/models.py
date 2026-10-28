@@ -31,7 +31,7 @@ class Project(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True, unique=True, max_length=64)
-    template: str = Field(default="odoo-module", max_length=64)
+    template: str = Field(default="empty", max_length=64)
     repo_url: str | None = Field(default=None, max_length=512)
     created_at: datetime = Field(default_factory=utcnow)
 

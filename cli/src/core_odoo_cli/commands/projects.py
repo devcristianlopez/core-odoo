@@ -59,7 +59,7 @@ def _project_table(projects: list[dict[str, Any]]) -> None:
 def project_create(
     ctx: typer.Context,
     name: str = argument("arg.name", ...),
-    template: str = option("opt.template", "odoo-module", "--template"),
+    template: str = option("opt.template", "empty", "--template"),
 ) -> None:
     """Create a project."""
     project = _client(ctx).create_project(name, template)

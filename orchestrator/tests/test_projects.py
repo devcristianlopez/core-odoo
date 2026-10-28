@@ -13,9 +13,10 @@ def test_create_list_get_project(
 ) -> None:
     project = create_project("smoke-test")
     assert project["name"] == "smoke-test"
-    assert project["template"] == "odoo-module"
+    assert project["template"] == "empty"
     assert project["environments"] == []
     assert (settings.core_projects_dir / "smoke-test" / "odoo" / "addons").is_dir()
+    assert not any((settings.core_projects_dir / "smoke-test" / "odoo" / "addons").iterdir())
     assert (settings.core_projects_dir / "smoke-test" / "frontend" / "Dockerfile").is_file()
 
     listing = harness.client.get("/api/v1/projects", headers=auth_headers)

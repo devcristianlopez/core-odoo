@@ -32,7 +32,7 @@ class EnvironmentSpec:
     odoo_api_key: str
     gateway_jwt_secret: str
     domain_suffix: str
-    template: str = "odoo-module"
+    template: str = "empty"
     branch: str | None = None
     modules: list[str] = field(default_factory=list)
 

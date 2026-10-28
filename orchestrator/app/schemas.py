@@ -111,7 +111,7 @@ class ProjectAccessRead(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=63)
-    template: str = Field(default="odoo-module", min_length=1, max_length=64)
+    template: str = Field(default="empty", min_length=1, max_length=64)
     repo_url: str | None = Field(default=None, max_length=512)
 
     @field_validator("name")

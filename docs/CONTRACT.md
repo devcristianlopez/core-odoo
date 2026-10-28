@@ -337,7 +337,7 @@ core-odoo/
 ├── gateway/                 # FastAPI BFF
 ├── mission-control/         # React UI
 ├── observability/           # provisioning files
-├── templates/               # compose, odoo-module, frontend-starter
+├── templates/               # odoo-module (opt-in), frontend starter, compose
 ├── projects/                # project sources (MVP: local dirs)
 ├── docs/                    # docs ES/EN + agent recipes
 ├── skills/                  # optional agent workflows

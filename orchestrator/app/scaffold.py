@@ -4,7 +4,11 @@ Sprint 1 uses local directories as project sources (``CORE_PROJECTS_DIR``).
 A project always gets ``odoo/addons`` and a ``frontend`` build context so the
 compose renderer can bind-mount / build it deterministically.
 
-Templates come in two flavours:
+A project starts **empty** (``template="empty"``): just ``odoo/addons`` and a
+frontend context. The first module comes from the generator, so the project name
+and the module name never collide.
+
+Templates are optional and come in two flavours:
 
 - ``odoo-module`` — an Odoo addon skeleton with ``__MODULE__`` /
   ``__MODULE_TITLE__`` placeholders. It is installed inside the project's addons
@@ -22,6 +26,7 @@ from pathlib import Path
 
 from .config import Settings
 
+_EMPTY_TEMPLATES = {"", "empty", "none"}
 _MANIFEST_FILENAME = "__manifest__.py"
 _MODULE_TOKEN = "__MODULE__"
 _MODULE_TITLE_TOKEN = "__MODULE_TITLE__"
@@ -116,10 +121,12 @@ _FALLBACK_INDEX = """<!doctype html>
 """
 
 
-def ensure_project_layout(settings: Settings, name: str, template: str) -> Path:
+def ensure_project_layout(settings: Settings, name: str, template: str = "empty") -> Path:
     """Create the minimum project tree required by the Docker provider."""
     project_dir = settings.core_projects_dir / name
-    source = _resolve_template(settings, template)
+    source = None if template.strip().lower() in _EMPTY_TEMPLATES else _resolve_template(
+        settings, template
+    )
 
     if source is not None and (source / _MANIFEST_FILENAME).is_file():
         _install_module_template(project_dir, source, name)

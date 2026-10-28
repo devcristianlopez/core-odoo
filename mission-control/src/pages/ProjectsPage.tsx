@@ -22,12 +22,10 @@ import { Skeleton } from '../components/ui/Loading'
 import { Badge } from '../components/ui/Badge'
 import { STAGES, type Project } from '../lib/types'
 
-const TEMPLATE_SUGGESTIONS = ['odoo', 'odoo-module', 'frontend-starter']
 const NAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/
 
 interface FormErrors {
   name?: string
-  template?: string
   repoUrl?: string
 }
 
@@ -63,7 +61,6 @@ export default function ProjectsPage() {
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [name, setName] = useState('')
-  const [template, setTemplate] = useState('odoo')
   const [repoUrl, setRepoUrl] = useState('')
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null)
@@ -84,7 +81,6 @@ export default function ProjectsPage() {
     onSuccess: (project) => {
       setCreateOpen(false)
       setName('')
-      setTemplate('odoo')
       setRepoUrl('')
       setFormErrors({})
       invalidateProjects()
@@ -132,14 +128,14 @@ export default function ProjectsPage() {
     const errors: FormErrors = {}
     const trimmedName = name.trim()
     if (!NAME_PATTERN.test(trimmedName)) errors.name = t('projects.nameInvalid')
-    if (template.trim() === '') errors.template = t('common.required')
     const trimmedRepo = repoUrl.trim()
     if (trimmedRepo !== '' && !safeHttpUrl(trimmedRepo)) errors.repoUrl = t('projects.repoUrlInvalid')
     setFormErrors(errors)
     if (Object.keys(errors).length > 0) return
     createMutation.mutate({
       name: trimmedName,
-      template: template.trim(),
+      // Projects start empty; the first module comes from the generator.
+      template: 'empty',
       repo_url: trimmedRepo === '' ? undefined : trimmedRepo,
     })
   }
@@ -248,9 +244,9 @@ export default function ProjectsPage() {
                           ) : null}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <Badge tone="info">
-                            {project.template || t('projects.noTemplate')}
-                          </Badge>
+                          {project.template && project.template !== 'empty' ? (
+                            <Badge tone="info">{project.template}</Badge>
+                          ) : null}
                           <Badge tone="neutral">
                             {t('projects.environmentCount', { count: environmentCount })}
                           </Badge>
@@ -346,32 +342,6 @@ export default function ProjectsPage() {
               <FieldError id="project-name-error">{formErrors.name}</FieldError>
             ) : (
               <FieldHint id="project-name-hint">{t('projects.nameHint')}</FieldHint>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="project-template">{t('projects.templateLabel')}</Label>
-            <Input
-              id="project-template"
-              name="template"
-              list="project-template-options"
-              value={template}
-              onChange={(event) => setTemplate(event.target.value)}
-              placeholder={t('projects.templatePlaceholder')}
-              invalid={Boolean(formErrors.template)}
-              aria-describedby={
-                formErrors.template ? 'project-template-error' : 'project-template-hint'
-              }
-            />
-            <datalist id="project-template-options">
-              {TEMPLATE_SUGGESTIONS.map((suggestion) => (
-                <option key={suggestion} value={suggestion} />
-              ))}
-            </datalist>
-            {formErrors.template ? (
-              <FieldError id="project-template-error">{formErrors.template}</FieldError>
-            ) : (
-              <FieldHint id="project-template-hint">{t('projects.templateHint')}</FieldHint>
             )}
           </div>
 
