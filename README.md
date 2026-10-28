@@ -1,6 +1,6 @@
 # Kizuku
 
-**Self-hosted, distributable software factory built on Odoo 20.**
+**Self-hosted software factory built on Odoo 20.**
 
 [![CI](https://github.com/devcristianlopez/kizuku/actions/workflows/ci.yml/badge.svg)](https://github.com/devcristianlopez/kizuku/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache--2.0%20%2F%20LGPL--3.0-blue.svg)](LICENSE)
 
@@ -9,10 +9,16 @@ Odoo.sh-style workflow: isolated environments (`dev` → `staging` → `prod`),
 custom Odoo modules with real tests, generated frontends, and full
 observability — all on a single Docker host.
 
-> Estado: operativo en un host Docker. Entornos, auto-rollback, backups
-> programados (con copia offsite opcional), promociones con neutralización,
-> TLS, credenciales por entorno y observabilidad ya están. Siguen auto-stop,
-> quotas y distribución (GHCR, releases); después, el provider Proxmox.
+> **Naming.** The product is **Kizuku**. The CLI command, Python packages,
+> Compose project, volumes, `CORE_*` variables and hostnames still use
+> `core-odoo`; the rename is brand-only for now. The repository lives at
+> `devcristianlopez/kizuku`.
+
+> Status: operational on a Docker host. Environments, auto-rollback,
+> scheduled backups (with an optional offsite mirror), promotions with
+> neutralization, TLS, per-environment credentials and observability are in.
+> Auto-stop, quotas and distribution (GHCR, releases) remain; after that, the
+> Proxmox provider.
 
 Projects start empty: creating one only lays out its addons and frontend, and
 the first module comes from the generator. They live in `projects/` on the host
@@ -22,7 +28,7 @@ apps. Keep each project's history in its own repository when it needs one.
 ## Quick start
 
 ```bash
-git clone <repo> kizuku && cd kizuku
+git clone https://github.com/devcristianlopez/kizuku.git && cd kizuku
 ./install.sh            # platform + CLI (when uv is available)
 core-odoo status
 # panel: http://core-odoo.<your-ip>.nip.io
@@ -31,7 +37,8 @@ core-odoo status
 Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 (observability + one environment). `uv` is optional but installs the CLI and
 runs the MCP server; without it use `uv run --project cli core-odoo <command>`.
-Validated with Odoo 20.0 and Traefik 3.7.
+Node 24 and npm are only needed to develop the panel. Validated with Odoo
+20.0 and Traefik 3.7.
 
 ## What you get
 
@@ -49,6 +56,8 @@ Validated with Odoo 20.0 and Traefik 3.7.
 - **Bilingual** — Spanish and English (UI, CLI, docs).
 - **Multi-user panel** — global roles plus per-project owner/developer/viewer membership.
 - **Production approvals** — operators request, admins approve and deploy.
+- **Agent layer** — 7 skills (3 Kizuku skills + 4 vendored from Odoo 20), 3 project
+  subagents and an MCP server with 21 tools.
 
 ## Stack
 
@@ -56,12 +65,12 @@ Versions shipped with the repository:
 
 | Layer | Technologies |
 |---|---|
-| Backend | Odoo 20, PostgreSQL 16, Python 3.12, FastAPI, SQLModel, Pydantic |
+| Backend | Odoo 20, PostgreSQL 16, Python 3.12, FastAPI 0.162, SQLModel 0.0.48, Pydantic 2.14 |
 | Frontend | React 19, TypeScript 6, Vite 8, Tailwind 4, TanStack Query 5, Recharts 3, i18next 26 |
-| CLI / tooling | Typer, Rich, uv, httpx |
-| Infrastructure | Docker Compose, Traefik 3.7, nginx, Mailpit |
-| Observability | Prometheus 3.15, Loki 3.7, Alloy, Grafana 13.3, Alertmanager 0.34, Uptime Kuma |
-| Quality | pytest, Ruff, Vitest, ESLint, GitHub Actions |
+| CLI / tooling | Typer 0.27, Rich 15, MCP 2, httpx 0.28, uv |
+| Infrastructure | Docker Compose, Traefik 3.7, nginx 1.30, Node 24, Mailpit 1.32 |
+| Observability | Prometheus 3.15, Loki 3.7, Alloy 1.21, Grafana 13.3, Alertmanager 0.34, Uptime Kuma 2.5 |
+| Quality | pytest 9, Ruff 0.17, Vitest 5, ESLint 10, GitHub Actions |
 | Data | SQLite (control plane), `pg_dump` backups |
 
 ## Agent development
@@ -69,6 +78,7 @@ Versions shipped with the repository:
 - [Agent instructions](AGENTS.md)
 - [Agent layer](docs/agent/README.md)
 - [Model catalogue](docs/agent/model-catalog.md)
+- [MCP server](docs/agent/mcp.md)
 - [Skill library](skills/README.md): `odoo-module`, `odoo-frontend`, `odoo-deploy`
   plus Odoo's vendored `odoo-guidelines`, `odoo-security`, `odoo-review` and
   `odoo-web-guidelines`
@@ -93,12 +103,13 @@ core-odoo env credentials <project> --stage dev
 ```bash
 npm --prefix mission-control ci   # once; prerequisite for make test / make lint
 make test                        # pytest (orchestrator, gateway, cli) + vitest (panel)
-make lint                        # ruff x3 + eslint + tsc --noEmit
+make lint                        # ruff x3 + eslint + tsc + skills
 ```
 
 The suites run per subproject because each one owns its `pyproject.toml` or JS
-tooling. CI (`.github/workflows/ci.yml`) runs the same four suites. Module tests
-and the full `make e2e` loop are covered in [Operations](docs/OPERATIONS.md).
+tooling. CI (`.github/workflows/ci.yml`) runs the same suites plus the skills
+check. Module tests and the full `make e2e` loop are covered in
+[Operations](docs/OPERATIONS.md).
 
 ### Landing page
 
@@ -119,4 +130,5 @@ Source: GitHub Actions); it is published at
 
 ## License
 
-Platform: Apache-2.0. Odoo modules: LGPL-3.0.
+Platform: Apache-2.0. Odoo modules: LGPL-3.0. Vendored Odoo skills: LGPL-3.0
+(see `skills/ODOO-LICENSE.txt`).
