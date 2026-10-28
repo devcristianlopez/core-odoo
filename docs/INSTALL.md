@@ -11,6 +11,9 @@
 - Puertos **80** y **443** libres. Traefik es el único servicio que publica puertos.
 - Acceso al socket `/var/run/docker.sock` para el orquestador.
 - `curl`, `openssl` y `python3`.
+- `uv` (recomendado): instala el CLI `core-odoo` y ejecuta el servidor MCP.
+- Node 22 y npm solo para desarrollar el panel (`make test`, `make lint`); la
+  imagen del panel compila con Node dentro de Docker.
 
 ### Instalación rápida
 
@@ -22,10 +25,12 @@ core-odoo status
 ```
 
 `install.sh` genera `.env` con secretos aleatorios, crea `data/`, levanta el plano
-de control y la observabilidad. Si prefieres hacerlo por separado:
+de control y la observabilidad y, si `uv` está disponible, instala el CLI con
+`uv tool install --editable ./cli`.
 
-> En esta guía se asume que el CLI `core-odoo` está instalado y en el `PATH`.
-> Desde el repo, sin instalarlo, usa `uv run --project cli core-odoo <comando>`.
+> Si `uv` no está, el script sigue y avisa: instala uv y ejecuta
+> `uv tool install --editable ./cli`, o usa
+> `uv run --project cli core-odoo <comando>` desde el repo.
 
 ```bash
 core-odoo init --lang es --non-interactive
@@ -113,6 +118,9 @@ los backups en `data/backups/`.
 - Ports **80** and **443** free. Traefik is the only published service.
 - Access to `/var/run/docker.sock` for the orchestrator.
 - `curl`, `openssl` and `python3`.
+- `uv` (recommended): installs the `core-odoo` CLI and runs the MCP server.
+- Node 22 and npm only to develop the panel (`make test`, `make lint`); the
+  panel image builds with Node inside Docker.
 
 ### Quick install
 
@@ -123,11 +131,13 @@ cd core-odoo
 core-odoo status
 ```
 
-`install.sh` writes `.env` with random secrets, creates `data/`, and starts the
-control plane plus observability. To do it step by step:
+`install.sh` writes `.env` with random secrets, creates `data/`, starts the
+control plane plus observability and, when `uv` is available, installs the CLI
+with `uv tool install --editable ./cli`.
 
-> This guide assumes the `core-odoo` CLI is installed and on `PATH`. From the
-> repository, without installing it, use `uv run --project cli core-odoo <command>`.
+> Without `uv` the script still runs and warns: install uv and run
+> `uv tool install --editable ./cli`, or use
+> `uv run --project cli core-odoo <command>` from the repository.
 
 ```bash
 core-odoo init --lang en --non-interactive

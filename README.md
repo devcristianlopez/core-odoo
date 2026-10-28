@@ -23,13 +23,15 @@ apps. Keep each project's history in its own repository when it needs one.
 
 ```bash
 git clone <repo> core-odoo && cd core-odoo
-./install.sh            # or: uv run --project cli core-odoo init
-uv run --project cli core-odoo up   # repo path; `core-odoo` alone needs the CLI installed
+./install.sh            # platform + CLI (when uv is available)
+core-odoo status
 # panel: http://core-odoo.<your-ip>.nip.io
 ```
 
 Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
-(observability + one environment). Validated with Odoo 20.0 and Traefik 3.6.
+(observability + one environment). `uv` is optional but installs the CLI and
+runs the MCP server; without it use `uv run --project cli core-odoo <command>`.
+Validated with Odoo 20.0 and Traefik 3.6.
 
 ## What you get
 

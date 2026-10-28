@@ -60,8 +60,22 @@ say() {
         en:api) printf '  API:        http://api.core-odoo.%s\n' "$*" ;;
         es:grafana) printf '  Grafana:    http://grafana.core-odoo.%s\n' "$*" ;;
         en:grafana) printf '  Grafana:    http://grafana.core-odoo.%s\n' "$*" ;;
-        es:done) printf '\nListo. Ejecuta `./scripts/e2e.sh` para validar el stack.\n' ;;
-        en:done) printf '\nDone. Run `./scripts/e2e.sh` to validate the stack.\n' ;;
+        es:done) printf '\nListo. CLI: `core-odoo status`. Valida el stack con `./scripts/e2e.sh`.\n' ;;
+        en:done) printf '\nDone. CLI: `core-odoo status`. Validate the stack with `./scripts/e2e.sh`.\n' ;;
+        es:optional_missing) printf '→ %s no está (opcional para el CLI y las pruebas).\n' "$*" ;;
+        en:optional_missing) printf '→ %s is missing (optional for the CLI and tests).\n' "$*" ;;
+        es:cli_present) printf '→ CLI core-odoo ya disponible en el PATH.\n' ;;
+        en:cli_present) printf '→ core-odoo CLI already available on PATH.\n' ;;
+        es:cli_installing) printf '→ Instalando el CLI core-odoo con uv...\n' ;;
+        en:cli_installing) printf '→ Installing the core-odoo CLI with uv...\n' ;;
+        es:cli_installed) printf '  ✓ CLI instalado (editable desde ./cli)\n' ;;
+        en:cli_installed) printf '  ✓ CLI installed (editable from ./cli)\n' ;;
+        es:cli_no_uv) printf '→ uv no está: no se instala el CLI. Instala uv y ejecuta `uv tool install --editable ./cli`.\n' ;;
+        en:cli_no_uv) printf '→ uv is missing: CLI not installed. Install uv and run `uv tool install --editable ./cli`.\n' ;;
+        es:cli_failed) printf '✗ No se pudo instalar el CLI. Ejecuta `uv tool install --editable ./cli` a mano.\n' >&2 ;;
+        en:cli_failed) printf '✗ Could not install the CLI. Run `uv tool install --editable ./cli` yourself.\n' >&2 ;;
+        es:cli_path) printf '→ ~/.local/bin no está en PATH; agrega `export PATH="$HOME/.local/bin:$PATH"`.\n' ;;
+        en:cli_path) printf '→ ~/.local/bin is not on PATH; add `export PATH="$HOME/.local/bin:$PATH"`.\n' ;;
         es:compose_missing) printf '✗ No se encontró %s.\n' "$*" >&2 ;;
         en:compose_missing) printf '✗ %s not found.\n' "$*" >&2 ;;
         *) printf '%s\n' "$key" ;;
@@ -91,6 +105,35 @@ require_command() {
         exit 1
     fi
     say ok "$name"
+}
+
+check_optional() {
+    local name="$1"
+    if command -v "$name" >/dev/null 2>&1; then
+        say ok "$name"
+    else
+        say optional_missing "$name"
+    fi
+}
+
+install_cli() {
+    if command -v core-odoo >/dev/null 2>&1; then
+        say cli_present
+        return
+    fi
+    if ! command -v uv >/dev/null 2>&1; then
+        say cli_no_uv
+        return
+    fi
+    say cli_installing
+    if uv tool install --editable "$REPO_ROOT/cli" >/dev/null 2>&1; then
+        say cli_installed
+        if ! command -v core-odoo >/dev/null 2>&1; then
+            say cli_path
+        fi
+    else
+        say cli_failed
+    fi
 }
 
 while [[ $# -gt 0 ]]; do
@@ -166,6 +209,9 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 require_command openssl
+check_optional curl
+check_optional python3
+check_optional uv
 
 cd "$REPO_ROOT"
 
@@ -253,5 +299,7 @@ say grafana "$suffix"
 
 say starting
 docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d --build
+
+install_cli
 
 say done
