@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Plus, UserMinus, Users } from 'lucide-react'
@@ -14,7 +14,7 @@ import { EmptyState } from '../ui/EmptyState'
 import { ErrorState } from '../ui/ErrorState'
 import { LoadingState } from '../ui/Loading'
 
-export function MembersPanel({ project, canManage }: { project: string; canManage: boolean }): JSX.Element {
+export function MembersPanel({ project, canManage }: { project: string; canManage: boolean }): ReactElement {
   const { t } = useTranslation()
   const { pushToast } = useToast()
   const queryClient = useQueryClient()

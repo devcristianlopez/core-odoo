@@ -52,7 +52,7 @@ export function initI18n(): typeof i18n {
     lng: language,
     fallbackLng: 'en',
     supportedLngs: [...LANGUAGES],
-    initImmediate: false,
+    initAsync: false,
     interpolation: { escapeValue: false },
     returnNull: false,
   })

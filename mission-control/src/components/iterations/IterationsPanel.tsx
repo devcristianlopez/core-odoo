@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactElement } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Database, Download, GitCompare, History, Plus, RotateCcw, Rocket, ShieldCheck } from 'lucide-react'
@@ -25,7 +25,7 @@ export function IterationsPanel({
   project: string
   onChanged: () => void
   canWrite?: boolean
-}): JSX.Element {
+}): ReactElement {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const queryClient = useQueryClient()
