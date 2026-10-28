@@ -25,11 +25,14 @@ scrape_configs:
       - targets:
           - traefik:8080
 
-  - job_name: cadvisor
+  - job_name: docker-exporter
     metrics_path: /metrics
+    # Docker 29 + containerd image store breaks cAdvisor's layer lookup; this
+    # exporter reads the Docker API and emits the same container_* names.
+    scrape_timeout: 14s
     static_configs:
       - targets:
-          - cadvisor:8080
+          - docker-exporter:9101
 
   - job_name: node-exporter
     metrics_path: /metrics

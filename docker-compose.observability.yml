@@ -169,26 +169,21 @@ services:
       - core-edge
     mem_limit: 64m
 
-  cadvisor:
+  docker-exporter:
     logging: *default-logging
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    build:
+      context: ./observability/docker-exporter
+    image: core-odoo-docker-exporter
     restart: unless-stopped
-    privileged: true
-    command:
-      - --housekeeping_interval=30s
-      - --docker_only=true
-    expose:
-      - "8080"
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - "9101"
     labels:
       - traefik.enable=false
     networks:
       - core-edge
-    mem_limit: 192m
+    mem_limit: 64m
 
 volumes:
   prometheus_data:

@@ -13,7 +13,7 @@ docker compose -f docker-compose.yml -f docker-compose.observability.yml ps
 
 Servicios esperados: `traefik`, `orchestrator`, `mission-control`, `prometheus`,
 `loki`, `alloy`, `grafana`, `alertmanager`, `uptime-kuma`, `node-exporter`,
-`cadvisor`.
+`docker-exporter`.
 
 ### Usuarios y roles
 

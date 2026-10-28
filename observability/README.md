@@ -1,7 +1,8 @@
 # Observability
 
 Prometheus, Loki, Alloy, Grafana, Alertmanager, Uptime Kuma, node-exporter and
-cAdvisor for the Core Odoo control plane.
+A small Docker stats exporter for the Core Odoo control plane (cAdvisor cannot
+read Docker's containerd image store).
 
 Everything here is an **override** file: it is always started together with the
 control plane so both stacks share the `core-edge` network and Traefik.
@@ -12,7 +13,7 @@ docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 
 Memory budget: every service has a `mem_limit`; the whole file stays under
 ~2 GB (Prometheus 512 MB, Loki 384 MB, Grafana 256 MB, Alloy 192 MB,
-Uptime Kuma 192 MB, cAdvisor 192 MB, Alertmanager 128 MB, node-exporter 64 MB).
+Uptime Kuma 192 MB, docker-exporter 64 MB, Alertmanager 128 MB, node-exporter 64 MB).
 
 ## Access
 

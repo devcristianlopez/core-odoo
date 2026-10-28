@@ -25,7 +25,9 @@ export function buildEnvironmentQueries(project: string, stage: string): Environ
     cpu: `sum(rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_project="${composeProject}"}[2m]))`,
     memory: `sum(container_memory_working_set_bytes{container_label_com_docker_compose_project="${composeProject}"})`,
     p95: `histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket{service=~"${service}-.*"}[5m])) by (le))`,
-    errorRate: `sum(rate(traefik_service_requests_total{service=~"${service}-.*",code=~"5.."}[5m]))`,
+    // `or vector(0)` keeps the chart at zero instead of "waiting" when there
+    // are no 5xx series at all.
+    errorRate: `sum(rate(traefik_service_requests_total{service=~"${service}-.*",code=~"5.."}[5m])) or vector(0)`,
   }
 }
 

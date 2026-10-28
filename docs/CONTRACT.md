@@ -308,7 +308,7 @@ Security rules:
 
 ## 9. Observability
 
-- Prometheus scrapes: orchestrator, Traefik, cAdvisor and node-exporter (host)
+- Prometheus scrapes: orchestrator, Traefik, the Docker stats exporter and node-exporter (host)
   through static jobs; containers labelled `core.metrics=true` can be added with
   Docker service discovery (see `observability/README.md`).
 - Loki receives container logs through Alloy (Docker discovery).

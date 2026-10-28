@@ -127,7 +127,7 @@ automatic rollback to `last_good_iteration` when a deploy fails
 
 ## Observability
 
-Prometheus scrapes the orchestrator, Traefik, cAdvisor and node-exporter through
+Prometheus scrapes the orchestrator, Traefik, the Docker stats exporter and node-exporter through
 static jobs; containers labelled `core.metrics=true` can be added with Docker
 service discovery (see `observability/README.md`). Alloy ships container logs to
 Loki.
