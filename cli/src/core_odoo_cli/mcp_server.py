@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from .api import OrchestratorClient
 from .checker import check_project as run_check
@@ -32,8 +32,8 @@ def _fail(exc: Exception) -> dict[str, Any]:
     return {"ok": False, "error": str(exc)}
 
 
-def build_server() -> FastMCP:
-    server = FastMCP(
+def build_server() -> MCPServer:
+    server = MCPServer(
         "core-odoo",
         instructions=(
             "Core Odoo is an Odoo 20 software factory. Inspect the catalogue "

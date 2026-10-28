@@ -41,8 +41,9 @@ def stub_api(monkeypatch: pytest.MonkeyPatch) -> type[StubClient]:
 def _call(payload: dict[str, Any]) -> dict[str, Any]:
     server = mcp_server.build_server()
     result = asyncio.run(server.call_tool("promote_environment", payload))
-    if isinstance(result, tuple):
-        return result[1]
+    structured = getattr(result, "structured_content", None)
+    if isinstance(structured, dict):
+        return structured
     raise AssertionError(f"expected structured tool output, got {result!r}")
 
 

@@ -5,10 +5,10 @@ description = "Core Odoo command line interface"
 requires-python = ">=3.12"
 dependencies = [
   "typer>=0.12,<1",
-  "rich>=13.7,<15",
+  "rich>=15,<16",
   "httpx>=0.27,<1",
   "pyyaml>=6.0,<7",
-  "mcp>=1.0,<2",
+  "mcp>=2.3,<3",
 ]
 
 [project.scripts]
