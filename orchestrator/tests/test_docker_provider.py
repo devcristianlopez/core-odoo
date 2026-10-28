@@ -157,6 +157,8 @@ def test_deploy_renders_compose_and_runs_docker(
         "Host(`smoke-test-dev.core-odoo.test.local`)"
     )
     assert labels["traefik.http.services.smoke-test-dev-frontend.loadbalancer.server.port"] == "80"
+    assert rendered["services"]["frontend"]["logging"]["options"]["max-size"] == "10m"
+    assert "traefik.http.routers.smoke-test-dev-frontend-tls.tls.certresolver" not in labels
 
     odoo = rendered["services"]["odoo"]
     assert "edge" in odoo["networks"] and "internal" in odoo["networks"]
@@ -336,6 +338,23 @@ def test_neutralize_database_disables_mail_cron_and_test_users(
     assert "NOT IN ('admin', 'core_gateway')" in sql
     assert "http://demo-prod.core-odoo.test" in sql
     assert env_spec.db_name in runner.calls[-1]
+
+
+def test_acme_mode_adds_the_letsencrypt_resolver(
+    provider_settings: Settings, env_spec: EnvironmentSpec
+) -> None:
+    acme_settings = provider_settings.model_copy(update={"core_tls_mode": "acme"})
+    provider = DockerProvider(acme_settings, runner=RecordingRunner())
+
+    provider.prepare(env_spec)
+
+    rendered = yaml.safe_load(env_spec.compose_file.read_text())
+    labels = rendered["services"]["frontend"]["labels"]
+    assert labels["traefik.http.routers.smoke-test-dev-frontend-tls.tls.certresolver"] == "le"
+    odoo_labels = rendered["services"]["odoo"]["labels"]
+    assert (
+        odoo_labels["traefik.http.routers.smoke-test-dev-odoo-tls.tls.certresolver"] == "le"
+    )
 
 
 def test_deploy_waits_until_the_frontend_is_healthy(

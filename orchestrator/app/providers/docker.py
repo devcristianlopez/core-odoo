@@ -415,6 +415,7 @@ class DockerProvider:
             "odoo_ui_cidrs": self._settings.core_odoo_ui_allowed_cidrs,
             "public_url": f"http://{odoo_host}",
             "admin_password": spec.admin_password,
+            "tls_mode": self._settings.core_tls_mode,
             "cpu_limit": cpu_limit,
             "memory_limit": memory_limit,
             "smtp_enabled": spec.stage != "prod",

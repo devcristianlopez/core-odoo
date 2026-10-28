@@ -9,8 +9,15 @@
 # Prometheus, Loki, Alertmanager, Alloy, node-exporter and cAdvisor are
 # internal-only (no Traefik route).
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   prometheus:
+    logging: *default-logging
     image: prom/prometheus:v2.55.1
     restart: unless-stopped
     command:
@@ -32,6 +39,7 @@ services:
     mem_limit: 512m
 
   loki:
+    logging: *default-logging
     image: grafana/loki:3.3.2
     restart: unless-stopped
     command:
@@ -48,6 +56,7 @@ services:
     mem_limit: 384m
 
   alloy:
+    logging: *default-logging
     image: grafana/alloy:latest
     restart: unless-stopped
     command:
@@ -67,6 +76,7 @@ services:
     mem_limit: 192m
 
   grafana:
+    logging: *default-logging
     image: grafana/grafana:11.4.0
     restart: unless-stopped
     environment:
@@ -97,6 +107,7 @@ services:
     mem_limit: 256m
 
   alertmanager:
+    logging: *default-logging
     image: prom/alertmanager:v0.27.0
     restart: unless-stopped
     command:
@@ -114,6 +125,7 @@ services:
     mem_limit: 128m
 
   uptime-kuma:
+    logging: *default-logging
     image: louislam/uptime-kuma:1
     restart: unless-stopped
     expose:
@@ -136,6 +148,7 @@ services:
     mem_limit: 192m
 
   node-exporter:
+    logging: *default-logging
     image: prom/node-exporter:v1.8.2
     restart: unless-stopped
     pid: host
@@ -157,6 +170,7 @@ services:
     mem_limit: 64m
 
   cadvisor:
+    logging: *default-logging
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     restart: unless-stopped
     privileged: true

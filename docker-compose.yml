@@ -10,8 +10,15 @@
 
 name: core-odoo
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   traefik:
+    logging: *default-logging
     image: traefik:v3.6
     restart: unless-stopped
     environment:
@@ -34,11 +41,16 @@ services:
       - --ping=true
       - --metrics.prometheus=true
       - --metrics.prometheus.entrypoint=traefik
+      # Used only by routers that ask for it (CORE_TLS_MODE=acme).
+      - --certificatesresolvers.le.acme.email=${CORE_ACME_EMAIL:-admin@example.com}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
     networks:
       - core-edge
     mem_limit: 256m
@@ -50,6 +62,7 @@ services:
       start_period: 10s
 
   orchestrator:
+    logging: *default-logging
     build:
       context: ./orchestrator
     restart: unless-stopped
@@ -105,6 +118,7 @@ services:
       start_period: 20s
 
   mission-control:
+    logging: *default-logging
     build:
       context: ./mission-control
     restart: unless-stopped
@@ -133,6 +147,7 @@ services:
   # Optional Cloudflare quick tunnel for remote testing. The URL is ephemeral.
   #   docker compose --profile tunnel up -d
   cloudflared:
+    logging: *default-logging
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     profiles:
@@ -148,6 +163,9 @@ services:
     networks:
       - core-edge
     mem_limit: 128m
+
+volumes:
+  letsencrypt:
 
 networks:
   core-edge:

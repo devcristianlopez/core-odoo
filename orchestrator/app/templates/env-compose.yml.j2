@@ -4,6 +4,11 @@ name: {{ compose_project }}
 
 services:
   db:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     image: postgres:16-alpine
     container_name: {{ compose_project }}-db
     restart: unless-stopped
@@ -28,6 +33,11 @@ services:
       core.service: "db"
 
   odoo:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     image: odoo:20
     container_name: {{ compose_project }}-odoo
     restart: unless-stopped
@@ -77,6 +87,8 @@ services:
       "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.rule": "Host(`{{ odoo_host }}`)"
       "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.entrypoints": "websecure"
       "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.tls": "true"
+{% if tls_mode == "acme" %}      "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.tls.certresolver": "le"
+{% endif %}
       "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.service": "{{ project }}-{{ stage }}-odoo"
       "traefik.http.routers.{{ project }}-{{ stage }}-odoo-tls.middlewares": "{{ project }}-{{ stage }}-odoo-allowlist"
       "traefik.http.middlewares.{{ project }}-{{ stage }}-odoo-allowlist.ipallowlist.sourcerange": {{ odoo_ui_cidrs | tojson }}
@@ -88,6 +100,11 @@ services:
 
 {% if smtp_enabled %}
   mailpit:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     image: axllent/mailpit:latest
     container_name: {{ compose_project }}-mailpit
     restart: unless-stopped
@@ -104,6 +121,11 @@ services:
 {% endif %}
 
   bootstrap:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     image: odoo:20
     container_name: {{ compose_project }}-bootstrap
     restart: "no"
@@ -129,6 +151,11 @@ services:
       - internal
 
   gateway:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     build:
       context: {{ gateway_dir | tojson }}
       dockerfile: Dockerfile
@@ -173,6 +200,11 @@ services:
           memory: "512m"
 
   frontend:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     build:
       context: {{ frontend_dir | tojson }}
       dockerfile: Dockerfile
@@ -201,6 +233,8 @@ services:
       "traefik.http.routers.{{ router_name }}-tls.rule": "Host(`{{ host }}`)"
       "traefik.http.routers.{{ router_name }}-tls.entrypoints": "websecure"
       "traefik.http.routers.{{ router_name }}-tls.tls": "true"
+{% if tls_mode == "acme" %}      "traefik.http.routers.{{ router_name }}-tls.tls.certresolver": "le"
+{% endif %}
       "traefik.http.routers.{{ router_name }}-tls.service": "{{ router_name }}"
     deploy:
       resources:
