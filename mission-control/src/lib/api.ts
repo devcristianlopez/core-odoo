@@ -2,6 +2,7 @@ import type {
   AuditEvent,
   DeploymentRequest,
   Environment,
+  EnvironmentCredentials,
   Iteration,
   IterationDiff,
   LoginResponse,
@@ -418,6 +419,11 @@ export const api = {
     },
     restart(name: string, stage: string): Promise<Environment> {
       return request<Environment>(`${environmentPath(name, stage)}/restart`, { method: 'POST' })
+    },
+    credentials(name: string, stage: string): Promise<EnvironmentCredentials> {
+      return request<EnvironmentCredentials>(
+        `${projectPath(name)}/environments/${encodeURIComponent(stage)}/credentials`,
+      )
     },
     promote(name: string, sourceStage: string, confirm: string): Promise<Environment> {
       return request<Environment>(`${projectPath(name)}/promote`, {

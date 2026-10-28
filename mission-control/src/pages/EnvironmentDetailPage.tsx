@@ -6,6 +6,7 @@ import {
   Copy,
   Database,
   ExternalLink,
+  KeyRound,
   Pause,
   Play,
   Rocket,
@@ -18,6 +19,7 @@ import {
 import { api } from '../lib/api'
 import { queryKeys, useRollbackEnvironment } from '../lib/query'
 import { findEnvironment, safeHttpUrl } from '../lib/services'
+import type { EnvironmentCredentials } from '../lib/types'
 import { buildEnvironmentQueries } from '../lib/metrics'
 import { isRunningStatus } from '../lib/status'
 import { formatDate, formatNumber, formatRelativeTime } from '../lib/format'
@@ -31,6 +33,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input, Label, Select } from '../components/ui/Input'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { Modal } from '../components/ui/Modal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { LoadingState, Skeleton } from '../components/ui/Loading'
@@ -67,6 +70,9 @@ export default function EnvironmentDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [rollbackOpen, setRollbackOpen] = useState(false)
   const [promoteOpen, setPromoteOpen] = useState(false)
+  const [credentialsOpen, setCredentialsOpen] = useState(false)
+  const [credentials, setCredentials] = useState<EnvironmentCredentials | null>(null)
+  const [credentialsError, setCredentialsError] = useState<string | null>(null)
   const [metricsPaused, setMetricsPaused] = useState(false)
   const [logsPaused, setLogsPaused] = useState(false)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -173,6 +179,17 @@ export default function EnvironmentDetailPage() {
       })
     },
   })
+
+  const openCredentials = async (): Promise<void> => {
+    setCredentialsOpen(true)
+    setCredentials(null)
+    setCredentialsError(null)
+    try {
+      setCredentials(await api.environments.credentials(name, stage))
+    } catch (error) {
+      setCredentialsError(describeError(error, t))
+    }
+  }
 
   const logLines = useMemo(() => splitLogLines(logsQuery.data?.logs), [logsQuery.data?.logs])
   const filteredLines = useMemo(() => filterLogLines(logLines, logFilter), [logLines, logFilter])
@@ -354,6 +371,18 @@ export default function EnvironmentDetailPage() {
             {lastGoodIteration ? null : (
               <span className="sr-only">{t('environment.rollbackUnavailable')}</span>
             )}
+            {canOperate ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void openCredentials()}
+                aria-label={t('environment.credentials')}
+                title={t('environment.credentials')}
+              >
+                <KeyRound className="h-4 w-4" aria-hidden="true" />
+                {t('environment.credentials')}
+              </Button>
+            ) : null}
             {stage === 'staging' && isAdmin ? (
               <Button
                 variant="primary"
@@ -768,6 +797,59 @@ export default function EnvironmentDetailPage() {
         destructive={isProd}
         loading={rollbackMutation.isPending}
       />
+
+      <Modal
+        open={credentialsOpen}
+        onClose={() => setCredentialsOpen(false)}
+        title={t('environment.credentialsTitle')}
+        footer={
+          <Button variant="ghost" onClick={() => setCredentialsOpen(false)}>
+            {t('common.close')}
+          </Button>
+        }
+      >
+        <div className="space-y-4 text-sm">
+          <p className="text-xs text-slate-400">{t('environment.credentialsWarning')}</p>
+          {credentialsError ? <p className="error">{credentialsError}</p> : null}
+          {credentials ? (
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-xs text-slate-500">{t('environment.credentialsUser')}</dt>
+                <dd className="font-mono text-slate-100">{credentials.admin_user}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">{t('environment.credentialsPassword')}</dt>
+                <dd className="flex items-center gap-2">
+                  <code className="rounded bg-surface-muted px-2 py-1 font-mono text-slate-100">
+                    {credentials.admin_password ?? '—'}
+                  </code>
+                  {credentials.admin_password ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void copyText(credentials.admin_password ?? '')}
+                    >
+                      {t('common.copy')}
+                    </Button>
+                  ) : null}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">{t('environment.credentialsDatabase')}</dt>
+                <dd className="font-mono text-slate-100">{credentials.database}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">{t('environment.openOdoo')}</dt>
+                <dd className="break-all font-mono text-xs text-slate-300">
+                  {credentials.odoo_url ?? '—'}
+                </dd>
+              </div>
+            </dl>
+          ) : !credentialsError ? (
+            <LoadingState rows={3} />
+          ) : null}
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={promoteOpen}

@@ -165,6 +165,16 @@ describe('api client', () => {
     expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
   })
 
+  it('requests the environment credentials', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ database: 'demo_dev' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.environments.credentials('demo', 'dev')
+    const [url, init] = firstFetchCall(fetchMock)
+    expect(url).toBe('/api/v1/projects/demo/environments/dev/credentials')
+    expect(init.method ?? 'GET').toBe('GET')
+  })
+
   it('posts a promotion with the typed confirmation', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ stage: 'prod' }))
     vi.stubGlobal('fetch', fetchMock)

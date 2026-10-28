@@ -13,6 +13,13 @@ export function isStage(value: unknown): value is Stage {
   return typeof value === 'string' && (STAGES as readonly string[]).includes(value)
 }
 
+export interface EnvironmentCredentials {
+  admin_user: string
+  admin_password?: string | null
+  odoo_url?: string | null
+  database: string
+}
+
 export interface Environment {
   project: string
   stage: string

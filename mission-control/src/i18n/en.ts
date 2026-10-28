@@ -235,6 +235,12 @@ const en = {
   },
   environment: {
     backToProject: 'Back to {{project}}',
+    credentials: 'Credentials',
+    credentialsTitle: 'Odoo credentials',
+    credentialsWarning: 'Sensitive: visible to anyone with write access to the project.',
+    credentialsUser: 'User',
+    credentialsPassword: 'Password',
+    credentialsDatabase: 'Database',
     openOdoo: 'Open the Odoo backend',
     notFoundTitle: 'Environment not found',
     notFoundDescription: 'It may have been deleted or not deployed yet.',
