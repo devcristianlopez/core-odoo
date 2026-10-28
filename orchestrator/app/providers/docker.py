@@ -300,6 +300,7 @@ class DockerProvider:
     def _render_compose(self, spec: EnvironmentSpec) -> None:
         cpu_limit, memory_limit = STAGE_LIMITS.get(spec.stage, STAGE_LIMITS["dev"])
         router_name = f"{spec.project}-{spec.stage}-frontend"
+        odoo_host = f"{spec.project}-{spec.stage}-odoo.core-odoo.{spec.domain_suffix}"
         modules = self._init_modules(spec)
         context: dict[str, Any] = {
             "project": spec.project,
@@ -323,6 +324,9 @@ class DockerProvider:
             "workers": 2 if spec.stage == "prod" else 0,
             "host": f"{spec.project}-{spec.stage}.core-odoo.{spec.domain_suffix}",
             "router_name": router_name,
+            "odoo_host": odoo_host,
+            "odoo_ui_cidrs": self._settings.core_odoo_ui_allowed_cidrs,
+            "public_url": f"http://{odoo_host}",
             "cpu_limit": cpu_limit,
             "memory_limit": memory_limit,
             "smtp_enabled": spec.stage != "prod",

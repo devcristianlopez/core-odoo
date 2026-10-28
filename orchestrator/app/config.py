@@ -77,6 +77,12 @@ class Settings(BaseSettings):
     # failed environment in ``error`` and recover by hand.
     core_auto_rollback: bool = Field(default=True)
 
+    # Networks allowed to open the Odoo backend UI of an environment. Operators
+    # use it for crons, mail and reports; the apps keep going through the BFF.
+    core_odoo_ui_allowed_cidrs: str = Field(
+        default="127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    )
+
     @field_validator(
         "core_data_dir",
         "core_projects_dir",

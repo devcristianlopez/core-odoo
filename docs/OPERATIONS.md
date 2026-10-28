@@ -67,6 +67,21 @@ cuándo es válida y, al expirar, el panel vuelve al login. No hay recuperación
 por correo: si alguien pierde la contraseña, un `admin` la resetea con
 `PATCH /users/{username}`.
 
+### Backend de Odoo (cron, correo, reportes)
+
+Cada entorno expone su propio backend en
+`http://<proyecto>-<stage>-odoo.core-odoo.<suffix>`, limitado por
+`CORE_ODOO_UI_ALLOWED_CIDRS` (redes privadas por defecto). Es para el equipo:
+las apps siguen hablando solo con el gateway.
+
+Ahí se configuran los crons (**Ajustes → Técnico → Acciones planificadas**; el
+entorno corre con `max_cron_threads = 1`), el correo saliente y las plantillas
+de reportes. dev y staging envían a Mailpit; producción no trae SMTP, así que
+se carga el servidor real en esa pantalla.
+
+`web.base.url` queda fijado a esa URL en cada deploy (`web.base.url.freeze`),
+para que los enlaces de correos y reportes no apunten a `odoo:8069`.
+
 ### Proyectos y entornos
 
 ```bash
@@ -359,6 +374,21 @@ The session is a JWT with an expiry (`CORE_JWT_TTL`); Settings shows how long it
 is valid and the panel returns to the login page when it expires. There is no
 email recovery: an `admin` resets a lost password with
 `PATCH /users/{username}`.
+
+### Odoo backend (cron, mail, reports)
+
+Each environment exposes its own backend at
+`http://<project>-<stage>-odoo.core-odoo.<suffix>`, limited by
+`CORE_ODOO_UI_ALLOWED_CIDRS` (private networks by default). It is for the team:
+the apps keep talking only to the gateway.
+
+There you configure crons (**Settings → Technical → Scheduled Actions**; the
+environment runs with `max_cron_threads = 1`), outgoing mail and report
+templates. dev and staging send to Mailpit; production ships no SMTP, so the real
+server is configured in that screen.
+
+`web.base.url` is pinned to that URL on every deploy (`web.base.url.freeze`), so
+links in emails and reports never point at `odoo:8069`.
 
 ### Projects and environments
 

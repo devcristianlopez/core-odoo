@@ -158,6 +158,26 @@ def test_deploy_renders_compose_and_runs_docker(
     )
     assert labels["traefik.http.services.smoke-test-dev-frontend.loadbalancer.server.port"] == "80"
 
+    odoo = rendered["services"]["odoo"]
+    assert "edge" in odoo["networks"] and "internal" in odoo["networks"]
+    odoo_labels = odoo["labels"]
+    assert odoo_labels["traefik.http.routers.smoke-test-dev-odoo.rule"] == (
+        "Host(`smoke-test-dev-odoo.core-odoo.test.local`)"
+    )
+    assert (
+        odoo_labels["traefik.http.services.smoke-test-dev-odoo.loadbalancer.server.port"]
+        == "8069"
+    )
+    assert odoo_labels["traefik.http.routers.smoke-test-dev-odoo.middlewares"] == (
+        "smoke-test-dev-odoo-allowlist"
+    )
+    assert "192.168.0.0/16" in odoo_labels[
+        "traefik.http.middlewares.smoke-test-dev-odoo-allowlist.ipallowlist.sourcerange"
+    ]
+    assert rendered["services"]["bootstrap"]["environment"]["CORE_PUBLIC_URL"] == (
+        "http://smoke-test-dev-odoo.core-odoo.test.local"
+    )
+
     up_call = runner.calls[0]
     assert up_call[:5] == [
         "docker",

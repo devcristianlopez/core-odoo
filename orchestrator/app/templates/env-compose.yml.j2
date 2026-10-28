@@ -61,11 +61,20 @@ services:
       start_period: 300s
     networks:
       - internal
+      - edge
     labels:
       core.metrics: "true"
       core.project: {{ project | tojson }}
       core.stage: {{ stage | tojson }}
       core.service: "odoo"
+      traefik.enable: "true"
+      traefik.docker.network: "core-edge"
+      "traefik.http.routers.{{ project }}-{{ stage }}-odoo.rule": "Host(`{{ odoo_host }}`)"
+      "traefik.http.routers.{{ project }}-{{ stage }}-odoo.entrypoints": "web"
+      "traefik.http.routers.{{ project }}-{{ stage }}-odoo.service": "{{ project }}-{{ stage }}-odoo"
+      "traefik.http.services.{{ project }}-{{ stage }}-odoo.loadbalancer.server.port": "8069"
+      "traefik.http.routers.{{ project }}-{{ stage }}-odoo.middlewares": "{{ project }}-{{ stage }}-odoo-allowlist"
+      "traefik.http.middlewares.{{ project }}-{{ stage }}-odoo-allowlist.ipallowlist.sourcerange": {{ odoo_ui_cidrs | tojson }}
     deploy:
       resources:
         limits:
@@ -100,6 +109,7 @@ services:
     environment:
       ODOO_DB: {{ db_name | tojson }}
       ODOO_CONF: "/etc/odoo/odoo.conf"
+      CORE_PUBLIC_URL: {{ public_url | tojson }}
     entrypoint: ["/bin/bash", "/opt/core/bootstrap.sh"]
     volumes:
       - secrets:/run/core
