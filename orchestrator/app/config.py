@@ -89,6 +89,21 @@ class Settings(BaseSettings):
     core_backup_interval_hours: float = Field(default=24.0, ge=0.25)
     core_backup_retention_days: int = Field(default=7, ge=1)
 
+    # Mounted path (NAS, second disk, rclone mount) that receives a mirror of
+    # every dump. Empty disables the copy.
+    core_backup_offsite_dir: Path | None = None
+
+    # "selfsigned" keeps Traefik's own certificate; "acme" asks Let's Encrypt
+    # for the environment routers (needs a public domain and CORE_ACME_EMAIL).
+    core_tls_mode: str = Field(default="selfsigned")
+
+    @field_validator("core_backup_offsite_dir", mode="before")
+    @classmethod
+    def _empty_offsite(cls, value: object) -> object:
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
     @field_validator(
         "core_data_dir",
         "core_projects_dir",

@@ -97,3 +97,16 @@ def test_backup_control_plane_copies_the_sqlite_database(settings: Settings) -> 
 
     assert path is not None and path.is_file()
     assert path.parent.name == "control-plane"
+
+
+def test_run_backups_once_mirrors_the_dumps_offsite(settings: Settings, tmp_path) -> None:
+    settings.core_backup_offsite_dir = tmp_path / "offsite"
+    session_factory = _session_factory(settings)
+    _project_with_env(session_factory, with_compose=True, settings=settings)
+
+    created = run_backups_once(settings, session_factory, FakeProvider())
+
+    assert created
+    mirrored = list((tmp_path / "offsite").rglob("scheduled-*.sql"))
+    assert mirrored
+    assert list((tmp_path / "offsite" / "control-plane").glob("control-*.db"))

@@ -67,12 +67,36 @@ cuándo es válida y, al expirar, el panel vuelve al login. No hay recuperación
 por correo: si alguien pierde la contraseña, un `admin` la resetea con
 `PATCH /users/{username}`.
 
+### Retención de logs
+
+Cada contenedor (plano de control y entornos) rota sus logs con
+`json-file`, `max-size: 10m` y `max-file: 3`. Loki retiene 14 días
+(`observability/loki/config.yml`, `retention_period: 336h`) con compactor.
+
+### Backups fuera del host
+
+`CORE_BACKUP_OFFSITE_DIR` apunta a un directorio montado (NAS, segundo disco,
+`rclone mount`). Cada dump se copia ahí después del backup local y se poda con la
+misma retención. Vacío = solo en este host.
+
+```yaml
+# docker-compose.override.yml
+services:
+  orchestrator:
+    environment:
+      CORE_BACKUP_OFFSITE_DIR: /offsite
+    volumes:
+      - /mnt/nas/core-odoo:/offsite
+```
+
 ### TLS y credenciales del backend
 
 Cada entorno responde por HTTP y HTTPS (`https://<proyecto>-<stage>-odoo…` y
-`https://<proyecto>-<stage>…`) con el certificado autofirmado de Traefik: el
-tráfico va cifrado, pero el navegador avisa. Para certificados reales hace falta
-un `certresolver` ACME con un dominio público.
+`https://<proyecto>-<stage>…`). Por defecto usa el certificado autofirmado de
+Traefik: el tráfico va cifrado, pero el navegador avisa. Con
+`CORE_TLS_MODE=acme` y `CORE_ACME_EMAIL`, los routers piden un certificado a
+Let's Encrypt; hace falta un dominio público apuntando al host (el reto HTTP usa
+el puerto 80) y `letsencrypt/acme.json` persiste en el volumen `letsencrypt`.
 
 La contraseña de `admin` de Odoo se genera por entorno; se consulta con:
 
@@ -410,12 +434,37 @@ is valid and the panel returns to the login page when it expires. There is no
 email recovery: an `admin` resets a lost password with
 `PATCH /users/{username}`.
 
+### Log retention
+
+Every container (control plane and environments) rotates its logs with
+`json-file`, `max-size: 10m`, `max-file: 3`. Loki keeps 14 days
+(`observability/loki/config.yml`, `retention_period: 336h`) with the compactor.
+
+### Offsite backups
+
+`CORE_BACKUP_OFFSITE_DIR` points at a mounted directory (NAS, second disk,
+`rclone mount`). Every dump is copied there after the local backup and pruned
+with the same retention. Empty keeps them on this host only.
+
+```yaml
+# docker-compose.override.yml
+services:
+  orchestrator:
+    environment:
+      CORE_BACKUP_OFFSITE_DIR: /offsite
+    volumes:
+      - /mnt/nas/core-odoo:/offsite
+```
+
 ### TLS and backend credentials
 
 Every environment answers over HTTP and HTTPS
-(`https://<project>-<stage>-odoo…` and `https://<project>-<stage>…`) with
-Traefik's self-signed certificate: traffic is encrypted but browsers warn. Real
-certificates need an ACME `certresolver` with a public domain.
+(`https://<project>-<stage>-odoo…` and `https://<project>-<stage>…`). By default
+it uses Traefik's self-signed certificate: traffic is encrypted but browsers
+warn. With `CORE_TLS_MODE=acme` and `CORE_ACME_EMAIL` the routers ask Let's
+Encrypt for a certificate; it needs a public domain pointing at the host (the
+HTTP challenge uses port 80) and `letsencrypt/acme.json` persists in the
+`letsencrypt` volume.
 
 The Odoo `admin` password is generated per environment; read it with:
 

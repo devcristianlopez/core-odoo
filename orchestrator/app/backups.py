@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 import sqlite3
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
@@ -75,6 +76,40 @@ def backup_control_plane(settings: Settings, *, now: datetime) -> Path | None:
     return destination
 
 
+def mirror_offsite(
+    settings: Settings, created: list[Path], *, now: datetime
+) -> list[Path]:
+    """Copy fresh dumps to the mounted offsite path and prune the mirror."""
+    root = settings.core_backup_offsite_dir
+    if root is None:
+        return []
+    copied: list[Path] = []
+    for source in created:
+        try:
+            relative = source.relative_to(settings.backups_dir)
+        except ValueError:
+            continue
+        destination = root / relative
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+        except OSError:
+            logger.warning("could not mirror %s offsite", source)
+            continue
+        copied.append(destination)
+    prune(
+        list(root.rglob(f"{SCHEDULED_PREFIX}*.sql")),
+        retention_days=settings.core_backup_retention_days,
+        now=now,
+    )
+    prune(
+        list((root / CONTROL_DIR).glob(f"{CONTROL_PREFIX}*.db")),
+        retention_days=settings.core_backup_retention_days,
+        now=now,
+    )
+    return copied
+
+
 def run_backups_once(
     settings: Settings,
     session_factory: Any,
@@ -117,6 +152,7 @@ def run_backups_once(
     control = backup_control_plane(settings, now=moment)
     if control is not None:
         created.append(control)
+    mirror_offsite(settings, created, now=moment)
     prune_backups(settings, now=moment)
     return created
 
