@@ -616,6 +616,7 @@ export default function EnvironmentDetailPage() {
             unitLabel={t('environment.p95Unit')}
             color="warning"
             paused={metricsPaused}
+            emptyLabel={t('environment.p95NoTraffic')}
           />
           <MetricChart
             title={t('environment.errorRateTitle')}

@@ -83,6 +83,7 @@ export interface MetricChartProps {
   color: keyof typeof colorClasses
   paused?: boolean
   className?: string
+  emptyLabel?: string
 }
 
 export function MetricChart({
@@ -93,6 +94,7 @@ export function MetricChart({
   unitLabel,
   color,
   paused = false,
+  emptyLabel,
 }: MetricChartProps) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
@@ -140,7 +142,9 @@ export function MetricChart({
           </div>
         ) : data.length === 0 ? (
           <div className="flex h-40 items-center justify-center px-4 text-center">
-            <p className="text-xs text-slate-500">{t('environment.chartEmpty')}</p>
+            <p className="text-xs text-slate-500">
+              {emptyLabel ?? t('environment.chartEmpty')}
+            </p>
           </div>
         ) : (
           <figure aria-label={title}>

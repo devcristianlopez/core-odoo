@@ -291,6 +291,7 @@ const en = {
     cpuUnit: 'cores',
     memoryTitle: 'Memory usage',
     memoryUnit: 'working set',
+    p95NoTraffic: 'No requests in the last 5 minutes.',
     p95Title: 'HTTP p95 latency',
     p95Unit: 'latency',
     errorRateTitle: 'HTTP 5xx rate',

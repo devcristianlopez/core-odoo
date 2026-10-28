@@ -293,6 +293,7 @@ const es = {
     cpuUnit: 'núcleos',
     memoryTitle: 'Uso de memoria',
     memoryUnit: 'working set',
+    p95NoTraffic: 'Sin tráfico en los últimos 5 minutos.',
     p95Title: 'Latencia p95 HTTP',
     p95Unit: 'latencia',
     errorRateTitle: 'Tasa de errores 5xx HTTP',
