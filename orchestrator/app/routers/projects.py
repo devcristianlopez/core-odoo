@@ -298,6 +298,23 @@ def delete_project(
     ).all()
     for member in members:
         session.delete(member)
+    # Rows must never outlive their project: SQLite reuses ids after a delete,
+    # so an orphan iteration would silently attach itself to the next project.
+    iterations = session.exec(
+        select(Iteration).where(Iteration.project_id == project.id)
+    ).all()
+    for iteration in iterations:
+        backups = session.exec(
+            select(IterationBackup).where(IterationBackup.iteration_id == iteration.id)
+        ).all()
+        for backup in backups:
+            session.delete(backup)
+        session.delete(iteration)
+    requests = session.exec(
+        select(DeploymentRequest).where(DeploymentRequest.project_id == project.id)
+    ).all()
+    for request in requests:
+        session.delete(request)
     session.delete(project)
     if purge:
         for path in (

@@ -137,3 +137,34 @@ def test_delete_project_requires_typed_confirmation(
         headers=auth_headers,
     )
     assert correct.status_code == 200
+
+
+def test_deleting_a_project_removes_its_iterations(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    created = harness.client.post(
+        "/api/v1/projects/smoke-test/iterations",
+        json={"version": "0.1.0", "title": "Base"},
+        headers=auth_headers,
+    )
+    assert created.status_code == 201, created.text
+
+    deleted = harness.client.delete(
+        "/api/v1/projects/smoke-test?confirm=smoke-test&purge=true", headers=auth_headers
+    )
+    assert deleted.status_code == 200, deleted.text
+
+    # SQLite reuses ids: a leftover iteration would attach to the new project and
+    # block creating version 0.1.0 again.
+    create_project("smoke-test")
+    iterations = harness.client.get(
+        "/api/v1/projects/smoke-test/iterations", headers=auth_headers
+    ).json()
+    assert iterations == []
+    again = harness.client.post(
+        "/api/v1/projects/smoke-test/iterations",
+        json={"version": "0.1.0", "title": "Base"},
+        headers=auth_headers,
+    )
+    assert again.status_code == 201, again.text
