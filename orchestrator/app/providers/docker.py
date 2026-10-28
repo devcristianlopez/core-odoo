@@ -37,6 +37,8 @@ DATABASE_PROBE_TIMEOUT_SECONDS = 30
 DATABASE_READY_TIMEOUT_SECONDS = 60
 DATABASE_READY_INTERVAL_SECONDS = 1.0
 DATABASE_READY_PROBE_TIMEOUT_SECONDS = 10
+FRONTEND_READY_TIMEOUT_SECONDS = 90
+FRONTEND_READY_INTERVAL_SECONDS = 2.0
 
 # Runs inside the gateway container. urllib is part of the standard library, so
 # the probe needs no extra dependency in the gateway image.
@@ -116,6 +118,7 @@ class DockerProvider:
             self._update_modules(spec)
         self._run(spec, "up", "-d", "--build", timeout=COMPOSE_TIMEOUT_SECONDS)
         self._wait_for_health(spec)
+        self._wait_for_frontend(spec)
         return self.inspect(spec)
 
     def start(self, spec: EnvironmentSpec) -> ProviderStatus:
@@ -595,6 +598,38 @@ class DockerProvider:
         if result.returncode != 0:
             output = ((result.stderr or "") + (result.stdout or "")).strip()
             raise ProviderError("odoo module update failed", details=output[-4000:] or None)
+
+    def _wait_for_frontend(self, spec: EnvironmentSpec) -> None:
+        """Wait until the frontend reports healthy.
+
+        Traefik only publishes a container's router once Docker marks it healthy,
+        so returning before that leaves the URL answering 404 right after a
+        deploy. Best effort: a missing container or a missing healthcheck is not
+        an error.
+        """
+        container = f"{spec.compose_project}-frontend"
+        deadline = time.monotonic() + FRONTEND_READY_TIMEOUT_SECONDS
+        while True:
+            try:
+                result = self._runner(
+                    [
+                        "docker",
+                        "inspect",
+                        "--format",
+                        "{{.State.Health.Status}}",
+                        container,
+                    ],
+                    timeout=10,
+                )
+            except Exception:  # noqa: BLE001 - readiness must never fail a deploy
+                return
+            status = (result.stdout or "").strip()
+            if result.returncode != 0 or status not in {"starting", "unhealthy"}:
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            time.sleep(min(FRONTEND_READY_INTERVAL_SECONDS, remaining))
 
     def _wait_for_health(self, spec: EnvironmentSpec) -> None:
         timeout = self._settings.core_deploy_health_timeout

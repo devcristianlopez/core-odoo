@@ -271,6 +271,10 @@ actualización, el entorno queda en `status=error`, la falla se audita y se
 conserva el `last_good_iteration` anterior. Cada deploy exitoso con
 `--iteration` registra `last_good_iteration` / `last_good_at`.
 
+El deploy termina cuando el frontend está `healthy`: Traefik solo publica el
+router de contenedores sanos, así que al volver la URL ya responde (antes había
+una ventana de 404 de hasta 30 s).
+
 Si el deploy falla y el entorno tenía una iteración exitosa, el orquestador
 **revierte solo**: restaura ese snapshot y redespliega con `-u` y health gate.
 La respuesta vuelve con `auto_rolled_back=true`, el deploy fallido queda auditado
@@ -525,6 +529,10 @@ within `CORE_DEPLOY_HEALTH_TIMEOUT` (300s), retried every
 is marked `status=error`, the failure is audited and the previous
 `last_good_iteration` is kept. Every successful deploy with `--iteration`
 records `last_good_iteration` / `last_good_at`.
+
+The deploy returns once the frontend is healthy: Traefik only publishes
+routers for healthy containers, so the URL already answers when the call ends
+(it used to 404 for up to 30 s).
 
 When a deploy fails and the environment had a successful iteration, the
 orchestrator **rolls back on its own**: it restores that snapshot and redeploys

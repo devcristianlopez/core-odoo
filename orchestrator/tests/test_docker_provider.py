@@ -322,6 +322,33 @@ def test_neutralize_database_disables_mail_cron_and_test_users(
     assert env_spec.db_name in runner.calls[-1]
 
 
+def test_deploy_waits_until_the_frontend_is_healthy(
+    provider_settings: Settings,
+    env_spec: EnvironmentSpec,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class InspectRunner(RecordingRunner):
+        def __init__(self) -> None:
+            super().__init__()
+            self.statuses = ["starting", "starting", "healthy"]
+            self.inspects: list[list[str]] = []
+
+        def __call__(self, args, *, input=None, timeout=600):
+            if list(args[:2]) == ["docker", "inspect"]:
+                self.inspects.append(list(args))
+                return subprocess.CompletedProcess(args, 0, self.statuses.pop(0), "")
+            return super().__call__(args, input=input, timeout=timeout)
+
+    runner = InspectRunner()
+    provider = DockerProvider(provider_settings, runner=runner)
+    monkeypatch.setattr(docker_module.time, "sleep", lambda seconds: None)
+
+    provider.deploy(env_spec)
+
+    assert len(runner.inspects) == 3
+    assert runner.inspects[0][-1] == "core-smoke-test-dev-frontend"
+
+
 def test_restore_database_recreates_db_and_streams_dump(
     provider_settings: Settings, env_spec: EnvironmentSpec, tmp_path: Path
 ) -> None:
