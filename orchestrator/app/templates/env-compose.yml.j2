@@ -110,6 +110,9 @@ services:
       ODOO_DB: {{ db_name | tojson }}
       ODOO_CONF: "/etc/odoo/odoo.conf"
       CORE_PUBLIC_URL: {{ public_url | tojson }}
+      POSTGRES_HOST: "db"
+      POSTGRES_USER: "odoo"
+      POSTGRES_PASSWORD: {{ db_password | tojson }}
     entrypoint: ["/bin/bash", "/opt/core/bootstrap.sh"]
     volumes:
       - secrets:/run/core
