@@ -2654,11 +2654,11 @@ html:not(.js) .copy {
 /* ---------------------------------------------------------------------------
    Technologies + system diagram
    --------------------------------------------------------------------------- */
-.diagram-shell {
+.sysmap-shell {
   margin: 0 0 2.5rem;
 }
 
-.diagram {
+.sysmap {
   position: relative;
   padding: 1rem;
   border: 1px solid var(--border);
@@ -2670,7 +2670,7 @@ html:not(.js) .copy {
   overflow: hidden;
 }
 
-.diagram::before {
+.sysmap::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -2682,40 +2682,59 @@ html:not(.js) .copy {
   pointer-events: none;
 }
 
-.diagram svg {
+.sysmap svg {
   position: relative;
   display: block;
   width: 100%;
   height: auto;
 }
 
-.diagram-node rect {
+.sysmap-node rect {
   fill: var(--surface);
   stroke: var(--border);
   stroke-width: 1;
   transition: stroke 0.2s ease, filter 0.2s ease;
 }
 
-.diagram-node:hover rect {
+.sysmap-node:hover rect {
   stroke: var(--edge-1);
   filter: drop-shadow(0 0 12px var(--accent-soft));
 }
 
-.diagram-label {
+.sysmap-label {
   fill: var(--text);
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.diagram-sub {
+.sysmap-sub {
   fill: var(--muted);
   font-family: var(--mono);
   font-size: 9.5px;
   letter-spacing: 0.02em;
+  text-transform: none;
 }
 
-.diagram-flow {
+/* The site stacks both languages in one grid cell; SVG text is not a grid, so
+   the inactive language would render beside the active one. Hide it. */
+svg text.t {
+  display: inline;
+}
+
+svg text.t > [data-lang] {
+  grid-area: auto;
+}
+
+html[data-lang="es"] svg text.t > [data-lang="en"],
+html[data-lang="en"] svg text.t > [data-lang="es"] {
+  display: none;
+  visibility: visible;
+}
+
+.sysmap-flow {
   fill: none;
   stroke: var(--edge-1);
   stroke-width: 1.6;
@@ -2724,7 +2743,7 @@ html:not(.js) .copy {
   animation: diagram-dash 1.6s linear infinite;
 }
 
-.diagram-flow.dashed {
+.sysmap-flow.dashed {
   stroke: var(--edge-2);
   stroke-dasharray: 3 6;
 }
@@ -2735,7 +2754,7 @@ html:not(.js) .copy {
   }
 }
 
-.diagram-caption {
+.sysmap-caption {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2820,17 +2839,17 @@ html:not(.js) .copy {
 }
 
 @media (max-width: 720px) {
-  .diagram {
+  .sysmap {
     padding: 0.5rem;
     overflow-x: auto;
   }
-  .diagram svg {
+  .sysmap svg {
     min-width: 720px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diagram-flow {
+  .sysmap-flow {
     animation: none;
   }
   .tech-group,
