@@ -217,7 +217,7 @@ entorno queda con `last_good_iteration` en la versión promovida. La neutralizac
 `core_gateway`, y apunta `web.base.url` a la URL de producción. El dump queda en
 `data/backups/<proyecto>-<origen>/`.
 
-Usa `--no-neutralize` sólo si querés conservar los usuarios y los crons tal como
+Usa `--no-neutralize` sólo si quieres conservar los usuarios y los crons tal como
 estaban en el origen. La base de producción anterior se descarta.
 
 ### Aprobaciones de producción
