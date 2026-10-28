@@ -11,7 +11,7 @@ from core_odoo_cli import mcp_server
 
 
 class StubClient:
-    calls: list[tuple[str, str, str | None, bool, bool]] = []
+    calls: list[tuple[str, str, str | None, bool, bool, str | None]] = []
 
     def __init__(self, settings: Any) -> None:
         self.settings = settings
@@ -23,8 +23,11 @@ class StubClient:
         confirm: str | None = None,
         neutralize: bool = True,
         skip_smoke: bool = False,
+        iteration: str | None = None,
     ) -> dict[str, Any]:
-        StubClient.calls.append((name, source_stage, confirm, neutralize, skip_smoke))
+        StubClient.calls.append(
+            (name, source_stage, confirm, neutralize, skip_smoke, iteration)
+        )
         return {"project": name, "stage": "prod", "status": "running"}
 
 
@@ -50,7 +53,7 @@ def test_mcp_promote_returns_environment() -> None:
         "ok": True,
         "environment": {"project": "demo", "stage": "prod", "status": "running"},
     }
-    assert StubClient.calls == [("demo", "staging", "demo", True, False)]
+    assert StubClient.calls == [("demo", "staging", "demo", True, False, None)]
 
 
 def test_mcp_promote_requires_confirmation() -> None:

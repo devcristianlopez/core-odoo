@@ -25,7 +25,7 @@ ENVIRONMENT_PAYLOAD: dict[str, Any] = {
 class StubClient:
     def __init__(self, payload: dict[str, Any] | None = None) -> None:
         self.payload = payload or ENVIRONMENT_PAYLOAD
-        self.calls: list[tuple[str, str, str | None, bool, bool]] = []
+        self.calls: list[tuple[str, str, str | None, bool, bool, str | None]] = []
 
     def promote_environment(
         self,
@@ -34,8 +34,9 @@ class StubClient:
         confirm: str | None = None,
         neutralize: bool = True,
         skip_smoke: bool = False,
+        iteration: str | None = None,
     ) -> dict[str, Any]:
-        self.calls.append((name, source_stage, confirm, neutralize, skip_smoke))
+        self.calls.append((name, source_stage, confirm, neutralize, skip_smoke, iteration))
         return self.payload
 
 
@@ -59,7 +60,7 @@ def test_promote_json_output(stub_client: StubClient) -> None:
         "status": "running",
         "neutralized": True,
     }
-    assert stub_client.calls == [("demo", "staging", "demo", True, False)]
+    assert stub_client.calls == [("demo", "staging", "demo", True, False, None)]
 
 
 def test_promote_requires_confirm_in_machine_mode(stub_client: StubClient) -> None:
@@ -89,5 +90,5 @@ def test_promote_forwards_source_and_no_neutralize(stub_client: StubClient) -> N
     )
 
     assert result.exit_code == 0, result.output
-    assert stub_client.calls == [("demo", "dev", "demo", False, False)]
+    assert stub_client.calls == [("demo", "dev", "demo", False, False, None)]
     assert json.loads(result.stdout)["neutralized"] is False

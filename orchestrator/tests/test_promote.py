@@ -13,6 +13,17 @@ def _deploy(harness: AppHarness, headers: dict[str, str], stage: str = "staging"
     )
 
 
+def _create_iteration(
+    harness: AppHarness, headers: dict[str, str], version: str = "0.1.0"
+) -> None:
+    response = harness.client.post(
+        "/api/v1/projects/smoke-test/iterations",
+        json={"version": version, "title": "Base"},
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+
+
 def _promote(
     harness: AppHarness,
     headers: dict[str, str],
@@ -95,6 +106,7 @@ def test_promote_clones_and_neutralizes_staging(
     harness: AppHarness, auth_headers: dict[str, str], create_project
 ) -> None:
     create_project("smoke-test")
+    _create_iteration(harness, auth_headers)
     assert _deploy(harness, auth_headers).status_code == 200
 
     response = _promote(harness, auth_headers)
@@ -103,6 +115,7 @@ def test_promote_clones_and_neutralizes_staging(
     body = response.json()
     assert body["stage"] == "prod"
     assert body["status"] == "running"
+    assert body["last_good_iteration"] == "0.1.0"
     assert body["url"] == "http://smoke-test-prod.core-odoo.test.local"
 
     actions = [call[0] for call in harness.provider.calls]
@@ -112,6 +125,7 @@ def test_promote_clones_and_neutralizes_staging(
         "prepare",
         "backup",
         "restore_database",
+        "copy_filestore",
         "neutralize_database",
         "deploy",
     ]
@@ -119,11 +133,15 @@ def test_promote_clones_and_neutralizes_staging(
     assert dump.is_file()
     assert "promote-" in dump.name
     assert harness.provider.neutralized == ["http://smoke-test-prod.core-odoo.test.local"]
+    assert harness.provider.copied_filestores == [
+        ("core-smoke-test-staging", "core-smoke-test-prod")
+    ]
 
     audit = harness.client.get("/api/v1/audit", headers=auth_headers).json()
     event = next(item for item in audit if item["action"] == "environment.promote")
     assert event["status"] == "success"
     assert event["details"]["source"] == "staging"
+    assert event["details"]["iteration"] == "0.1.0"
     assert event["details"]["neutralized"] is True
 
 
@@ -131,6 +149,7 @@ def test_promote_can_skip_neutralization(
     harness: AppHarness, auth_headers: dict[str, str], create_project
 ) -> None:
     create_project("smoke-test")
+    _create_iteration(harness, auth_headers)
     assert _deploy(harness, auth_headers).status_code == 200
 
     response = _promote(harness, auth_headers, neutralize=False)
@@ -145,6 +164,7 @@ def test_promote_failure_marks_prod_error(
     harness: AppHarness, auth_headers: dict[str, str], create_project
 ) -> None:
     create_project("smoke-test")
+    _create_iteration(harness, auth_headers)
     assert _deploy(harness, auth_headers).status_code == 200
 
     harness.provider.fail_with = ProviderError("promotion failed")
@@ -191,6 +211,7 @@ def test_promote_can_skip_the_smoke_gate(
     harness: AppHarness, auth_headers: dict[str, str], create_project
 ) -> None:
     create_project("smoke-test")
+    _create_iteration(harness, auth_headers)
     assert _deploy(harness, auth_headers).status_code == 200
     harness.provider.smoke_ok = False
 
@@ -199,3 +220,16 @@ def test_promote_can_skip_the_smoke_gate(
     assert response.status_code == 200, response.text
     actions = [call[0] for call in harness.provider.calls]
     assert "smoke" not in actions
+
+
+def test_promote_requires_an_iteration(
+    harness: AppHarness, auth_headers: dict[str, str], create_project
+) -> None:
+    create_project("smoke-test")
+    assert _deploy(harness, auth_headers).status_code == 200
+
+    response = _promote(harness, auth_headers)
+
+    assert response.status_code == 409
+    assert "iteration" in response.json()["detail"]
+    assert harness.provider.restored_dumps == []

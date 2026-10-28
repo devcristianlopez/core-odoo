@@ -216,13 +216,16 @@ def perform_promote(
     confirm: str | None = None,
     neutralize: bool = True,
     skip_smoke: bool = False,
+    iteration: str | None = None,
 ) -> dict[str, Any]:
     """Shared CLI/MCP policy: a promotion always needs the typed confirmation."""
     if confirm is None:
         raise CliError(t("error.prod_confirm_required"), code="confirmation_required")
     if confirm != project:
         raise CliError(t("error.confirmation_mismatch"), code="confirmation_mismatch")
-    return client.promote_environment(project, source_stage, confirm, neutralize, skip_smoke)
+    return client.promote_environment(
+        project, source_stage, confirm, neutralize, skip_smoke, iteration
+    )
 
 
 def promote(
@@ -232,6 +235,7 @@ def promote(
     confirm: str | None = option("opt.confirm", None, "--confirm"),
     neutralize: bool = option("opt.neutralize", True, "--neutralize/--no-neutralize"),
     skip_smoke: bool = option("opt.skip_smoke", False, "--skip-smoke"),
+    iteration: str | None = option("opt.iteration", None, "--iteration"),
 ) -> None:
     """Clone a source environment into production and neutralize the data."""
     if confirm is None:
@@ -248,6 +252,7 @@ def promote(
         confirm=confirm,
         neutralize=neutralize,
         skip_smoke=skip_smoke,
+        iteration=iteration,
     )
     if machine_output():
         emit(

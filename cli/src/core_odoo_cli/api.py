@@ -195,6 +195,7 @@ class OrchestratorClient:
         confirm: str | None = None,
         neutralize: bool = True,
         skip_smoke: bool = False,
+        iteration: str | None = None,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "source_stage": source_stage,
@@ -203,6 +204,8 @@ class OrchestratorClient:
         }
         if confirm is not None:
             body["confirm"] = confirm
+        if iteration:
+            body["iteration"] = iteration
         return self._request(
             "POST", f"/projects/{name}/promote", json=body, timeout=DEPLOY_TIMEOUT
         )

@@ -264,6 +264,43 @@ class DockerProvider:
             input=sql,
         )
 
+    def copy_filestore(self, source: EnvironmentSpec, target: EnvironmentSpec) -> None:
+        """Copy the Odoo attachments volume, renaming it to the target database.
+
+        Odoo stores attachments in ``<data_dir>/filestore/<db_name>``, so a
+        promotion that only restores the SQL dump leaves every attachment
+        pointing at a missing file.
+        """
+        source_volume = f"{source.compose_project}_odoo_data"
+        target_volume = f"{target.compose_project}_odoo_data"
+        script = (
+            "set -e; mkdir -p /dst/filestore; "
+            f"rm -rf /dst/filestore/{target.db_name}; "
+            f"if [ -d /src/filestore/{source.db_name} ]; then "
+            f"cp -a /src/filestore/{source.db_name} /dst/filestore/{target.db_name}; fi"
+        )
+        result = self._runner(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "-v",
+                f"{source_volume}:/src:ro",
+                "-v",
+                f"{target_volume}:/dst",
+                "alpine:3",
+                "sh",
+                "-c",
+                script,
+            ],
+            timeout=COMPOSE_TIMEOUT_SECONDS,
+        )
+        if result.returncode != 0:
+            detail = ((result.stderr or "") + (result.stdout or "")).strip()
+            raise ProviderError(
+                "could not copy the Odoo filestore", details=detail[-2000:] or None
+            )
+
     def smoke(self, spec: EnvironmentSpec) -> tuple[bool, str]:
         """Read-only gate: services running and the gateway reports odoo=true."""
         self._require_rendered(spec)

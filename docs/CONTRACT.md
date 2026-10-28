@@ -122,7 +122,7 @@ password: the current one must match and the new one must differ and be at least
 | GET | `/projects/{name}/iterations/{version}/backups` | – | `[IterationBackup]` |
 | POST | `/projects/{name}/iterations/{version}/backup` | `?stage=dev` | `IterationBackup` |
 | POST | `/projects/{name}/iterations/{version}/restore-db` | `{stage?, confirm?}` | `Environment` |
-| POST | `/projects/{name}/promote` | `{source_stage?, confirm?, neutralize?, skip_smoke?}` | `Environment` (admin) |
+| POST | `/projects/{name}/promote` | `{source_stage?, confirm?, iteration?, neutralize?, skip_smoke?}` | `Environment` (admin) |
 | POST | `/projects/{name}/environments/{stage}/start` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/stop` | – | `Environment` |
 | POST | `/projects/{name}/environments/{stage}/restart` | – | `Environment` |
@@ -182,7 +182,9 @@ back to, the call returns `502` and the environment stays `error`.
 `POST /projects/{name}/promote` clones a `dev`/`staging` environment into
 production: before touching production it runs a read-only smoke check on the
 source (services running and gateway `odoo=true`; `skip_smoke` bypasses it),
-then dumps the source database, recreates the production database
+restores the iteration snapshot (`iteration`, newest by default; promotion
+requires one), then dumps the source database, copies the Odoo filestore,
+recreates the production database
 from that dump, neutralizes it and redeploys with module updates and the health
 gate. Promotion always requires `admin` and `confirm` equal to the project name,
 and creates the `prod` environment when it does not exist yet. Neutralization
@@ -191,7 +193,8 @@ every user except `admin` and `core_gateway`, and points `web.base.url` at the
 production URL. The dump is kept under `data/backups/<project>-<source>/`. It
 returns `404` when the source environment is missing, `409` when the source has
 never been deployed and `502` when the clone, the neutralization or the deploy
-fails (production is then `error`).
+fails (production is then `error`). A successful promotion sets
+`last_good_iteration` to the promoted version, so production is recoverable.
 
 
 ## 6. Gateway (BFF) contract

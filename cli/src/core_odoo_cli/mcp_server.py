@@ -184,6 +184,7 @@ def build_server() -> FastMCP:
         confirm: str | None = None,
         neutralize: bool = True,
         skip_smoke: bool = False,
+        iteration: str | None = None,
     ) -> dict[str, Any]:
         """Clone a source environment database into production and neutralize it."""
         try:
@@ -196,6 +197,7 @@ def build_server() -> FastMCP:
                     confirm=confirm,
                     neutralize=neutralize,
                     skip_smoke=skip_smoke,
+                    iteration=iteration,
                 ),
             }
         except Exception as exc:  # noqa: BLE001

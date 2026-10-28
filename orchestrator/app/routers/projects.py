@@ -1015,6 +1015,35 @@ def promote_environment(
                 detail=f"smoke gate failed on {source.stage}: {detail}",
             )
 
+    # Production must stay traceable: either the caller names an iteration or we
+    # promote the newest one, and its snapshot is what gets deployed.
+    if payload.iteration:
+        iteration = session.exec(
+            select(Iteration).where(
+                Iteration.project_id == project.id,
+                Iteration.version == payload.iteration,
+            )
+        ).first()
+        if iteration is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="iteration not found"
+            )
+    else:
+        iteration = session.exec(
+            select(Iteration)
+            .where(Iteration.project_id == project.id)
+            .order_by(Iteration.created_at.desc())
+        ).first()
+        if iteration is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="promotion requires an iteration; create one first",
+            )
+    try:
+        restore_iteration_snapshot(settings, name, iteration.snapshot_path)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
     now = utcnow()
     target = session.exec(
         select(Environment).where(
@@ -1058,6 +1087,7 @@ def promote_environment(
         provider.prepare(target_spec)
         provider.backup(source_spec, dump)
         provider.restore_database(target_spec, dump)
+        provider.copy_filestore(source_spec, target_spec)
         if payload.neutralize:
             provider.neutralize_database(target_spec, target_spec.url)
         result = provider.deploy(target_spec, update=target_existed)
@@ -1083,6 +1113,8 @@ def promote_environment(
     target.status = result.status
     target.services = result.services
     target.url = target_spec.url
+    target.last_good_iteration = iteration.version
+    target.last_good_at = utcnow()
     target.updated_at = utcnow()
     session.add(target)
     record_deploy(name, "prod", "success")
@@ -1094,6 +1126,7 @@ def promote_environment(
         details={
             "source": source.stage,
             "dump": str(dump),
+            "iteration": iteration.version,
             "neutralized": payload.neutralize,
         },
     )

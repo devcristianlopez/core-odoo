@@ -150,6 +150,7 @@ class RollbackRequest(BaseModel):
 class PromoteRequest(BaseModel):
     source_stage: Stage = "staging"
     confirm: str | None = Field(default=None, max_length=64)
+    iteration: str | None = Field(default=None, max_length=32)
     neutralize: bool = True
     skip_smoke: bool = False
 
