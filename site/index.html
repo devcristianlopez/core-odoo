@@ -358,120 +358,177 @@
 
         <figure class="sysmap-shell reveal" aria-labelledby="sysmap-caption">
           <div class="sysmap">
-            <svg viewBox="0 0 940 440" role="img" aria-label="Core Odoo system diagram" data-en-aria-label="Core Odoo system diagram">
-              <title>Core Odoo</title>
+            <svg viewBox="0 0 960 480" role="img" aria-label="Diagrama del sistema" data-en-aria-label="System diagram">
+                            <title>Core Odoo</title>
 
-              <!-- clients -->
-              <g class="sysmap-node">
-                <rect x="20" y="20" width="190" height="54" rx="12"/>
-                <text class="sysmap-label t" x="115" y="44" text-anchor="middle">
+              <defs>
+                <marker id="sysmap-arrow-flow" class="sysmap-arrow" viewBox="0 0 8 8" refX="7.2" refY="4"
+                        markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M0 0 L8 4 L0 8 z"/>
+                </marker>
+                <marker id="sysmap-arrow-operator" class="sysmap-arrow violet" viewBox="0 0 8 8" refX="7.2" refY="4"
+                        markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M0 0 L8 4 L0 8 z"/>
+                </marker>
+                <marker id="sysmap-arrow-agent" class="sysmap-arrow green" viewBox="0 0 8 8" refX="7.2" refY="4"
+                        markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M0 0 L8 4 L0 8 z"/>
+                </marker>
+              </defs>
+
+              <text class="sysmap-lane t" x="115" y="24" text-anchor="middle">
+                <tspan data-lang="es" lang="es">personas y agentes</tspan>
+                <tspan data-lang="en" lang="en">people &amp; agents</tspan>
+              </text>
+              <text class="sysmap-lane t" x="470" y="24" text-anchor="middle">
+                <tspan data-lang="es" lang="es">una petición</tspan>
+                <tspan data-lang="en" lang="en">one request</tspan>
+              </text>
+              <text class="sysmap-lane t" x="820" y="24" text-anchor="middle">
+                <tspan data-lang="es" lang="es">operación</tspan>
+                <tspan data-lang="en" lang="en">operations</tspan>
+              </text>
+              <g class="sysmap-node" tabindex="0" data-tip-es="Cliente final: usa la app desde el navegador. Nunca habla con Odoo directamente." data-tip-en="End user: uses the app from the browser. Never talks to Odoo directly.">
+                <rect x="20" y="44" width="190" height="54" rx="12"/>
+                <text class="sysmap-label t" x="115" y="68" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Navegador</tspan>
                   <tspan data-lang="en" lang="en">Browser</tspan>
                 </text>
-                <text class="sysmap-sub t" x="115" y="61" text-anchor="middle">
+                <text class="sysmap-sub t" x="115" y="85" text-anchor="middle">
                   <tspan data-lang="es" lang="es">apps de clientes</tspan>
                   <tspan data-lang="en" lang="en">customer apps</tspan>
                 </text>
               </g>
-              <g class="sysmap-node">
-                <rect x="20" y="105" width="190" height="54" rx="12"/>
-                <text class="sysmap-label t" x="115" y="129" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Los desarrolladores entran a Mission Control desde acá." data-tip-en="Developers sign in to Mission Control from here.">
+                <rect x="20" y="129" width="190" height="54" rx="12"/>
+                <text class="sysmap-label t" x="115" y="153" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Panel del equipo</tspan>
                   <tspan data-lang="en" lang="en">Team panel</tspan>
                 </text>
-                <text class="sysmap-sub t" x="115" y="146" text-anchor="middle">
+                <text class="sysmap-sub t" x="115" y="170" text-anchor="middle">
                   <tspan data-lang="es" lang="es">navegador</tspan>
                   <tspan data-lang="en" lang="en">browser</tspan>
                 </text>
               </g>
-
-              <!-- edge -->
-              <g class="sysmap-node">
-                <rect x="370" y="20" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="470" y="44" text-anchor="middle">Traefik 3.6</text>
-                <text class="sysmap-sub t" x="470" y="61" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Crea módulos, API y frontend y despliega a través del orquestador (CLI o MCP)." data-tip-en="Builds modules, API and frontend, then deploys through the orchestrator (CLI or MCP).">
+                <rect x="20" y="214" width="190" height="54" rx="12"/>
+                <text class="sysmap-label t" x="115" y="238" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Agente de IA</tspan>
+                  <tspan data-lang="en" lang="en">AI agent</tspan>
+                </text>
+                <text class="sysmap-sub t" x="115" y="255" text-anchor="middle">OpenCode · CLI · MCP</text>
+              </g>
+              <g class="sysmap-node" tabindex="0" data-tip-es="Punto de entrada: HTTPS, una ruta por entorno y allowlist de red." data-tip-en="Entry point: HTTPS, one route per environment and a network allowlist.">
+                <rect x="370" y="44" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="470" y="68" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Traefik 3.6</tspan>
+                  <tspan data-lang="en" lang="en">Traefik 3.6</tspan>
+                </text>
+                <text class="sysmap-sub t" x="470" y="85" text-anchor="middle">
                   <tspan data-lang="es" lang="es">HTTPS · rutas · allowlist</tspan>
                   <tspan data-lang="en" lang="en">HTTPS · routes · allowlist</tspan>
                 </text>
               </g>
-
-              <!-- application lane -->
-              <g class="sysmap-node">
-                <rect x="370" y="105" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="470" y="129" text-anchor="middle">Frontend</text>
-                <text class="sysmap-sub t" x="470" y="146" text-anchor="middle">nginx · React 18</text>
+              <g class="sysmap-node" tabindex="0" data-tip-es="nginx sirve la app y hace proxy de /api y /auth hacia el gateway." data-tip-en="nginx serves the app and proxies /api and /auth to the gateway.">
+                <rect x="370" y="129" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="470" y="153" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Frontend</tspan>
+                  <tspan data-lang="en" lang="en">Frontend</tspan>
+                </text>
+                <text class="sysmap-sub t" x="470" y="170" text-anchor="middle">nginx · React 18</text>
               </g>
-              <g class="sysmap-node">
-                <rect x="370" y="190" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="470" y="214" text-anchor="middle">Gateway BFF</text>
-                <text class="sysmap-sub t" x="470" y="231" text-anchor="middle">FastAPI · JWT</text>
+              <g class="sysmap-node" tabindex="0" data-tip-es="Aplica el contrato de backend.yaml, autentica y habla con Odoo por JSON-2." data-tip-en="Enforces backend.yaml, authenticates and talks to Odoo over JSON-2.">
+                <rect x="370" y="214" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="470" y="238" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Gateway BFF</tspan>
+                  <tspan data-lang="en" lang="en">Gateway BFF</tspan>
+                </text>
+                <text class="sysmap-sub t" x="470" y="255" text-anchor="middle">FastAPI · JWT</text>
               </g>
-              <g class="sysmap-node">
-                <rect x="370" y="275" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="470" y="299" text-anchor="middle">Odoo 20</text>
-                <text class="sysmap-sub t" x="470" y="316" text-anchor="middle">ORM · módulos</text>
+              <g class="sysmap-node" tabindex="0" data-tip-es="Modelos, permisos, cron, correo y reportes; una base por entorno." data-tip-en="Models, permissions, cron, mail and reports; one database per stage.">
+                <rect x="370" y="299" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="470" y="323" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Odoo 20</tspan>
+                  <tspan data-lang="en" lang="en">Odoo 20</tspan>
+                </text>
+                <text class="sysmap-sub t" x="470" y="340" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">ORM · módulos</tspan>
+                  <tspan data-lang="en" lang="en">ORM · modules</tspan>
+                </text>
               </g>
-              <g class="sysmap-node">
-                <rect x="370" y="360" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="470" y="384" text-anchor="middle">PostgreSQL 16</text>
-                <text class="sysmap-sub t" x="470" y="401" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Datos de cada entorno, aislados en su propio volumen." data-tip-en="Data for each stage, isolated in its own volume.">
+                <rect x="370" y="384" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="470" y="408" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">PostgreSQL 16</tspan>
+                  <tspan data-lang="en" lang="en">PostgreSQL 16</tspan>
+                </text>
+                <text class="sysmap-sub t" x="470" y="425" text-anchor="middle">
                   <tspan data-lang="es" lang="es">una base por entorno</tspan>
                   <tspan data-lang="en" lang="en">one database per stage</tspan>
                 </text>
               </g>
-
-              <!-- operations lane -->
-              <g class="sysmap-node">
-                <rect x="720" y="20" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="44" text-anchor="middle">Mission Control</text>
-                <text class="sysmap-sub t" x="820" y="61" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Proyectos, entornos, métricas, logs, credenciales y promociones." data-tip-en="Projects, environments, metrics, logs, credentials and promotions.">
+                <rect x="720" y="44" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="68" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Mission Control</tspan>
+                  <tspan data-lang="en" lang="en">Mission Control</tspan>
+                </text>
+                <text class="sysmap-sub t" x="820" y="85" text-anchor="middle">
                   <tspan data-lang="es" lang="es">panel del equipo</tspan>
                   <tspan data-lang="en" lang="en">team panel</tspan>
                 </text>
               </g>
-              <g class="sysmap-node">
-                <rect x="720" y="105" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="129" text-anchor="middle">Orchestrator</text>
-                <text class="sysmap-sub t" x="820" y="146" text-anchor="middle">FastAPI · Docker</text>
+              <g class="sysmap-node" tabindex="0" data-tip-es="Crea entornos, despliega, hace backups y promueve; maneja Docker." data-tip-en="Creates environments, deploys, backs up and promotes; drives Docker.">
+                <rect x="720" y="129" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="153" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Orchestrator</tspan>
+                  <tspan data-lang="en" lang="en">Orchestrator</tspan>
+                </text>
+                <text class="sysmap-sub t" x="820" y="170" text-anchor="middle">FastAPI · Docker</text>
               </g>
-              <g class="sysmap-node">
-                <rect x="720" y="190" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="214" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Acceso de operadores a Odoo para cron, correo y contabilidad, solo en la red interna." data-tip-en="Operator access to Odoo for cron, mail and accounting, internal network only.">
+                <rect x="720" y="214" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="238" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Odoo backend</tspan>
                   <tspan data-lang="en" lang="en">Odoo backend</tspan>
                 </text>
-                <text class="sysmap-sub t" x="820" y="231" text-anchor="middle">
+                <text class="sysmap-sub t" x="820" y="255" text-anchor="middle">
                   <tspan data-lang="es" lang="es">crons · correo · informes</tspan>
                   <tspan data-lang="en" lang="en">crons · mail · reports</tspan>
                 </text>
               </g>
-              <g class="sysmap-node">
-                <rect x="720" y="275" width="200" height="54" rx="12"/>
-                <text class="sysmap-label t" x="820" y="299" text-anchor="middle">
+              <g class="sysmap-node" tabindex="0" data-tip-es="Prometheus, Loki y Grafana: métricas, logs y alertas de todo el stack." data-tip-en="Prometheus, Loki and Grafana: metrics, logs and alerts for the whole stack.">
+                <rect x="720" y="299" width="200" height="54" rx="12"/>
+                <text class="sysmap-label t" x="820" y="323" text-anchor="middle">
                   <tspan data-lang="es" lang="es">Observabilidad</tspan>
                   <tspan data-lang="en" lang="en">Observability</tspan>
                 </text>
-                <text class="sysmap-sub t" x="820" y="316" text-anchor="middle">
+                <text class="sysmap-sub t" x="820" y="340" text-anchor="middle">
                   <tspan data-lang="es" lang="es">métricas · logs · alertas</tspan>
                   <tspan data-lang="en" lang="en">metrics · logs · alerts</tspan>
                 </text>
               </g>
 
-              <!-- flows: straight or routed through the gutters -->
-              <path class="sysmap-flow" d="M 210 47 L 370 47"/>
-              <path class="sysmap-flow" d="M 210 132 C 285 132 330 60 370 60"/>
-              <path class="sysmap-flow" d="M 570 47 L 720 47"/>
-              <path class="sysmap-flow" d="M 470 74 L 470 105"/>
-              <path class="sysmap-flow" d="M 470 159 L 470 190"/>
-              <path class="sysmap-flow" d="M 470 244 L 470 275"/>
-              <path class="sysmap-flow" d="M 470 329 L 470 360"/>
-              <path class="sysmap-flow" d="M 820 74 L 820 105"/>
-              <path class="sysmap-flow dashed" d="M 570 62 L 645 62 L 645 217 L 720 217"/>
+              <!-- flows: straight or routed through the empty gutters -->
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 210 71 L 370 71"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 210 156 C 280 156 320 84 370 84"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 570 71 L 720 71"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 98 L 470 129"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 183 L 470 214"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 268 L 470 299"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 470 353 L 470 384"/>
+              <path class="sysmap-flow" marker-end="url(#sysmap-arrow-flow)" d="M 820 98 L 820 129"/>
+              <path class="sysmap-flow dashed" marker-end="url(#sysmap-arrow-operator)" d="M 570 84 L 645 84 L 645 241 L 720 241"/>
+              <path class="sysmap-flow agent" marker-end="url(#sysmap-arrow-agent)" d="M 210 241 L 235 241 L 235 458 L 938 458 L 938 156 L 920 156"/>
             </svg>
+            <div class="sysmap-tip" id="sysmap-tip" role="tooltip">
+              <span class="sysmap-tip-title"></span>
+              <span class="sysmap-tip-body"></span>
+            </div>
           </div>
           <figcaption id="sysmap-caption" class="sysmap-caption t">
-            <span data-lang="es" lang="es"><span class="legend-dot cyan"></span>tráfico de las apps <span class="legend-dot violet"></span>acceso de operadores</span>
-            <span data-lang="en" lang="en"><span class="legend-dot cyan"></span>application traffic <span class="legend-dot violet"></span>operator access</span>
+            <span data-lang="es" lang="es"><span class="legend-dot cyan"></span>tráfico de las apps <span class="legend-dot violet"></span>acceso de operadores <span class="legend-dot green"></span>camino del agente</span>
+            <span data-lang="en" lang="en"><span class="legend-dot cyan"></span>application traffic <span class="legend-dot violet"></span>operator access <span class="legend-dot green"></span>agent path</span>
           </figcaption>
         </figure>
 

@@ -30,6 +30,10 @@ traducción vive en el mismo HTML, en pares de spans:
 - El idioma inactivo se oculta con `visibility: hidden` según
   `html[data-lang="es"]` / `html[data-lang="en"]`. Como sigue ocupando su celda,
   cambiar de idioma no produce saltos de layout.
+- Dentro del SVG el grid no existe, así que el texto usa `<tspan>` y el idioma
+  inactivo se oculta con `display: none`: con `visibility: hidden` se
+  renderizarían los dos idiomas uno al lado del otro y el título se saldría del
+  nodo.
 - Los bloques de código usan el mismo patrón con `.code-variant` dentro de un
   `code.t`; así los placeholders también se traducen y el botón de copiar toma
   solo la variante activa.
@@ -72,6 +76,11 @@ Odoo no se traducen.
   `data-copy-target` y `data-copy-kind`.
 - Reveal: `IntersectionObserver` solo para elementos debajo del fold; si no hay
   soporte o el usuario pide movimiento reducido, no se oculta nada.
+- Diagrama del sistema: al pasar el mouse (o enfocar un nodo con el teclado) se
+  muestra un tooltip con el rol de ese nodo. Sigue al cursor, se mantiene dentro
+  de la tarjeta y se oculta al salir, con `Escape` o al cambiar de idioma. En
+  pantallas táctiles se abre con un toque. Sin JS, las etiquetas del diagrama
+  siguen siendo legibles.
 - Año del footer.
 
 Todas las consultas al DOM están guardadas con `if`; si se elimina una sección,
@@ -84,8 +93,13 @@ el script no lanza errores. No escribe en consola.
 - Foco visible (`:focus-visible`), targets de 44 px en mobile y navegación por
   teclado.
 - Los SVG decorativos llevan `aria-hidden="true"` y `focusable="false"`.
-- El diagrama es HTML/CSS con una descripción textual para lectores de pantalla;
-  no depende de JS.
+- El diagrama es un SVG con `role="img"` y `aria-label` traducible. Cada nodo es
+  enfocable (`tabindex="0"`) y el tooltip también se abre con el teclado, así que
+  la información no depende solo del hover. Las conexiones se dibujan con
+  `stroke-dasharray` animado y el orden de lectura va de izquierda a derecha:
+  personas y agentes → una petición → operación.
+- Los conectores se trazan rectos o por los pasillos entre columnas: ningún
+  trazo cruza un nodo.
 - Los pares de idioma llevan `lang`; el inactivo se marca `aria-hidden` al
   cargar el script.
 - Contraste objetivo: WCAG AA en texto normal y grande, en ambos temas.

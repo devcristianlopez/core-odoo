@@ -2689,6 +2689,19 @@ html:not(.js) .copy {
   height: auto;
 }
 
+.sysmap-lane {
+  fill: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sysmap-node {
+  cursor: help;
+  outline: none;
+}
+
 .sysmap-node rect {
   fill: var(--surface);
   stroke: var(--border);
@@ -2696,9 +2709,46 @@ html:not(.js) .copy {
   transition: stroke 0.2s ease, filter 0.2s ease;
 }
 
-.sysmap-node:hover rect {
+.sysmap-node:hover rect,
+.sysmap-node:focus-visible rect {
   stroke: var(--edge-1);
   filter: drop-shadow(0 0 12px var(--accent-soft));
+}
+
+.sysmap-tip {
+  position: absolute;
+  z-index: 3;
+  max-width: 250px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-3);
+  box-shadow: var(--card-shadow);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.sysmap-tip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sysmap-tip-title {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.sysmap-tip-body {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .sysmap-label {
@@ -2748,6 +2798,24 @@ html[data-lang="en"] svg text.t > [data-lang="es"] {
   stroke-dasharray: 3 6;
 }
 
+.sysmap-flow.agent {
+  stroke: var(--ok);
+  stroke-dasharray: 2 7;
+  animation-duration: 2.4s;
+}
+
+.sysmap-arrow {
+  fill: var(--accent);
+}
+
+.sysmap-arrow.violet {
+  fill: var(--violet);
+}
+
+.sysmap-arrow.green {
+  fill: var(--ok);
+}
+
 @keyframes diagram-dash {
   to {
     stroke-dashoffset: -14;
@@ -2781,6 +2849,11 @@ html[data-lang="en"] svg text.t > [data-lang="es"] {
 .legend-dot.violet {
   background: var(--violet);
   box-shadow: 0 0 8px var(--violet-soft);
+}
+
+.legend-dot.green {
+  background: var(--ok);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.35);
 }
 
 .tech-grid {

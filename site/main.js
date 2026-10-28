@@ -19,6 +19,8 @@
 
   var attrOriginals = new WeakMap();
 
+  var hideSysmapTip = function () {};
+
   var COPY_LABELS = {
     es: {
       copy: "Copiar",
@@ -161,6 +163,7 @@
       }
     });
 
+    hideSysmapTip();
     applyAttributeTranslations();
     updateDocumentMeta();
     updateLanguageControl();
@@ -417,6 +420,114 @@
   /* ------------------------------------------------------------------------
      Wiring
      ------------------------------------------------------------------------ */
+  function setupSysmapTips() {
+    var tip = document.getElementById("sysmap-tip");
+    if (!tip) return;
+
+    var titleEl = tip.querySelector(".sysmap-tip-title");
+    var bodyEl = tip.querySelector(".sysmap-tip-body");
+    var nodes = document.querySelectorAll(".sysmap-node");
+    var current = null;
+    var lastPoint = null;
+    var frame = 0;
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), Math.max(max, min));
+    }
+
+    function place(node, point) {
+      var wrap = node.closest(".sysmap");
+      if (!wrap) return;
+
+      var wr = wrap.getBoundingClientRect();
+      var nr = node.getBoundingClientRect();
+      var originX = wr.left + wrap.clientLeft;
+      var originY = wr.top + wrap.clientTop;
+      var width = tip.offsetWidth;
+      var height = tip.offsetHeight;
+      var maxLeft = wrap.clientWidth - width - 10;
+      var maxTop = wrap.clientHeight - height - 10;
+      var left;
+      var top;
+
+      if (point && point.clientX !== undefined) {
+        left = point.clientX - originX + 14;
+        if (left > maxLeft) left = point.clientX - originX - width - 14;
+
+        top = point.clientY - originY + 16;
+        if (top > maxTop) top = point.clientY - originY - height - 14;
+      } else {
+        left = nr.left - originX + nr.width / 2 - width / 2;
+        top = nr.top - originY - height - 10;
+        if (top < 10) top = nr.bottom - originY + 10;
+      }
+
+      tip.style.left = clamp(left, 10, maxLeft) + "px";
+      tip.style.top = clamp(top, 10, maxTop) + "px";
+    }
+
+    function show(node, point) {
+      var label = node.querySelector('.sysmap-label [data-lang="' + lang + '"]');
+      var text = node.getAttribute("data-tip-" + lang) || "";
+
+      current = node;
+      lastPoint = point && point.clientX !== undefined
+        ? { clientX: point.clientX, clientY: point.clientY }
+        : null;
+      titleEl.textContent = label ? label.textContent.trim() : "";
+      bodyEl.textContent = text;
+      tip.classList.add("is-visible");
+      place(node, lastPoint);
+    }
+
+    hideSysmapTip = function () {
+      if (!current) return;
+      current = null;
+      lastPoint = null;
+      tip.classList.remove("is-visible");
+    };
+
+    nodes.forEach(function (node) {
+      node.addEventListener("pointerenter", function (event) {
+        if (event.pointerType === "touch") return;
+        show(node, event);
+      });
+      node.addEventListener("pointermove", function (event) {
+        if (current !== node || event.pointerType === "touch") return;
+        lastPoint = { clientX: event.clientX, clientY: event.clientY };
+        if (frame) return;
+        frame = window.requestAnimationFrame(function () {
+          frame = 0;
+          if (current) place(current, lastPoint);
+        });
+      });
+      node.addEventListener("pointerleave", hideSysmapTip);
+      node.addEventListener("click", function () {
+        if (current === node) {
+          hideSysmapTip();
+        } else {
+          show(node);
+        }
+      });
+      node.addEventListener("focus", function () {
+        show(node);
+      });
+      node.addEventListener("blur", hideSysmapTip);
+    });
+
+    document.addEventListener("pointerdown", function (event) {
+      if (current && !current.contains(event.target)) hideSysmapTip();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") hideSysmapTip();
+    });
+
+    window.addEventListener("resize", function () {
+      if (current) place(current, lastPoint);
+    });
+  }
+
   function init() {
     applyAttributeTranslations();
     setLanguage(lang, false);
@@ -518,6 +629,7 @@
     var year = document.getElementById("year");
     if (year) year.textContent = String(new Date().getFullYear());
 
+    setupSysmapTips();
     setupReveal();
   }
 

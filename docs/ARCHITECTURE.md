@@ -8,7 +8,7 @@ later phase, on Proxmox via the same provider interface.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ Mission Control (React)      CLI (core-odoo)                 │
+│ Mission Control (React) · CLI (core-odoo) · AI agent (MCP)   │
 └───────────────┬───────────────────────┬──────────────────────┘
                 │ /api/v1 (JWT/token)   │
                 ▼                       ▼
