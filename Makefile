@@ -19,7 +19,7 @@ PY_PROJECTS := orchestrator gateway cli
 JS_PROJECT  := mission-control
 JS_DEPS     := [ -d $(JS_PROJECT)/node_modules ]
 
-.PHONY: init up down restart status logs test lint fmt e2e clean
+.PHONY: init up down restart status logs test lint skills fmt e2e clean
 
 init:
 	@./install.sh --dev
@@ -69,6 +69,10 @@ lint:
 	printf '\n>>> tsc --noEmit -p tsconfig.node.json (%s)\n' "$(JS_PROJECT)"; \
 	(cd $(JS_PROJECT) && npx tsc --noEmit -p tsconfig.node.json) \
 		|| { printf '\n*** FAILED: tsc --noEmit -p tsconfig.node.json in %s\n' "$(JS_PROJECT)"; exit 1; }
+	@printf '\n>>> skills (frontmatter + links + symlinks)\n'; python3 scripts/check_skills.py
+
+skills:
+	@python3 scripts/check_skills.py
 
 fmt:
 	@set -eu; \

@@ -132,3 +132,13 @@ jobs:
 
       - name: Build (tsc --noEmit + vite build)
         run: npm run build
+
+  skills:
+    name: skills (frontmatter + links + symlinks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check skills and agents
+        run: python3 scripts/check_skills.py

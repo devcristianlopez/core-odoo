@@ -154,12 +154,29 @@ prefer its typed tools: `catalog_models`, `generate_module`,
 `generate_resource`, `generate_sdk`, `generate_frontend`, `check_project`,
 `deploy_project`, `environment_logs`. The CLI remains the source of truth.
 
-## Skills
+## Skills and agents
 
-Optional workflows live in `skills/`:
+Skills are on-demand playbooks under `skills/`; `skills/README.md` is the index
+and `skills/UPSTREAM.md` records the vendored Odoo set. Load the one that
+matches the task instead of guessing.
 
-- `skills/odoo-module` — add a model/module safely.
-- `skills/odoo-frontend` — consume the BFF from a generated frontend.
-- `skills/odoo-deploy` — deploy, inspect and debug an environment.
+| Task | Skill |
+|---|---|
+| models, fields, views, ACL, tests | `odoo-module` + `odoo-guidelines` |
+| security audit of an addon | `odoo-security` |
+| review a diff, commit or module | `odoo-review` |
+| screens against the BFF | `odoo-frontend` |
+| deploy, promote, roll back, logs | `odoo-deploy` |
+| OWL, JavaScript or SCSS under `static/` | `odoo-web-guidelines` |
 
-The CLI is the portable interface; skills are progressive-disclosure wrappers.
+`odoo-module`, `odoo-frontend` and `odoo-deploy` are ours; the rest are copied
+verbatim from Odoo 20 (`skills/UPSTREAM.md`). Do not edit the vendored files.
+
+Project agents live in `.opencode/agents/`:
+
+- `odoo-module-dev` builds addons (catalogue, generator, tests, dev deploy),
+- `odoo-reviewer` reviews without editing,
+- `odoo-operator` deploys, promotes and rolls back without touching code.
+
+After editing a skill or an agent, run `python3 scripts/check_skills.py`; CI
+runs the same check. The CLI remains the portable interface.

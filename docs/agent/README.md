@@ -7,7 +7,28 @@ The agent layer has four separate pieces:
 | Instructions | Rules and boundaries | `AGENTS.md` |
 | Catalogue | What Odoo already offers | `core-odoo --json catalog models` |
 | Generators | Deterministic boilerplate | `core-odoo generate ...` |
-| Skills | Optional task workflows | `skills/` |
+| Skills | On-demand playbooks | `skills/` (index: `skills/README.md`) |
+| Upstream guidelines | Odoo's own house rules, vendored | `skills/odoo-guidelines`, `skills/odoo-security`, `skills/odoo-review`, `skills/odoo-web-guidelines` |
+| Project agents | Odoo-specific roles with their own permissions | `.opencode/agents/` |
+
+## Skills and agents
+
+The three Core Odoo skills are the workflow layer; the four upstream skills are
+Odoo's house rules, copied verbatim (see `skills/UPSTREAM.md` for the ref, the
+license and the sync command).
+
+| Task | Load |
+|---|---|
+| add or change models, fields, views, ACL, tests | `odoo-module` + `odoo-guidelines` |
+| audit access control, `sudo`, SQL, routes, XSS | `odoo-security` |
+| review a diff or a module | `odoo-review` |
+| build screens against the BFF | `odoo-frontend` |
+| deploy, promote, roll back | `odoo-deploy` |
+
+`.opencode/agents/` defines three subagents: `odoo-module-dev` (builds addons),
+`odoo-reviewer` (read-only review) and `odoo-operator` (deploy and recovery,
+no code edits). `python3 scripts/check_skills.py` validates the frontmatter,
+the harness symlinks and every relative link.
 
 ## Catalogue
 

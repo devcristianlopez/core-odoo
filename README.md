@@ -67,7 +67,11 @@ Versions shipped with the repository:
 - [Agent instructions](AGENTS.md)
 - [Agent layer](docs/agent/README.md)
 - [Model catalogue](docs/agent/model-catalog.md)
-- Skills: `skills/odoo-module`, `skills/odoo-frontend`, `skills/odoo-deploy`
+- [Skill library](skills/README.md): `odoo-module`, `odoo-frontend`, `odoo-deploy`
+  plus Odoo's vendored `odoo-guidelines`, `odoo-security`, `odoo-review` and
+  `odoo-web-guidelines`
+- Project agents: `.opencode/agents/` (`odoo-module-dev`, `odoo-reviewer`,
+  `odoo-operator`)
 
 ```bash
 core-odoo --json catalog models <project> --stage dev --model res.partner
