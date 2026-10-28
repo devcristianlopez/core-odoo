@@ -48,6 +48,20 @@ Requirements: Docker Engine 24+, Docker Compose v2, 6 GB RAM recommended
 - **Multi-user panel** — global roles plus per-project owner/developer/viewer membership.
 - **Production approvals** — operators request, admins approve and deploy.
 
+## Stack
+
+Versions shipped with the repository:
+
+| Layer | Technologies |
+|---|---|
+| Backend | Odoo 20, PostgreSQL 16, Python 3.12, FastAPI, SQLModel, Pydantic |
+| Frontend | React 18, TypeScript 5, Vite 6, Tailwind 3, TanStack Query 5, Recharts, i18next |
+| CLI / tooling | Typer, Rich, uv, httpx |
+| Infrastructure | Docker Compose, Traefik 3.6, nginx, Mailpit |
+| Observability | Prometheus 2.55, Loki 3.3, Alloy, Grafana 11.4, Alertmanager 0.27, Uptime Kuma |
+| Quality | pytest, Ruff, Vitest, ESLint, GitHub Actions |
+| Data | SQLite (control plane), `pg_dump` backups |
+
 ## Agent development
 
 - [Agent instructions](AGENTS.md)

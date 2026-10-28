@@ -2650,3 +2650,191 @@ html:not(.js) .copy {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Technologies + system diagram
+   --------------------------------------------------------------------------- */
+.diagram-shell {
+  margin: 0 0 2.5rem;
+}
+
+.diagram {
+  position: relative;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(640px 260px at 12% 0%, var(--glow-1), transparent 62%),
+    radial-gradient(520px 240px at 88% 100%, var(--glow-2), transparent 62%),
+    var(--surface-2);
+  overflow: hidden;
+}
+
+.diagram::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.diagram svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.diagram-node rect {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1;
+  transition: stroke 0.2s ease, filter 0.2s ease;
+}
+
+.diagram-node:hover rect {
+  stroke: var(--edge-1);
+  filter: drop-shadow(0 0 12px var(--accent-soft));
+}
+
+.diagram-label {
+  fill: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.diagram-sub {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+}
+
+.diagram-flow {
+  fill: none;
+  stroke: var(--edge-1);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 7 7;
+  animation: diagram-dash 1.6s linear infinite;
+}
+
+.diagram-flow.dashed {
+  stroke: var(--edge-2);
+  stroke-dasharray: 3 6;
+}
+
+@keyframes diagram-dash {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+.diagram-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.15rem;
+  border-radius: 999px;
+}
+
+.legend-dot.cyan {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-soft);
+}
+
+.legend-dot.violet {
+  background: var(--violet);
+  box-shadow: 0 0 8px var(--violet-soft);
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.tech-group {
+  padding: 1.05rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tech-group:hover {
+  transform: translateY(-3px);
+  border-color: var(--edge-1);
+  box-shadow: var(--card-shadow);
+}
+
+.tech-group h3 {
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .diagram {
+    padding: 0.5rem;
+    overflow-x: auto;
+  }
+  .diagram svg {
+    min-width: 720px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-flow {
+    animation: none;
+  }
+  .tech-group,
+  .chip {
+    transition: none;
+  }
+}

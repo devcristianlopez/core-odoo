@@ -94,6 +94,9 @@
         <a class="nav-link" href="#capacidades">
           <span class="t t-inline"><span data-lang="es" lang="es">Qué puedes hacer</span><span data-lang="en" lang="en">What you can do</span></span>
         </a>
+        <a class="nav-link" href="#tecnologias">
+          <span class="t t-inline"><span data-lang="es" lang="es">Tecnologías</span><span data-lang="en" lang="en">Technologies</span></span>
+        </a>
         <a class="nav-link" href="#como-funciona">
           <span class="t t-inline"><span data-lang="es" lang="es">Cómo se usa</span><span data-lang="en" lang="en">How it works</span></span>
         </a>
@@ -332,6 +335,204 @@
       </div>
     </section>
 
+
+    <!-- ====================================================================
+         3. TECNOLOGÍAS Y ARQUITECTURA
+         ==================================================================== -->
+    <section class="section" id="tecnologias" aria-labelledby="tecnologias-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">03 · Tecnologías</span><span data-lang="en" lang="en">03 · Technologies</span></span>
+          </p>
+          <h2 id="tecnologias-title" class="t">
+            <span data-lang="es" lang="es">Un stack probado, no un collage</span>
+            <span data-lang="en" lang="en">A proven stack, not a collage</span>
+          </h2>
+          <p class="lede t">
+            <span data-lang="es" lang="es">Odoo 20 como backend y piezas estándar alrededor. Todo corre en Docker, en tu host, sin servicios propietarios.</span>
+            <span data-lang="en" lang="en">Odoo 20 as the backend and standard pieces around it. Everything runs on Docker, on your host, with no proprietary services.</span>
+          </p>
+        </div>
+
+        <figure class="diagram-shell reveal" aria-labelledby="diagram-caption">
+          <div class="diagram">
+            <svg viewBox="0 0 920 380" role="img" aria-label="Core Odoo system diagram" data-en-aria-label="Core Odoo system diagram">
+              <title>Core Odoo</title>
+
+              <g class="diagram-node">
+                <rect x="10" y="20" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="95" y="42" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Navegador</tspan>
+                  <tspan data-lang="en" lang="en">Browser</tspan>
+                </text>
+                <text class="diagram-sub t" x="95" y="59" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">apps · panel</tspan>
+                  <tspan data-lang="en" lang="en">apps · panel</tspan>
+                </text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="250" y="105" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="335" y="127" text-anchor="middle">Traefik 3.6</text>
+                <text class="diagram-sub t" x="335" y="144" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">HTTPS · rutas · allowlist</tspan>
+                  <tspan data-lang="en" lang="en">HTTPS · routes · allowlist</tspan>
+                </text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="490" y="20" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="575" y="44" text-anchor="middle">Frontend</text>
+                <text class="diagram-sub t" x="575" y="61" text-anchor="middle">nginx · React 18</text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="490" y="105" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="575" y="129" text-anchor="middle">Gateway BFF</text>
+                <text class="diagram-sub t" x="575" y="146" text-anchor="middle">FastAPI · JWT</text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="490" y="190" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="575" y="214" text-anchor="middle">Odoo 20</text>
+                <text class="diagram-sub t" x="575" y="231" text-anchor="middle">ORM · módulos</text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="490" y="275" width="170" height="54" rx="12"/>
+                <text class="diagram-label t" x="575" y="299" text-anchor="middle">PostgreSQL 16</text>
+                <text class="diagram-sub t" x="575" y="316" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">una base por entorno</tspan>
+                  <tspan data-lang="en" lang="en">one database per stage</tspan>
+                </text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="730" y="20" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="820" y="44" text-anchor="middle">Mission Control</text>
+                <text class="diagram-sub t" x="820" y="61" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">panel del equipo</tspan>
+                  <tspan data-lang="en" lang="en">team panel</tspan>
+                </text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="730" y="105" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="820" y="129" text-anchor="middle">Orchestrator</text>
+                <text class="diagram-sub t" x="820" y="146" text-anchor="middle">FastAPI · Docker</text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="730" y="190" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="820" y="214" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Odoo backend</tspan>
+                  <tspan data-lang="en" lang="en">Odoo backend</tspan>
+                </text>
+                <text class="diagram-sub t" x="820" y="231" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">crons · correo · informes</tspan>
+                  <tspan data-lang="en" lang="en">crons · mail · reports</tspan>
+                </text>
+              </g>
+
+              <g class="diagram-node">
+                <rect x="730" y="275" width="180" height="54" rx="12"/>
+                <text class="diagram-label t" x="820" y="299" text-anchor="middle">
+                  <tspan data-lang="es" lang="es">Observabilidad</tspan>
+                  <tspan data-lang="en" lang="en">Observability</tspan>
+                </text>
+                <text class="diagram-sub t" x="820" y="316" text-anchor="middle">Prometheus · Loki · Grafana</text>
+              </g>
+
+              <path class="diagram-flow" d="M 180 47 C 230 47 335 80 335 105"/>
+              <path class="diagram-flow" d="M 420 132 C 460 132 490 95 490 47"/>
+              <path class="diagram-flow" d="M 420 132 C 560 132 730 95 730 47"/>
+              <path class="diagram-flow" d="M 575 74 L 575 105"/>
+              <path class="diagram-flow" d="M 575 159 L 575 190"/>
+              <path class="diagram-flow" d="M 575 244 L 575 275"/>
+              <path class="diagram-flow" d="M 820 74 L 820 105"/>
+              <path class="diagram-flow dashed" d="M 420 150 C 560 185 730 170 730 190"/>
+            </svg>
+          </div>
+          <figcaption id="diagram-caption" class="diagram-caption t">
+            <span data-lang="es" lang="es"><span class="legend-dot cyan"></span>tráfico de las apps <span class="legend-dot violet"></span>acceso de operadores</span>
+            <span data-lang="en" lang="en"><span class="legend-dot cyan"></span>application traffic <span class="legend-dot violet"></span>operator access</span>
+          </figcaption>
+        </figure>
+
+        <div class="tech-grid reveal">
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Backend</span><span data-lang="en" lang="en">Backend</span></h3>
+            <ul class="chip-list">
+              <li class="chip">Odoo 20</li>
+              <li class="chip">Python 3.12</li>
+              <li class="chip">FastAPI</li>
+              <li class="chip">SQLModel</li>
+              <li class="chip">Pydantic</li>
+              <li class="chip">Typer + Rich</li>
+            </ul>
+          </article>
+
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Datos</span><span data-lang="en" lang="en">Data</span></h3>
+            <ul class="chip-list">
+              <li class="chip">PostgreSQL 16</li>
+              <li class="chip">SQLite</li>
+              <li class="chip">pg_dump</li>
+            </ul>
+          </article>
+
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Frontend</span><span data-lang="en" lang="en">Frontend</span></h3>
+            <ul class="chip-list">
+              <li class="chip">React 18</li>
+              <li class="chip">TypeScript 5</li>
+              <li class="chip">Vite 6</li>
+              <li class="chip">Tailwind 3</li>
+              <li class="chip">TanStack Query</li>
+              <li class="chip">Recharts</li>
+              <li class="chip">i18next</li>
+            </ul>
+          </article>
+
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Infraestructura</span><span data-lang="en" lang="en">Infrastructure</span></h3>
+            <ul class="chip-list">
+              <li class="chip">Docker Compose</li>
+              <li class="chip">Traefik 3.6</li>
+              <li class="chip">Nginx</li>
+              <li class="chip">uv</li>
+              <li class="chip">Mailpit</li>
+            </ul>
+          </article>
+
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Observabilidad</span><span data-lang="en" lang="en">Observability</span></h3>
+            <ul class="chip-list">
+              <li class="chip">Prometheus</li>
+              <li class="chip">Loki</li>
+              <li class="chip">Alloy</li>
+              <li class="chip">Grafana</li>
+              <li class="chip">Alertmanager</li>
+              <li class="chip">Uptime Kuma</li>
+            </ul>
+          </article>
+
+          <article class="tech-group">
+            <h3 class="t"><span data-lang="es" lang="es">Calidad</span><span data-lang="en" lang="en">Quality</span></h3>
+            <ul class="chip-list">
+              <li class="chip">pytest</li>
+              <li class="chip">Ruff</li>
+              <li class="chip">Vitest</li>
+              <li class="chip">ESLint</li>
+              <li class="chip">GitHub Actions</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <!-- ====================================================================
          3. CÓMO SE USA
          ==================================================================== -->
@@ -340,7 +541,7 @@
         <div class="section-head reveal">
           <p class="eyebrow">
             <span class="eyebrow-dot" aria-hidden="true"></span>
-            <span class="t t-inline"><span data-lang="es" lang="es">03 · Cómo se usa</span><span data-lang="en" lang="en">03 · How it works</span></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">04 · Cómo se usa</span><span data-lang="en" lang="en">04 · How it works</span></span>
           </p>
           <h2 id="como-funciona-title" class="t">
             <span data-lang="es" lang="es">Tú decides. El agente construye.</span>
@@ -382,7 +583,7 @@
         <div class="section-head reveal">
           <p class="eyebrow">
             <span class="eyebrow-dot" aria-hidden="true"></span>
-            <span class="t t-inline"><span data-lang="es" lang="es">04 · Empezar</span><span data-lang="en" lang="en">04 · Get started</span></span>
+            <span class="t t-inline"><span data-lang="es" lang="es">05 · Empezar</span><span data-lang="en" lang="en">05 · Get started</span></span>
           </p>
           <h2 id="empezar-title" class="t">
             <span data-lang="es" lang="es">Un host con Docker y diez minutos</span>
