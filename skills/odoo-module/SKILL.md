@@ -197,6 +197,21 @@ A redeploy applies `-u <module>`, waits for the gateway health check and rolls
 back to `last_good_iteration` when it fails. Promote, roll back and debug with
 the `odoo-deploy` skill.
 
+## Reference
+
+Odoo 20 documentation, verified against the published pages:
+
+- [ORM API](https://www.odoo.com/documentation/20.0/developer/reference/backend/orm.html)
+- [Module manifests](https://www.odoo.com/documentation/20.0/developer/reference/backend/module.html)
+- [View records](https://www.odoo.com/documentation/20.0/developer/reference/user_interface/view_records.html)
+- [Security](https://www.odoo.com/documentation/20.0/developer/reference/backend/security.html)
+- [Testing](https://www.odoo.com/documentation/20.0/developer/reference/backend/testing.html)
+- [Performance](https://www.odoo.com/documentation/20.0/developer/reference/backend/performance.html)
+- [Web controllers](https://www.odoo.com/documentation/20.0/developer/reference/backend/http.html)
+
+For rules, the vendored guidelines are the source of truth; the reference
+explains the API behind them.
+
 ## Checklist
 
 - [ ] Catalogue inspected and no model duplicated.
